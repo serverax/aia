@@ -1,0 +1,39 @@
+# Runtime dependencies shared across services.
+# Service-specific extras live in services/<name>/requirements.txt.
+
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+pydantic==2.9.2
+pydantic-settings==2.5.2
+
+redis==5.0.8
+asyncpg==0.29.0
+
+opentelemetry-api==1.27.0
+opentelemetry-sdk==1.27.0
+opentelemetry-exporter-otlp-proto-grpc==1.27.0
+opentelemetry-instrumentation-fastapi==0.48b0
+opentelemetry-instrumentation-redis==0.48b0
+opentelemetry-instrumentation-asyncpg==0.48b0
+
+structlog==24.4.0
+
+# Orchestration (Sprint 2)
+langgraph==0.2.34
+langchain==0.3.1
+langchain-anthropic==0.2.1
+anthropic==0.34.2          # used directly by chat_with_tools (Sprint 6)
+
+# Tool sandbox (Sprint 6)
+wasmtime==24.0.0
+cryptography==43.0.1
+jsonschema==4.23.0
+pyyaml==6.0.2
+
+# Security floor pins for transitive deps (Sprint 6 audit, 2026-05-21).
+# These packages are NOT directly imported by our code, but are pulled in
+# transitively by langchain / requests / opentelemetry. The floors close
+# four CVEs surfaced by pip-audit. Bump as new fixes ship.
+urllib3>=2.7.0            # PYSEC-2026-141 (header leak), PYSEC-2026-142 (decompression DoS)
+markdown>=3.8.1           # PYSEC-2026-89  (HTMLParser DoS)
+idna>=3.15                # CVE-2026-45409 (DoS on long inputs)

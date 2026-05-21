@@ -1,0 +1,40 @@
+{
+  "id": "compliance_checklist",
+  "name": "Compliance Checklist",
+  "version": "1.0",
+  "description": "Checklist-style compliance validation report.",
+  "sections": [
+    {
+      "type": "title",
+      "field": "title",
+      "required": true,
+      "placeholder": "Checklist title"
+    },
+    {
+      "type": "table",
+      "field": "checklist_items",
+      "columns": ["Requirement", "Status", "Owner"],
+      "rows": "dynamic"
+    },
+    {
+      "type": "text",
+      "field": "notes",
+      "placeholder": "Any additional context"
+    },
+    {
+      "type": "references",
+      "field": "policies",
+      "source": "semantic_search"
+    }
+  ],
+  "styling": {
+    "font": "Arial",
+    "font_size": 11,
+    "line_spacing": 1.15,
+    "colors": {
+      "header": "#0D5C48",
+      "accent": "#2A9D8F"
+    }
+  }
+}
+

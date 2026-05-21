@@ -1,0 +1,41 @@
+{
+  "id": "policy_memo",
+  "name": "Policy Memo",
+  "version": "1.0",
+  "description": "Summarize policy changes and rationale.",
+  "sections": [
+    {
+      "type": "title",
+      "field": "title",
+      "required": true,
+      "placeholder": "Policy memo title"
+    },
+    {
+      "type": "text",
+      "field": "context",
+      "required": true,
+      "placeholder": "Policy context and drivers"
+    },
+    {
+      "type": "text",
+      "field": "recommendations",
+      "required": true,
+      "placeholder": "Recommended changes"
+    },
+    {
+      "type": "references",
+      "field": "policies",
+      "source": "semantic_search"
+    }
+  ],
+  "styling": {
+    "font": "Arial",
+    "font_size": 11,
+    "line_spacing": 1.15,
+    "colors": {
+      "header": "#2A4B7C",
+      "accent": "#0066CC"
+    }
+  }
+}
+

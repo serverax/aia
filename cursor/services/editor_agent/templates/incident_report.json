@@ -1,0 +1,47 @@
+{
+  "id": "incident_report",
+  "name": "Incident Report",
+  "version": "1.0",
+  "description": "Capture and communicate incident details and mitigations.",
+  "sections": [
+    {
+      "type": "title",
+      "field": "title",
+      "required": true,
+      "placeholder": "Incident title"
+    },
+    {
+      "type": "text",
+      "field": "incident_summary",
+      "required": true,
+      "placeholder": "What happened"
+    },
+    {
+      "type": "text",
+      "field": "impact_assessment",
+      "required": true,
+      "placeholder": "Business and technical impact"
+    },
+    {
+      "type": "table",
+      "field": "timeline",
+      "columns": ["Time", "Event", "Owner"],
+      "rows": "dynamic"
+    },
+    {
+      "type": "references",
+      "field": "policies",
+      "source": "semantic_search"
+    }
+  ],
+  "styling": {
+    "font": "Arial",
+    "font_size": 11,
+    "line_spacing": 1.15,
+    "colors": {
+      "header": "#532D13",
+      "accent": "#A35C1F"
+    }
+  }
+}
+

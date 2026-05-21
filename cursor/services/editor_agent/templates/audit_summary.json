@@ -1,0 +1,47 @@
+{
+  "id": "audit_summary",
+  "name": "Audit Summary",
+  "version": "1.0",
+  "description": "Executive summary for internal or external audits.",
+  "sections": [
+    {
+      "type": "title",
+      "field": "title",
+      "required": true,
+      "placeholder": "Audit summary title"
+    },
+    {
+      "type": "text",
+      "field": "scope",
+      "required": true,
+      "placeholder": "Audit scope and objectives"
+    },
+    {
+      "type": "text",
+      "field": "findings",
+      "required": true,
+      "placeholder": "Top findings and evidence"
+    },
+    {
+      "type": "text",
+      "field": "recommendations",
+      "required": true,
+      "placeholder": "Actions and owners"
+    },
+    {
+      "type": "references",
+      "field": "policies",
+      "source": "semantic_search"
+    }
+  ],
+  "styling": {
+    "font": "Arial",
+    "font_size": 11,
+    "line_spacing": 1.15,
+    "colors": {
+      "header": "#3D348B",
+      "accent": "#7678ED"
+    }
+  }
+}
+

@@ -36,3 +36,4 @@ cosign.key
 *.log
 provision.log
 verify.log
+node_modules/

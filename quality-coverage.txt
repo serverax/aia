@@ -1,0 +1,106 @@
+........................................................................ [ 70%]
+..............................                                           [100%]{
+    "name": "smoke",
+    "context": {
+        "trace_id": "0x03a893169fa35a8b7546505e4e1e69b8",
+        "span_id": "0xc2fd8e87fb1dbe31",
+        "trace_state": "[]"
+    },
+    "kind": "SpanKind.INTERNAL",
+    "parent_id": null,
+    "start_time": "2026-05-21T15:24:43.748601Z",
+    "end_time": "2026-05-21T15:24:43.748738Z",
+    "status": {
+        "status_code": "UNSET"
+    },
+    "attributes": {},
+    "events": [],
+    "links": [],
+    "resource": {
+        "attributes": {
+            "telemetry.sdk.language": "python",
+            "telemetry.sdk.name": "opentelemetry",
+            "telemetry.sdk.version": "1.42.0",
+            "service.name": "test-svc",
+            "service.version": "0.1.0"
+        },
+        "schema_url": ""
+    }
+}
+
+============================== warnings summary ===============================
+<frozen importlib._bootstrap>:491
+  <frozen importlib._bootstrap>:491: DeprecationWarning: builtin type SwigPyPacked has no __module__ attribute
+
+<frozen importlib._bootstrap>:491
+  <frozen importlib._bootstrap>:491: DeprecationWarning: builtin type SwigPyObject has no __module__ attribute
+
+tests/unit/test_protocol.py::test_create_message_required_fields
+tests/unit/test_protocol.py::test_create_message_assigns_unique_id
+tests/unit/test_protocol.py::test_create_message_assigns_unique_id
+tests/unit/test_protocol.py::test_create_message_timestamp_is_utc_iso
+tests/unit/test_protocol.py::test_create_message_carries_data_payload
+  F:\aia\libs\communication\protocol.py:9: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "timestamp": datetime.utcnow().isoformat() + "Z",
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=============================== tests coverage ================================
+_______________ coverage: platform win32, python 3.14.3-final-0 _______________
+
+Name                                                   Stmts   Miss Branch BrPart  Cover
+----------------------------------------------------------------------------------------
+libs\__init__.py                                           0      0      0      0   100%
+libs\communication\__init__.py                             3      0      0      0   100%
+libs\communication\message.py                             68      0      0      0   100%
+libs\communication\postgres_client.py                     15      2      0      0    87%
+libs\communication\protocol.py                             5      0      0      0   100%
+libs\communication\redis_client.py                        36     17      8      0    43%
+libs\communication\telemetry.py                           29      2      6      2    89%
+libs\communication\tools.py                               32     32      6      0     0%
+libs\llm\__init__.py                                       3      0      0      0   100%
+libs\llm\client.py                                        61     32     16      2    40%
+libs\llm\tools.py                                         65      0      6      0   100%
+scripts\__init__.py                                        0      0      0      0   100%
+scripts\security\__init__.py                               0      0      0      0   100%
+scripts\security\audit_rbac.py                           134      8     48      5    92%
+scripts\security\generate_policies.py                     83     10     24      1    90%
+services\__init__.py                                       0      0      0      0   100%
+services\analyst_agent\__init__.py                         0      0      0      0   100%
+services\analyst_agent\analyst_agent.py                   17      6      0      0    65%
+services\analyst_agent\analyst_service.py                 64     31      8      1    47%
+services\analyst_agent\confidence.py                      14      8      4      0    33%
+services\analyst_agent\main.py                           129     58     16      2    50%
+services\analyst_agent\milvus_manager.py                  32     32      2      0     0%
+services\analyst_agent\models\explanation.py               7      0      0      0   100%
+services\analyst_agent\recommendation_generator.py        19     16     10      0    10%
+services\analyst_agent\risk_analyzer.py                   21     15      8      0    21%
+services\compliance_agent\__init__.py                      0      0      0      0   100%
+services\compliance_agent\main.py                        118     60     22      0    50%
+services\compliance_agent\qdrant_indexer.py               29     29      4      0     0%
+services\echo_agent\__init__.py                            0      0      0      0   100%
+services\echo_agent\main.py                              101     57     10      0    40%
+services\orchestrator_agent\__init__.py                    0      0      0      0   100%
+services\orchestrator_agent\conflict.py                   46     14     20      2    67%
+services\orchestrator_agent\graph.py                      33     33      0      0     0%
+services\orchestrator_agent\main.py                      123    123     12      0     0%
+services\orchestrator_agent\monitor.py                    34     34     12      0     0%
+services\orchestrator_agent\nodes.py                      35      0      8      0   100%
+services\orchestrator_agent\prompts.py                     3      0      0      0   100%
+services\orchestrator_agent\router.py                     33      1      2      1    94%
+services\orchestrator_agent\state.py                      33      0      0      0   100%
+services\rag_system\__init__.py                            0      0      0      0   100%
+services\rag_system\citation_tracker.py                   23     15      6      0    28%
+services\rag_system\rag_service.py                        31     31      2      0     0%
+services\rag_system\rag_system.py                         41     23      6      0    38%
+services\semantic_search\__init__.py                       0      0      0      0   100%
+services\semantic_search\vector_store\__init__.py          0      0      0      0   100%
+services\semantic_search\vector_store\faiss_store.py      98     98     40      0     0%
+services\semantic_search\vector_store\schemas.py           4      4      0      0     0%
+services\tool_sandbox\__init__.py                          4      0      0      0   100%
+services\tool_sandbox\audit_adapter.py                    26      0      2      0   100%
+services\tool_sandbox\executor.py                         92      7      8      3    90%
+services\tool_sandbox\registry.py                        126     10     26      6    89%
+services\tool_sandbox\verifier.py                         40      2      4      1    93%
+----------------------------------------------------------------------------------------
+TOTAL                                                   1910    810    346     26    55%
+102 passed, 17 deselected, 7 warnings in 43.59s

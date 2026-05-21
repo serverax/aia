@@ -1,0 +1,50 @@
+{
+  "generated_at": "2026-05-21T20:19:55.673Z",
+  "app_url": "http://127.0.0.1:5173",
+  "total_scenarios": 7,
+  "passed_scenarios": 7,
+  "failed_scenarios": 0,
+  "all_passed": true,
+  "scenarios": [
+    {
+      "scenario": "filtered pending view returns rows",
+      "passed": true,
+      "details": "visible=2"
+    },
+    {
+      "scenario": "select all visible matches filtered count",
+      "passed": true,
+      "details": "selected=2, visible=2"
+    },
+    {
+      "scenario": "bulk approve applies only filtered subset",
+      "passed": true,
+      "latency_ms": 289.69,
+      "details": "reduced=true, actioned=2/2"
+    },
+    {
+      "scenario": "bulk approve audit updated per selected item",
+      "passed": true,
+      "latency_ms": 289.69,
+      "details": "auditUpdated=true, selected=2"
+    },
+    {
+      "scenario": "bulk approve queue refresh resets selection",
+      "passed": true,
+      "latency_ms": 289.69,
+      "details": "selectionReset=true, under500=true"
+    },
+    {
+      "scenario": "bulk reject applies only filtered subset",
+      "passed": true,
+      "latency_ms": 289.37,
+      "details": "reduced=true, actioned=2/2"
+    },
+    {
+      "scenario": "bulk escalate applies only filtered subset",
+      "passed": true,
+      "latency_ms": 331.45,
+      "details": "targeted=true, actioned=2/2"
+    }
+  ]
+}

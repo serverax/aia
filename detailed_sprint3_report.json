@@ -1,0 +1,20 @@
+{
+    "hardware": {
+        "cpu": "Intel64 Family 6 Model 158 Stepping 9, GenuineIntel",
+        "cores": 4,
+        "threads": 8,
+        "ram": "63.86 GB",
+        "os": "Windows"
+    },
+    "embedding": {
+        "cold_batch_50_ms": 1025.51,
+        "warm_batch_50_ms": 5.87
+    },
+    "search_latency": {
+        "p50": 3.03,
+        "p95": 16.44,
+        "p99": 50.93
+    },
+    "memory_rss_mb": 540.53,
+    "integration_tests": "5/5"
+}

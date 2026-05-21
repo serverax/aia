@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-05-21T21:25:25.095Z",
+  "app_url": "http://127.0.0.1:5173",
+  "runs_per_metric": 20,
+  "threshold_ms": 500,
+  "all_metrics_pass": true,
+  "metrics": [
+    {
+      "label": "workstream1_search",
+      "threshold_ms": 500,
+      "samples": 20,
+      "p50": 141.24,
+      "p95": 367.57,
+      "p99": 367.57,
+      "max": 367.57,
+      "pass": true
+    },
+    {
+      "label": "workstream2_preset_apply",
+      "threshold_ms": 500,
+      "samples": 20,
+      "p50": 127.31,
+      "p95": 202.64,
+      "p99": 202.64,
+      "max": 202.64,
+      "pass": true
+    },
+    {
+      "label": "workstream3_bulk_action",
+      "threshold_ms": 500,
+      "samples": 20,
+      "p50": 191.11,
+      "p95": 252.15,
+      "p99": 252.15,
+      "max": 252.15,
+      "pass": true
+    },
+    {
+      "label": "workstream4_detail_open",
+      "threshold_ms": 500,
+      "samples": 20,
+      "p50": 141.08,
+      "p95": 265.45,
+      "p99": 265.45,
+      "max": 265.45,
+      "pass": true
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+services\semantic_search\vector_store\faiss_store.py
+    M 64:4 FAISSStore.search - C
+services\tool_sandbox\tests\test_audit_adapter.py
+    F 53:0 test_record_writes_one_audit_row - C
+scripts\security\audit_rbac.py
+    F 235:0 main - C
+
+3 blocks (classes, functions, methods) analyzed.
+Average complexity: C (11.666666666666666)

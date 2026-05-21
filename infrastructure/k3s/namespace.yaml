@@ -1,0 +1,111 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: synthetic-enterprise
+  labels:
+    name: synthetic-enterprise
+    app: synthetic-enterprise
+    environment: production
+---
+# Generic agent ServiceAccount. Sprint 1/2/7 manifests reference this name.
+# Sprint 6 Day 8 introduces per-agent ServiceAccounts (echo-agent-sa,
+# orchestrator-agent-sa, etc.) but `agent-sa` stays for compatibility.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: agent-sa
+  namespace: synthetic-enterprise
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: agent-role
+  namespace: synthetic-enterprise
+rules:
+- apiGroups: [""]
+  resources: ["pods", "pods/log", "configmaps"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list"]
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: agent-rolebinding
+  namespace: synthetic-enterprise
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: agent-role
+subjects:
+- kind: ServiceAccount
+  name: agent-sa
+  namespace: synthetic-enterprise
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: synthetic-enterprise-quota
+  namespace: synthetic-enterprise
+spec:
+  hard:
+    requests.cpu: "200"
+    requests.memory: "400Gi"
+    limits.cpu: "400"
+    limits.memory: "800Gi"
+    pods: "1000"
+    services: "200"
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: synthetic-enterprise
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-internal
+  namespace: synthetic-enterprise
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: synthetic-enterprise
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: synthetic-enterprise
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: databases
+    ports:
+    - protocol: TCP
+      port: 5432
+    - protocol: TCP
+      port: 6379

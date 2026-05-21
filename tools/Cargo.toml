@@ -1,0 +1,14 @@
+[workspace]
+resolver = "2"
+members = [
+    "sdk",
+    "parse_dates_v3",
+]
+
+[profile.release]
+# Optimise for small WASM module size and predictable execution.
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"

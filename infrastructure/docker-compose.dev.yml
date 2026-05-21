@@ -1,0 +1,129 @@
+# Local dev stack used by `pytest tests/integration` and by anyone running
+# the Echo Agent without a K3s cluster. Mirror of the K3s manifests in
+# `infrastructure/k3s/`.
+#
+# Usage:
+#   docker compose -f infrastructure/docker-compose.dev.yml up
+#   docker compose -f infrastructure/docker-compose.dev.yml down -v   # wipe volumes
+
+services:
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: synthetic
+      POSTGRES_USER: synthetic
+      POSTGRES_PASSWORD: synthetic-dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./k3s/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U synthetic -d synthetic"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  jaeger:
+    # all-in-one bundles collector + query UI. OTLP gRPC on 4317, UI on 16686.
+    image: jaegertracing/all-in-one:1.50
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"   # UI
+      - "4317:4317"     # OTLP gRPC
+      - "4318:4318"     # OTLP HTTP
+
+  echo-agent:
+    build:
+      context: ..
+      dockerfile: services/echo_agent/Dockerfile
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: synthetic
+      POSTGRES_USER: synthetic
+      POSTGRES_PASSWORD: synthetic-dev
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+      OTEL_SERVICE_NAME: echo-agent
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      jaeger:
+        condition: service_started
+
+  compliance-agent:
+    # Sprint 2 — runs the keyword-based skeleton. No API key needed.
+    build:
+      context: ..
+      dockerfile: services/compliance_agent/Dockerfile
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: synthetic
+      POSTGRES_USER: synthetic
+      POSTGRES_PASSWORD: synthetic-dev
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+      OTEL_SERVICE_NAME: compliance-officer
+    ports:
+      - "8002:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      jaeger:
+        condition: service_started
+
+  # Orchestrator is intentionally NOT auto-started: it requires ANTHROPIC_API_KEY.
+  # To run it manually:
+  #   export ANTHROPIC_API_KEY=sk-ant-...
+  #   docker compose -f infrastructure/docker-compose.dev.yml --profile with-llm up orchestrator
+  orchestrator:
+    profiles: ["with-llm"]
+    build:
+      context: ..
+      dockerfile: services/orchestrator_agent/Dockerfile
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: synthetic
+      POSTGRES_USER: synthetic
+      POSTGRES_PASSWORD: synthetic-dev
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+      OTEL_SERVICE_NAME: orchestrator
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-4-6}
+    ports:
+      - "8001:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      jaeger:
+        condition: service_started
+
+volumes:
+  pg_data:

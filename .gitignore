@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.python-version
+
+# Testing
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+coverage.xml
+.tox/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+~/.aia/
+*.pem
+*.key
+cosign.key
+
+# Editors
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Logs
+*.log
+provision.log
+verify.log

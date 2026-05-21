@@ -1,0 +1,55 @@
+services\semantic_search\embedding\cache_manager.py:7: error: Need type annotation for "cache"  [var-annotated]
+services\analyst_agent\risk_analyzer.py:13: error: Incompatible default for parameter "citations" (default has type "None", parameter has type "list[str]")  [assignment]
+services\analyst_agent\risk_analyzer.py:13: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+services\analyst_agent\risk_analyzer.py:13: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+services\analyst_agent\recommendation_generator.py:57: error: No overload variant of "get" of "dict" matches argument types "object", "int"  [call-overload]
+services\analyst_agent\recommendation_generator.py:57: note: Possible overload variants:
+services\analyst_agent\recommendation_generator.py:57: note:     def get(self, str, None = ..., /) -> int | None
+services\analyst_agent\recommendation_generator.py:57: note:     def get(self, str, int, /) -> int
+services\analyst_agent\recommendation_generator.py:57: note:     def [_T] get(self, str, _T, /) -> int | _T
+services\tool_sandbox\executor.py:159: error: "Table" not callable  [operator]
+services\tool_sandbox\executor.py:159: error: "Memory" not callable  [operator]
+services\tool_sandbox\executor.py:159: error: "SharedMemory" not callable  [operator]
+services\tool_sandbox\executor.py:159: error: "Global" not callable  [operator]
+services\semantic_search\vector_store\faiss_store.py:10: error: Incompatible default for parameter "index_path" (default has type "None", parameter has type "str")  [assignment]
+services\semantic_search\vector_store\faiss_store.py:10: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+services\semantic_search\vector_store\faiss_store.py:10: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+services\semantic_search\vector_store\faiss_store.py:64: error: Incompatible default for parameter "filters" (default has type "None", parameter has type "dict[str, Any]")  [assignment]
+services\semantic_search\vector_store\faiss_store.py:64: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+services\semantic_search\vector_store\faiss_store.py:64: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+services\tool_sandbox\tests\test_audit_adapter.py:39: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+libs\communication\redis_client.py:117: error: Argument 2 to "xadd" of "StreamCommands" has incompatible type "dict[str, str]"; expected "dict[bytes | bytearray | memoryview[int] | str | int | float, bytes | bytearray | memoryview[int] | str | int | float]"  [arg-type]
+services\echo_agent\main.py:190: error: Incompatible types in "await" (actual type "Awaitable[bool] | bool", expected type "Awaitable[Any]")  [misc]
+services\compliance_agent\main.py:228: error: Incompatible types in "await" (actual type "Awaitable[bool] | bool", expected type "Awaitable[Any]")  [misc]
+services\semantic_search\embedding\embedder.py:24: error: No overload variant of "__setitem__" of "list" matches argument types "int", "list[float]"  [call-overload]
+services\semantic_search\embedding\embedder.py:24: note: Possible overload variants:
+services\semantic_search\embedding\embedder.py:24: note:     def __setitem__(self, SupportsIndex, None, /) -> None
+services\semantic_search\embedding\embedder.py:24: note:     def __setitem__(self, slice[SupportsIndex | None, SupportsIndex | None, SupportsIndex | None], Iterable[None], /) -> None
+services\semantic_search\embedding\embedder.py:36: error: Incompatible return value type (got "list[None]", expected "list[list[float]]")  [return-value]
+services\semantic_search\search\semantic_search.py:15: error: Incompatible default for parameter "filters" (default has type "None", parameter has type "dict[str, Any]")  [assignment]
+services\semantic_search\search\semantic_search.py:15: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+services\semantic_search\search\semantic_search.py:15: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+services\semantic_search\knowledge_base\store_manager.py:51: error: Incompatible return value type (got "ComplianceDocument | None", expected "ComplianceDocument")  [return-value]
+libs\llm\client.py:50: error: Unexpected keyword argument "model" for "ChatAnthropic"  [call-arg]
+libs\llm\client.py:50: error: Unexpected keyword argument "anthropic_api_key" for "ChatAnthropic"  [call-arg]
+libs\llm\client.py:85: error: Argument "messages" to "create" of "AsyncMessages" has incompatible type "list[dict[str, Any]]"; expected "Iterable[MessageParam]"  [arg-type]
+libs\llm\client.py:86: error: Argument "tools" to "create" of "AsyncMessages" has incompatible type "list[dict[str, Any]]"; expected "Iterable[ToolParam | ToolBash20250124Param | CodeExecutionTool20250522Param | CodeExecutionTool20250825Param | CodeExecutionTool20260120Param | <11 more items>] | Omit"  [arg-type]
+services\semantic_search\api\main.py:32: error: Argument "top_k" to "search" of "SemanticSearchEngine" has incompatible type "int | None"; expected "int"  [arg-type]
+services\semantic_search\api\main.py:33: error: Argument "filters" to "search" of "SemanticSearchEngine" has incompatible type "dict[str, Any] | None"; expected "dict[str, Any]"  [arg-type]
+services\analyst_agent\analyst_service.py:107: error: Argument 2 to "assess" of "RiskAnalyzer" has incompatible type "list[str] | None"; expected "list[str]"  [arg-type]
+services\analyst_agent\main.py:102: error: Incompatible types in assignment (expression has type "ToolRegistry", variable has type "None")  [assignment]
+services\analyst_agent\main.py:110: error: "None" has no attribute "names"  [attr-defined]
+services\analyst_agent\main.py:112: error: "None" has no attribute "names"  [attr-defined]
+services\analyst_agent\main.py:148: error: Argument "llm" to "agent_loop" has incompatible type "LLMClient"; expected "ToolCapableLLMClient"  [arg-type]
+services\analyst_agent\main.py:250: error: Incompatible types in "await" (actual type "Awaitable[bool] | bool", expected type "Awaitable[Any]")  [misc]
+services\analyst_agent\tests\test_main.py:53: error: Incompatible types in assignment (expression has type "None", variable has type "Tracer")  [assignment]
+services\analyst_agent\tests\test_main.py:54: error: Incompatible types in assignment (expression has type "None", variable has type "Redis")  [assignment]
+services\analyst_agent\tests\test_main.py:57: error: Incompatible types in assignment (expression has type "_FakeRegistry", variable has type "None")  [assignment]
+services\analyst_agent\tests\test_main.py:98: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+services\analyst_agent\tests\test_main.py:99: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+services\analyst_agent\tests\test_main.py:122: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+services\orchestrator_agent\main.py:121: error: Incompatible types in assignment (expression has type "ToolRegistry", variable has type "None")  [assignment]
+services\orchestrator_agent\main.py:129: error: "None" has no attribute "names"  [attr-defined]
+services\orchestrator_agent\main.py:156: error: "None" has no attribute "ainvoke"  [attr-defined]
+services\orchestrator_agent\main.py:220: error: Incompatible types in "await" (actual type "Awaitable[bool] | bool", expected type "Awaitable[Any]")  [misc]
+Found 35 errors in 17 files (checked 100 source files)

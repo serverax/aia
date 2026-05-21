@@ -1,0 +1,17 @@
+[package]
+name = "parse_dates_v3"
+version = "0.1.0"
+edition = "2021"
+description = "Extract date references from free text. Supports YYYY-MM-DD and DD/MM/YYYY (en-GB) or MM/DD/YYYY (en-US)."
+license = "Proprietary"
+
+[[bin]]
+name = "parse_dates_v3"
+path = "src/main.rs"
+
+[dependencies]
+aia_tool_sdk = { path = "../sdk" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+regex = "1.10"
+once_cell = "1.19"

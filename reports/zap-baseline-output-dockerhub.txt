@@ -1,0 +1,65 @@
+Unable to find image 'zaproxy/zap-stable:latest' locally
+latest: Pulling from zaproxy/zap-stable
+1351c32cd85f: Pulling fs layer
+ddbbbc99d6a8: Pulling fs layer
+170422d96792: Pulling fs layer
+f76d1e457fdf: Pulling fs layer
+83d0d5dd0628: Pulling fs layer
+e24d8fec1912: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+dee7138e74a8: Pulling fs layer
+cd12c7dc114d: Pulling fs layer
+b9dccab200ce: Pulling fs layer
+b1adf7e4da33: Pulling fs layer
+ea9434457c35: Pulling fs layer
+02bcaf3db0da: Pulling fs layer
+33f18c346219: Pulling fs layer
+c00da341d6d9: Pulling fs layer
+77f8e47df0ef: Pulling fs layer
+8aa7a354ce1e: Pulling fs layer
+9bff806d9af1: Pulling fs layer
+db26a8fa6335: Pulling fs layer
+4f4fb700ef54: Already exists
+b1adf7e4da33: Download complete
+dee7138e74a8: Download complete
+1351c32cd85f: Download complete
+db26a8fa6335: Download complete
+e24d8fec1912: Download complete
+ea9434457c35: Download complete
+f76d1e457fdf: Download complete
+02bcaf3db0da: Download complete
+77f8e47df0ef: Download complete
+9bff806d9af1: Download complete
+33f18c346219: Download complete
+8aa7a354ce1e: Download complete
+ddbbbc99d6a8: Download complete
+c00da341d6d9: Download complete
+83d0d5dd0628: Download complete
+b9dccab200ce: Download complete
+cd12c7dc114d: Download complete
+170422d96792: Download complete
+170422d96792: Pull complete
+ddbbbc99d6a8: Pull complete
+83d0d5dd0628: Pull complete
+4f4fb700ef54: Pull complete
+1351c32cd85f: Pull complete
+e24d8fec1912: Pull complete
+f76d1e457fdf: Pull complete
+cd12c7dc114d: Pull complete
+b9dccab200ce: Pull complete
+b1adf7e4da33: Pull complete
+dee7138e74a8: Pull complete
+ea9434457c35: Pull complete
+02bcaf3db0da: Pull complete
+33f18c346219: Pull complete
+8aa7a354ce1e: Pull complete
+c00da341d6d9: Pull complete
+db26a8fa6335: Pull complete
+77f8e47df0ef: Pull complete
+9bff806d9af1: Pull complete
+Digest: sha256:8770b23f9e8b49038f413cb2b10c58c901e5b6717be221a22b1bcab5c9771b8a
+Status: Downloaded newer image for zaproxy/zap-stable:latest
+2026-05-21 07:32:15,489 Failed to access summary file /home/zap/zap_out.json
+Using the Automation Framework
+Automation plan failures:
+	Job spider failed to access URL http://127.0.0.1:19091 : Connect to http://127.0.0.1:19091 [/127.0.0.1] failed: Connection refused

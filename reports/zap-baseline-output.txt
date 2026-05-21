@@ -1,0 +1,4 @@
+Unable to find image 'ghcr.io/zaproxy/zaproxy:stable' locally
+docker: error getting credentials - err: exit status 1, out: ``
+
+Run 'docker run --help' for more information

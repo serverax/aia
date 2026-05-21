@@ -1,0 +1,28 @@
+# sigstore policy-controller ClusterImagePolicy.
+# Requires the public key ConfigMap created in INSTALL.md step 3.
+#
+# Apply with:
+#   kubectl apply -f infrastructure/security/cluster-image-policy.yaml
+#
+# Verify enforcement:
+#   # Try to deploy an unsigned image — should be denied:
+#   kubectl run unsigned-test -n synthetic-enterprise --image=nginx:latest
+#   # Expect: "admission webhook ... denied the request: ... no signature found"
+
+apiVersion: policy.sigstore.dev/v1beta1
+kind: ClusterImagePolicy
+metadata:
+  name: aia-images-must-be-signed
+spec:
+  images:
+    - glob: "ghcr.io/serverax/aia/**"
+  authorities:
+    - name: aia-cosign-vault-key
+      key:
+        # Set up in INSTALL.md step 3; rotated by infrastructure/security/rotate-cosign-key.sh.
+        # The ConfigMap key MUST be named `cosign.pub` and contain a PEM-encoded ECDSA public key.
+        kms: ""        # unused for PEM-key mode
+        secretRef:
+          name: aia-cosign-pubkey
+          namespace: cosign-system
+  mode: enforce         # `warn` while bootstrapping; flip to `enforce` once first signed image is verified

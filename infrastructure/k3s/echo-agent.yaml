@@ -1,0 +1,87 @@
+# Echo Agent Deployment. Reads env from a ConfigMap (non-secret) plus the
+# postgres-credentials Secret from postgres.yaml. The image reference must
+# be updated once CI publishes the agent to your registry.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: echo-agent-config
+  namespace: synthetic-enterprise
+data:
+  REDIS_HOST: redis.synthetic-enterprise.svc.cluster.local
+  REDIS_PORT: "6379"
+  POSTGRES_HOST: postgres.synthetic-enterprise.svc.cluster.local
+  POSTGRES_PORT: "5432"
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger.synthetic-enterprise.svc.cluster.local:4317
+  OTEL_SERVICE_NAME: echo-agent
+  ECHO_INPUT_STREAM: agent:echo:tasks
+  ECHO_OUTPUT_STREAM: agent:echo:results
+  ECHO_CONSUMER_GROUP: echo-agents
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: echo-agent
+  namespace: synthetic-enterprise
+spec:
+  selector:
+    app: echo-agent
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: echo-agent
+  namespace: synthetic-enterprise
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: echo-agent
+  template:
+    metadata:
+      labels:
+        app: echo-agent
+    spec:
+      serviceAccountName: agent-sa
+      containers:
+        - name: echo-agent
+          image: ghcr.io/serverax/aia/echo-agent:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: echo-agent-config
+            - secretRef:
+                name: postgres-credentials
+          env:
+            # Each pod uses its own consumer name so Redis hands out
+            # disjoint messages to the replicas.
+            - name: ECHO_CONSUMER_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          ports:
+            - containerPort: 8000
+              name: http
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"

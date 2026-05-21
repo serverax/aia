@@ -1,0 +1,258 @@
+{
+  "generated_at": "2026-05-21T16:02:48.796Z",
+  "app_url": "http://127.0.0.1:5173",
+  "total_scenarios": 31,
+  "passed_scenarios": 31,
+  "failed_scenarios": 0,
+  "all_passed": true,
+  "scenarios": [
+    {
+      "scenario": "requestor",
+      "field_count": 1,
+      "latency_ms": 246.85,
+      "under_500ms": true,
+      "passed": true,
+      "reason": null
+    },
+    {
+      "scenario": "date",
+      "field_count": 1,
+      "latency_ms": 320.36,
+      "under_500ms": true,
+      "passed": true,
+      "reason": null
+    },
+    {
+      "scenario": "requestor+date",
+      "field_count": 2,
+      "latency_ms": 213.78,
+      "under_500ms": true,
+      "passed": true,
+      "reason": null
+    },
+    {
+      "scenario": "outcome",
+      "field_count": 1,
+      "latency_ms": 319.65,
+      "under_500ms": true,
+      "passed": true,
+      "reason": null
+    },
+    {
+      "scenario": "requestor+outcome",
+      "field_count": 2,
+      "latency_ms": 261.26,
+      "under_500ms": true,
+      "passed": true,
+      "reason": null
+    },
+    {
+      "scenario": "date+outcome",
+      "field_count": 2,
+      "latency_ms": 245.42,
+      "under_500ms": true,
+      "passed": true,
+      "reason": null
+    },
+    {
+      "scenario": "requestor+date+outcome",
+      "field_count": 3,
+      "latency_ms": 213.31,
+      "under_500ms": true,
+      "passed": true,
+      "reason": null
+    },
+    {
+      "scenario": "policy",
+      "field_count": 1,
+      "latency_ms": 465.83,
+      "under_500ms": true,
+      "passed": true,
+      "reason": null
+    },
+    {
+      "scenario": "requestor+policy",
+      "field_count": 2,
+      "latency_ms": 199.17,
+      "under_500ms": true,
+      "passed": true,
+      "reason": null
+    },
+    {
+      "scenario": "date+policy",
+      "field_count": 2,
+      "latency_ms": 352.79,
+      "under_500ms": true,
+      "passed": true,
+      "reason": null
+    },
+    {
+      "scenario": "requestor+date+policy",
+      "field_count": 3,
+      "latency_ms": 298.83,
+      "under_500ms": true,
+      "passed": true,
+      "reason": null
+    },
+    {
+      "scenario": "outcome+policy",
+      "field_count": 2,
+      "latency_ms": 245.94,
+      "under_500ms": true,
+      "passed": true,
+      "reason": null
+    },
+    {
+      "scenario": "requestor+outcome+policy",
+      "field_count": 3,
+      "latency_ms": 200.18,
+      "under_500ms": true,
+      "passed": true,
+      "reason": null
+    },
+    {
+      "scenario": "date+outcome+policy",
+      "field_count": 3,
+      "latency_ms": 290.39,
+      "under_500ms": true,
+      "passed": true,
+      "reason": null
+    },
+    {
+      "scenario": "requestor+date+outcome+policy",
+      "field_count": 4,
+      "latency_ms": 196.83,
+      "under_500ms": true,
+      "passed": true,
+      "reason": null
+    },
+    {
+      "scenario": "comment",
+      "field_count": 1,
+      "latency_ms": 288.99,
+      "under_500ms": true,
+      "passed": true,
+      "reason": null
+    },
+    {
+      "scenario": "requestor+comment",
+      "field_count": 2,
+      "latency_ms": 266,
+      "under_500ms": true,
+      "passed": true,
+      "reason": null
+    },
+    {
+      "scenario": "date+comment",
+      "field_count": 2,
+      "latency_ms": 243.29,
+      "under_500ms": true,
+      "passed": true,
+      "reason": null
+    },
+    {
+      "scenario": "requestor+date+comment",
+      "field_count": 3,
+      "latency_ms": 213,
+      "under_500ms": true,
+      "passed": true,
+      "reason": null
+    },
+    {
+      "scenario": "outcome+comment",
+      "field_count": 2,
+      "latency_ms": 326.87,
+      "under_500ms": true,
+      "passed": true,
+      "reason": null
+    },
+    {
+      "scenario": "requestor+outcome+comment",
+      "field_count": 3,
+      "latency_ms": 201.23,
+      "under_500ms": true,
+      "passed": true,
+      "reason": null
+    },
+    {
+      "scenario": "date+outcome+comment",
+      "field_count": 3,
+      "latency_ms": 229.47,
+      "under_500ms": true,
+      "passed": true,
+      "reason": null
+    },
+    {
+      "scenario": "requestor+date+outcome+comment",
+      "field_count": 4,
+      "latency_ms": 211.1,
+      "under_500ms": true,
+      "passed": true,
+      "reason": null
+    },
+    {
+      "scenario": "policy+comment",
+      "field_count": 2,
+      "latency_ms": 300.68,
+      "under_500ms": true,
+      "passed": true,
+      "reason": null
+    },
+    {
+      "scenario": "requestor+policy+comment",
+      "field_count": 3,
+      "latency_ms": 238.12,
+      "under_500ms": true,
+      "passed": true,
+      "reason": null
+    },
+    {
+      "scenario": "date+policy+comment",
+      "field_count": 3,
+      "latency_ms": 347.44,
+      "under_500ms": true,
+      "passed": true,
+      "reason": null
+    },
+    {
+      "scenario": "requestor+date+policy+comment",
+      "field_count": 4,
+      "latency_ms": 211.69,
+      "under_500ms": true,
+      "passed": true,
+      "reason": null
+    },
+    {
+      "scenario": "outcome+policy+comment",
+      "field_count": 3,
+      "latency_ms": 349.55,
+      "under_500ms": true,
+      "passed": true,
+      "reason": null
+    },
+    {
+      "scenario": "requestor+outcome+policy+comment",
+      "field_count": 4,
+      "latency_ms": 286.71,
+      "under_500ms": true,
+      "passed": true,
+      "reason": null
+    },
+    {
+      "scenario": "date+outcome+policy+comment",
+      "field_count": 4,
+      "latency_ms": 333.65,
+      "under_500ms": true,
+      "passed": true,
+      "reason": null
+    },
+    {
+      "scenario": "requestor+date+outcome+policy+comment",
+      "field_count": 5,
+      "latency_ms": 355.56,
+      "under_500ms": true,
+      "passed": true,
+      "reason": null
+    }
+  ]
+}

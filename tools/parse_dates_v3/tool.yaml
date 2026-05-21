@@ -1,0 +1,12 @@
+name: parse_dates_v3
+version: 0.1.0
+description: Extract date references from text (YYYY-MM-DD and DD/MM/YYYY or MM/DD/YYYY).
+owner: claude-code
+# Path is relative to this tool.yaml's directory. The build script copies the
+# compiled artifact into dist/ alongside its .sig file.
+wasm: dist/parse_dates_v3.wasm
+schema: schema.json
+capability_class: small
+allowed_agents:
+  - analyst
+  - compliance_officer

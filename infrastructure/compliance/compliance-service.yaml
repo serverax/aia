@@ -1,0 +1,138 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: compliance-service-code
+  namespace: synthetic-enterprise
+data:
+  server.py: |
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+    import json
+
+    class Handler(BaseHTTPRequestHandler):
+        def _send(self, status, payload):
+            body = json.dumps(payload).encode("utf-8")
+            self.send_response(status)
+            self.send_header("content-type", "application/json")
+            self.send_header("content-length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def do_GET(self):
+            if self.path in ("/health", "/ready"):
+                self._send(200, {"status": "ready" if self.path == "/ready" else "ok"})
+            elif self.path == "/compliance/kill-switch":
+                self._send(200, {
+                    "global_enabled": False,
+                    "disabled_agents": [],
+                    "disabled_projects": [],
+                    "disabled_capabilities": [],
+                    "reason": "placeholder runtime until registry image is available",
+                    "policy_version": "placeholder",
+                })
+            else:
+                self._send(404, {"error": "not found"})
+
+        def do_POST(self):
+            if self.path == "/compliance/evaluate":
+                self._send(200, {
+                    "allowed": True,
+                    "reason": "allowed",
+                    "source": "placeholder runtime until registry image is available",
+                    "policy_version": "placeholder",
+                })
+            else:
+                self._send(404, {"error": "not found"})
+
+        def log_message(self, fmt, *args):
+            return
+
+    ThreadingHTTPServer(("0.0.0.0", 8000), Handler).serve_forever()
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: agent-sa
+  namespace: synthetic-enterprise
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: compliance-service
+  namespace: synthetic-enterprise
+  labels:
+    app: compliance-service
+spec:
+  selector:
+    app: compliance-service
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: compliance-service
+  namespace: synthetic-enterprise
+  labels:
+    app: compliance-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: compliance-service
+  template:
+    metadata:
+      labels:
+        app: compliance-service
+    spec:
+      serviceAccountName: agent-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: compliance-service
+          image: python:3.11-alpine
+          imagePullPolicy: IfNotPresent
+          command:
+            - python
+            - /app/server.py
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - containerPort: 8000
+              name: http
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          volumeMounts:
+            - name: compliance-service-code
+              mountPath: /app
+              readOnly: true
+      volumes:
+        - name: compliance-service-code
+          configMap:
+            name: compliance-service-code

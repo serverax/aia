@@ -1,0 +1,165 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  REGISTRY: ghcr.io
+  PY_VERSION: "3.11"
+
+jobs:
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PY_VERSION }}
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - name: black --check
+        run: black --check libs services tests
+      - name: isort --check
+        run: isort --check-only libs services tests
+      - name: flake8
+        # Match pyproject's line-length=100. E203/W503 are black-incompatible.
+        run: flake8 libs services tests --max-line-length=100 --extend-ignore=E203,W503
+
+  unit-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PY_VERSION }}
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - name: pytest unit
+        run: |
+          pytest tests/unit \
+                 services/echo_agent/tests \
+                 services/orchestrator_agent/tests \
+                 services/compliance_agent/tests \
+                 services/analyst_agent/tests \
+                 services/tool_sandbox/tests \
+                 -m unit \
+                 --cov=libs --cov=services --cov-report=xml --cov-report=term -v
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-xml
+          path: coverage.xml
+
+  integration-test:
+    needs: unit-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PY_VERSION }}
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - name: Bring up dev stack
+        run: |
+          docker compose -f infrastructure/docker-compose.dev.yml up -d \
+            postgres redis jaeger compliance-agent echo-agent
+      - name: Wait for services
+        run: |
+          for i in {1..30}; do
+            if docker compose -f infrastructure/docker-compose.dev.yml ps \
+                | grep -E 'compliance-agent|echo-agent' | grep -q 'Up'; then
+              echo "agents up"; exit 0
+            fi
+            sleep 2
+          done
+          docker compose -f infrastructure/docker-compose.dev.yml logs
+          exit 1
+      - name: pytest integration
+        env:
+          REDIS_HOST: localhost
+          POSTGRES_HOST: localhost
+        run: pytest tests/integration -m integration -v
+      - name: Dump logs on failure
+        if: failure()
+        run: docker compose -f infrastructure/docker-compose.dev.yml logs --tail=200
+      - name: Tear down
+        if: always()
+        run: docker compose -f infrastructure/docker-compose.dev.yml down -v
+
+  build-images:
+    needs: integration-test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: echo_agent
+            image: echo-agent
+          - service: orchestrator_agent
+            image: orchestrator-agent
+          - service: compliance_agent
+            image: compliance-agent
+          - service: analyst_agent
+            image: analyst-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: services/${{ matrix.service }}/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.image }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.image }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy-staging:
+    # Gated by the "staging" environment. Configure it in GitHub repo settings
+    # with KUBECONFIG_STAGING secret + manual approval if desired.
+    needs: build-images
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure kubectl
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG_STAGING }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+      - name: Apply manifests
+        run: |
+          kubectl apply -f infrastructure/k3s/namespace.yaml
+          kubectl apply -f infrastructure/k3s/postgres.yaml
+          kubectl apply -f infrastructure/k3s/redis.yaml
+          kubectl apply -f infrastructure/k3s/jaeger.yaml
+          # Update image tags to the just-built SHA.
+          for svc in echo-agent orchestrator-agent compliance-agent; do
+            kubectl -n synthetic-enterprise set image \
+              "deployment/$svc" \
+              "$svc=${{ env.REGISTRY }}/${{ github.repository }}/$svc:${{ github.sha }}" \
+              || kubectl apply -f infrastructure/k3s/$svc.yaml
+          done
+      - name: Wait for rollout
+        run: |
+          kubectl -n synthetic-enterprise rollout status deployment/echo-agent --timeout=5m
+          kubectl -n synthetic-enterprise rollout status deployment/compliance-agent --timeout=5m
+          kubectl -n synthetic-enterprise rollout status deployment/orchestrator-agent --timeout=5m

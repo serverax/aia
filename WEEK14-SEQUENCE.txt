@@ -1,0 +1,21 @@
+WEEK 14 DEPLOYMENT SEQUENCE
+===========================
+When notified: "K3s ready, deploy Sprint 7"
+
+Step 1: powershell scripts/testing/pre_week14_checklist.ps1
+        Expected: READY TO DEPLOY
+
+Step 2: kubectl apply -f infrastructure/compliance/
+        Expected: resource created / resource configured
+
+Step 3: powershell scripts/testing/sprint7_cluster_smoke.ps1
+        Expected: ALL TESTS PASSED
+
+Step 4: Report
+        ChatGPT | Sprint 7 | DEPLOYED & VALIDATED
+        Compliance controls: [working/issue]
+        Audit logging: [functional/issue]
+
+If any step fails:
+        powershell scripts/deployment/sprint7_rollback.ps1
+        Then diagnose and report blocker.

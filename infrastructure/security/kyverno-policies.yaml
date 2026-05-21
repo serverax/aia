@@ -1,0 +1,128 @@
+# Kyverno cluster policies — pod hardening invariants for the
+# synthetic-enterprise namespace. Applied after Kyverno install (see
+# infrastructure/security/INSTALL.md step 4).
+#
+# Each rule sets validationFailureAction: Enforce, which means matching
+# pods that violate the rule are rejected at admission time. For initial
+# rollout you can switch to Audit, observe which existing pods fail, fix
+# them, then flip to Enforce.
+
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: aia-readonly-root-fs
+  annotations:
+    policies.kyverno.io/title: "Read-only root filesystem"
+    policies.kyverno.io/description: "All containers in synthetic-enterprise must mount root FS read-only."
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: enforce-readonly-root-fs
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+              namespaces: [synthetic-enterprise]
+      validate:
+        message: "spec.containers[*].securityContext.readOnlyRootFilesystem must be true"
+        pattern:
+          spec:
+            containers:
+              - securityContext:
+                  readOnlyRootFilesystem: true
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: aia-no-privilege-escalation
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: deny-privilege-escalation
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+              namespaces: [synthetic-enterprise]
+      validate:
+        message: "containers must set allowPrivilegeEscalation: false and runAsNonRoot: true"
+        pattern:
+          spec:
+            containers:
+              - securityContext:
+                  allowPrivilegeEscalation: false
+                  runAsNonRoot: true
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: aia-drop-all-capabilities
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: drop-all-caps
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+              namespaces: [synthetic-enterprise]
+      validate:
+        message: "containers must drop ALL Linux capabilities"
+        pattern:
+          spec:
+            containers:
+              - securityContext:
+                  capabilities:
+                    drop:
+                      - "ALL"
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: aia-no-host-mounts
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: forbid-hostpath
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+              namespaces: [synthetic-enterprise]
+      validate:
+        message: "hostPath volumes are forbidden in synthetic-enterprise"
+        pattern:
+          spec:
+            =(volumes):
+              - X(hostPath): "null"
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: aia-require-signed-image-pattern
+  annotations:
+    policies.kyverno.io/description: |
+      Belt-and-suspenders. sigstore/policy-controller is the actual signature
+      verifier (see cluster-image-policy.yaml). This policy just blocks any
+      :latest tag and forces digest references for namespace pods, so even
+      a sigstore-bypass would face this second wall.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: forbid-latest-and-require-digest
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+              namespaces: [synthetic-enterprise]
+      validate:
+        message: "images must use a digest (@sha256:...) or a non-:latest tag from ghcr.io/serverax/aia/**"
+        pattern:
+          spec:
+            containers:
+              - image: "!*:latest"

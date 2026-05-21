@@ -1,0 +1,16 @@
+# Qdrant Helm Values
+persistence:
+  enabled: true
+  size: 10Gi
+
+service:
+  type: ClusterIP
+  port: 6333
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 1Gi
+  requests:
+    cpu: 100m
+    memory: 512Mi

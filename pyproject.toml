@@ -1,0 +1,35 @@
+[project]
+name = "synthetic-enterprise"
+version = "0.1.0"
+description = "Synthetic Enterprise - multi-agent AI platform"
+requires-python = ">=3.11"
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+known_first_party = ["libs", "services"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "services"]
+python_files = ["test_*.py"]
+asyncio_mode = "auto"
+addopts = "-ra --strict-markers"
+markers = [
+    "integration: requires docker-compose dev stack (slow)",
+    "unit: fast in-process tests with no external dependencies",
+    "security: requires a live K3s cluster with Sprint 6 admission policies applied",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["libs", "services", "scripts"]
+omit = ["*/tests/*", "*/test_*.py"]
+
+[tool.mypy]
+python_version = "3.11"
+strict_optional = true
+ignore_missing_imports = true

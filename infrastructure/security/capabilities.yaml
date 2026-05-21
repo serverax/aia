@@ -1,0 +1,91 @@
+# Sprint 6 capability matrix — single source of truth.
+# Consumed by scripts/security/generate_policies.py to produce:
+#   infrastructure/k3s/network-policies-per-agent.yaml
+#   infrastructure/k3s/rbac-per-agent.yaml
+#
+# Editing this file + re-running the generator + committing both is the
+# only supported way to change agent capabilities. Hand-editing the
+# generated YAMLs is a Sprint 6 audit finding.
+
+# Schema version. Bump if the generator's input contract changes.
+version: 1
+
+# Namespace these policies apply to.
+namespace: synthetic-enterprise
+
+# In-cluster Services agents may reach. Keys are friendly names used in
+# each agent's `network.egress_allow`. Each entry lists the Service's
+# canonical label selector and the port(s) the agent needs to hit.
+services:
+  redis:
+    selector: { app: redis }
+    ports:
+      - { port: 6379, protocol: TCP }
+  postgres:
+    selector: { app: postgres }
+    ports:
+      - { port: 5432, protocol: TCP }
+  jaeger:
+    selector: { app: jaeger }
+    ports:
+      - { port: 4317, protocol: TCP }   # OTLP gRPC
+      - { port: 4318, protocol: TCP }   # OTLP HTTP
+  qdrant:
+    selector: { app: qdrant }
+    ports:
+      - { port: 6333, protocol: TCP }
+      - { port: 6334, protocol: TCP }
+  milvus:
+    selector: { app: milvus }
+    ports:
+      - { port: 19530, protocol: TCP }
+
+# External egress allowances. Each entry produces an `ipBlock` rule that
+# allows the public internet EXCEPT the listed private CIDRs (RFC 1918).
+# Agents without entries here cannot reach anything outside the cluster.
+external:
+  anthropic:
+    ports:
+      - { port: 443, protocol: TCP }
+    description: "api.anthropic.com — Claude API"
+
+# Per-agent capability declarations.
+# `pod_selector` matches the app= label on each agent's Deployment.
+# `network.egress_allow` lists service/external keys from above.
+# `rbac.secrets` / `rbac.configmaps` are exact resource names the agent
+# may get + list (no other verbs, no other resources).
+agents:
+
+  echo:
+    pod_selector: { app: echo-agent }
+    network:
+      egress_allow: [redis, postgres, jaeger]
+    rbac:
+      secrets: [postgres-credentials]
+      configmaps: [echo-agent-config]
+
+  orchestrator:
+    pod_selector: { app: orchestrator-agent }
+    network:
+      egress_allow: [redis, postgres, jaeger]
+      external_allow: [anthropic]
+    rbac:
+      secrets: [postgres-credentials, llm-api-keys]
+      configmaps: [orchestrator-agent-config]
+
+  compliance:
+    pod_selector: { app: compliance-agent }
+    network:
+      egress_allow: [redis, postgres, jaeger, qdrant]
+    rbac:
+      secrets: [postgres-credentials]
+      configmaps: [compliance-agent-config]
+
+  analyst:
+    pod_selector: { app: analyst-agent }
+    network:
+      egress_allow: [redis, postgres, jaeger, milvus, qdrant]
+      external_allow: [anthropic]
+    rbac:
+      secrets: [postgres-credentials, llm-api-keys]
+      configmaps: [analyst-agent-config]

@@ -1,0 +1,51 @@
+{
+  "generated_at": "2026-05-21T20:56:43.708Z",
+  "app_url": "http://127.0.0.1:5173",
+  "total_scenarios": 6,
+  "passed_scenarios": 6,
+  "failed_scenarios": 0,
+  "all_passed": true,
+  "detail_open_latency_ms": {
+    "samples": [
+      192.02,
+      230.08
+    ],
+    "p95": 230.08,
+    "threshold": 500,
+    "under_threshold": true
+  },
+  "scenarios": [
+    {
+      "scenario": "filtered item loads explanation payload structure",
+      "passed": true,
+      "latency_ms": 192.02,
+      "details": "summary=72, clauses=2, path=2"
+    },
+    {
+      "scenario": "confidence badge and factor tooltip render correctly",
+      "passed": true,
+      "details": "badge=Low (0.42)"
+    },
+    {
+      "scenario": "low confidence guardrail appears in filtered detail view",
+      "passed": true,
+      "details": "guardrailVisible=true"
+    },
+    {
+      "scenario": "guardrail requires explicit acknowledgement before approve",
+      "passed": true,
+      "details": "before=true, after=false"
+    },
+    {
+      "scenario": "explanation panel shows clause rationale and decision path",
+      "passed": true,
+      "details": "rationale=true, path=true"
+    },
+    {
+      "scenario": "switching between filtered items updates detail pane",
+      "passed": true,
+      "latency_ms": 230.08,
+      "details": "rowCount=2, switched=true"
+    }
+  ]
+}

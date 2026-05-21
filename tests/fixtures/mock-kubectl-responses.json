@@ -1,0 +1,38 @@
+{
+  "context": {
+    "status": 0,
+    "output": "talos-synthetic-enterprise\n"
+  },
+  "nodes": {
+    "status": 0,
+    "output": "NAME   STATUS   ROLES           AGE   VERSION\ncp1    Ready    control-plane   5d    v1.36.0\ncp2    Ready    control-plane   5d    v1.36.0\ncp3    Ready    control-plane   5d    v1.36.0\n"
+  },
+  "deployments": {
+    "status": 0,
+    "output": "NAME                 READY   UP-TO-DATE   AVAILABLE   AGE\ncompliance-service   2/2     2            2           1h\n"
+  },
+  "pods": {
+    "status": 0,
+    "output": "NAME                                  READY   STATUS    RESTARTS   AGE   IP\ncompliance-service-abc                1/1     Running   0          1h    10.244.0.10\ncompliance-service-def                1/1     Running   0          1h    10.244.1.10\n"
+  },
+  "services": {
+    "status": 0,
+    "output": "NAME                 TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)\ncompliance-service   ClusterIP   10.104.240.98   <none>        8000/TCP\n"
+  },
+  "endpoints": {
+    "status": 0,
+    "output": "NAME                 ENDPOINTS                         AGE\ncompliance-service   10.244.0.10:8000,10.244.1.10:8000 1h\n"
+  },
+  "events": {
+    "status": 0,
+    "output": "LAST SEEN   TYPE     REASON              OBJECT                         MESSAGE\n1h          Normal   SuccessfulCreate    pod/compliance-service-abc     Created pod\n"
+  },
+  "rollout_history": {
+    "status": 0,
+    "output": "deployment.apps/compliance-service\nREVISION  CHANGE-CAUSE\n1         <none>\n"
+  },
+  "rollout_status": {
+    "status": 0,
+    "output": "deployment \"compliance-service\" successfully rolled out\n"
+  }
+}

@@ -1,0 +1,84 @@
+# Compliance Officer Agent — Sprint 2 skeleton (rule-based). No LLM key
+# required. Sprint 3 swaps the rule engine for a Qdrant-backed RAG lookup.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: compliance-agent-config
+  namespace: synthetic-enterprise
+data:
+  REDIS_HOST: redis.synthetic-enterprise.svc.cluster.local
+  REDIS_PORT: "6379"
+  POSTGRES_HOST: postgres.synthetic-enterprise.svc.cluster.local
+  POSTGRES_PORT: "5432"
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger.synthetic-enterprise.svc.cluster.local:4317
+  OTEL_SERVICE_NAME: compliance-officer
+  COMPLIANCE_INPUT_STREAM: agent:compliance_officer:tasks
+  COMPLIANCE_RESULT_STREAM: orchestrator:replies
+  COMPLIANCE_CONSUMER_GROUP: compliance-officers
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: compliance-agent
+  namespace: synthetic-enterprise
+spec:
+  selector:
+    app: compliance-agent
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: compliance-agent
+  namespace: synthetic-enterprise
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: compliance-agent
+  template:
+    metadata:
+      labels:
+        app: compliance-agent
+    spec:
+      serviceAccountName: agent-sa
+      containers:
+        - name: compliance-agent
+          image: ghcr.io/serverax/aia/compliance-agent:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: compliance-agent-config
+            - secretRef:
+                name: postgres-credentials
+          env:
+            - name: COMPLIANCE_CONSUMER_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          ports:
+            - containerPort: 8000
+              name: http
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "1Gi"

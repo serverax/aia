@@ -1,0 +1,85 @@
+# Orchestrator deployment. Requires the llm-api-keys Secret to be created
+# first (see llm-secret.yaml).
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: orchestrator-agent-config
+  namespace: synthetic-enterprise
+data:
+  REDIS_HOST: redis.synthetic-enterprise.svc.cluster.local
+  REDIS_PORT: "6379"
+  POSTGRES_HOST: postgres.synthetic-enterprise.svc.cluster.local
+  POSTGRES_PORT: "5432"
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger.synthetic-enterprise.svc.cluster.local:4317
+  OTEL_SERVICE_NAME: orchestrator
+  ANTHROPIC_MODEL: claude-sonnet-4-6
+  ORCHESTRATOR_REQUEST_STREAM: orchestrator:requests
+  ORCHESTRATOR_REPLY_STREAM: orchestrator:replies
+  ORCHESTRATOR_MAX_CONCURRENT_DISPATCHES: "20"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: orchestrator-agent
+  namespace: synthetic-enterprise
+spec:
+  selector:
+    app: orchestrator-agent
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orchestrator-agent
+  namespace: synthetic-enterprise
+spec:
+  # Keep at 1 in Sprint 2 — the monitor uses bare XREAD (not consumer
+  # groups) on `orchestrator:replies` so scaling out would fan out replies.
+  # Sprint 8 hardening should migrate the monitor to consumer groups.
+  replicas: 1
+  selector:
+    matchLabels:
+      app: orchestrator-agent
+  template:
+    metadata:
+      labels:
+        app: orchestrator-agent
+    spec:
+      serviceAccountName: agent-sa
+      containers:
+        - name: orchestrator-agent
+          image: ghcr.io/serverax/aia/orchestrator-agent:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: orchestrator-agent-config
+            - secretRef:
+                name: postgres-credentials
+            - secretRef:
+                name: llm-api-keys
+          ports:
+            - containerPort: 8000
+              name: http
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "2Gi"

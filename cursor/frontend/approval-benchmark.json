@@ -1,0 +1,11 @@
+{
+  "page": "ApprovalRequestPage",
+  "load_ms": 654.19,
+  "under_2s": true,
+  "bulk_action_ms": 331.58,
+  "bulk_under_2s": true,
+  "search_action_ms": 144.95,
+  "search_under_500ms": true,
+  "filter_action_ms": 130.97,
+  "filter_under_500ms": true
+}

@@ -1,0 +1,30 @@
+{
+  "started_at": "2026-05-21T15:44:25.280Z",
+  "base_url": "http://127.0.0.1:8080",
+  "endpoints": {
+    "evaluate": "http://127.0.0.1:8080/evaluate",
+    "approvals": "http://127.0.0.1:8080/api/v1/approval-requests"
+  },
+  "checks": {
+    "evaluate_status_ok": false,
+    "evaluate_response_shape_ok": false,
+    "evaluate_under_2s": true,
+    "approvals_status_ok": false,
+    "approvals_shape_ok": false,
+    "explanation_present": false,
+    "confidence_present": false
+  },
+  "latencies_ms": {
+    "evaluate": 95.4,
+    "approvals": 6.26
+  },
+  "notes": [
+    "Evaluate endpoint did not return JSON object.",
+    "No approval request included decision_explanation.",
+    "No approval request included recommendation_confidence."
+  ],
+  "graceful_fallback_mode": true,
+  "finished_at": "2026-05-21T15:44:25.394Z",
+  "passed": false,
+  "graceful_fallback_ready": true
+}

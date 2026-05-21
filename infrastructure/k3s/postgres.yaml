@@ -1,0 +1,110 @@
+# Sprint 1 Postgres: lightweight StatefulSet deployed into the
+# synthetic-enterprise namespace. For production multi-replica HA, swap to
+# the Bitnami Helm chart that provision-cluster-full.sh installs into the
+# `databases` namespace.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init
+  namespace: synthetic-enterprise
+data:
+  init.sql: |
+    CREATE TABLE IF NOT EXISTS audit_log (
+        id           BIGSERIAL PRIMARY KEY,
+        timestamp    TIMESTAMPTZ NOT NULL,
+        agent_id     TEXT        NOT NULL,
+        message_id   TEXT        NOT NULL,
+        task_id      TEXT        NOT NULL,
+        direction    TEXT        NOT NULL CHECK (direction IN ('in', 'out')),
+        message_type TEXT        NOT NULL,
+        status       TEXT        NOT NULL,
+        payload      JSONB       NOT NULL DEFAULT '{}'::jsonb
+    );
+    CREATE INDEX IF NOT EXISTS audit_log_task_idx  ON audit_log (task_id);
+    CREATE INDEX IF NOT EXISTS audit_log_agent_idx ON audit_log (agent_id, timestamp DESC);
+    CREATE INDEX IF NOT EXISTS audit_log_msg_idx   ON audit_log (message_id);
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-credentials
+  namespace: synthetic-enterprise
+type: Opaque
+stringData:
+  POSTGRES_DB: synthetic
+  POSTGRES_USER: synthetic
+  POSTGRES_PASSWORD: REPLACE_ME_BEFORE_APPLY
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: synthetic-enterprise
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  clusterIP: None  # headless: stable DNS for the StatefulSet
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: synthetic-enterprise
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          envFrom:
+            - secretRef:
+                name: postgres-credentials
+          ports:
+            - containerPort: 5432
+              name: postgres
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+            - name: init
+              mountPath: /docker-entrypoint-initdb.d
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "synthetic", "-d", "synthetic"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "synthetic", "-d", "synthetic"]
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "2Gi"
+      volumes:
+        - name: init
+          configMap:
+            name: postgres-init
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 20Gi

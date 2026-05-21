@@ -1,0 +1,71 @@
+{
+  "generated_at": "2026-05-21T16:08:07.969Z",
+  "app_url": "http://127.0.0.1:5173",
+  "total_scenarios": 9,
+  "passed_scenarios": 9,
+  "failed_scenarios": 0,
+  "all_passed": true,
+  "latency_summary_ms": {
+    "p50": 212.66,
+    "p95": 231.84,
+    "max": 231.84,
+    "threshold": 500,
+    "all_under_threshold": true
+  },
+  "scenarios": [
+    {
+      "scenario": "built-in my pending approvals",
+      "passed": true,
+      "latency_ms": 229.85,
+      "details": "outcome=pending"
+    },
+    {
+      "scenario": "built-in escalated items",
+      "passed": true,
+      "latency_ms": 212.66,
+      "details": "outcome=escalated, comment=Escalated"
+    },
+    {
+      "scenario": "built-in last 24 hours",
+      "passed": true,
+      "latency_ms": 210.64,
+      "details": "from=2026-05-20, to=2026-05-21"
+    },
+    {
+      "scenario": "built-in high confidence",
+      "passed": true,
+      "latency_ms": 221.81,
+      "details": "comment=positive"
+    },
+    {
+      "scenario": "custom save preset",
+      "passed": true,
+      "latency_ms": 226.44,
+      "details": "created=true"
+    },
+    {
+      "scenario": "custom apply preset",
+      "passed": true,
+      "latency_ms": 192.32,
+      "details": "requestor=editor@synthetic.io, outcome=approved"
+    },
+    {
+      "scenario": "custom modify preset",
+      "passed": true,
+      "latency_ms": 212.14,
+      "details": "updated=true"
+    },
+    {
+      "scenario": "custom delete preset",
+      "passed": true,
+      "latency_ms": 168.55,
+      "details": "exists_after_delete=false"
+    },
+    {
+      "scenario": "preset persistence across reload",
+      "passed": true,
+      "latency_ms": 231.84,
+      "details": "exists=true, requestor=compliance_officer@synthetic.io"
+    }
+  ]
+}

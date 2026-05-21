@@ -1,0 +1,868 @@
+************* Module services.analyst_agent.analyst_agent
+services\analyst_agent\analyst_agent.py:22: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\analyst_agent.py:25: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\analyst_agent.py:28: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\analyst_agent.py:31: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\analyst_agent.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+services\analyst_agent\analyst_agent.py:7: [C0115(missing-class-docstring), DomainAnalystAgent] Missing class docstring
+services\analyst_agent\analyst_agent.py:13: [W0613(unused-argument), DomainAnalystAgent.analyze] Unused argument 'context'
+services\analyst_agent\analyst_agent.py:7: [R0903(too-few-public-methods), DomainAnalystAgent] Too few public methods (1/2)
+services\analyst_agent\analyst_agent.py:1: [W0611(unused-import), ] Unused import asyncio
+services\analyst_agent\analyst_agent.py:2: [W0611(unused-import), ] Unused List imported from typing
+************* Module services.analyst_agent.analyst_service
+services\analyst_agent\analyst_service.py:55: [C0301(line-too-long), ] Line too long (104/100)
+services\analyst_agent\analyst_service.py:57: [C0301(line-too-long), ] Line too long (114/100)
+services\analyst_agent\analyst_service.py:77: [C0301(line-too-long), ] Line too long (140/100)
+services\analyst_agent\analyst_service.py:90: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\analyst_service.py:93: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\analyst_service.py:94: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\analyst_service.py:97: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\analyst_service.py:122: [C0301(line-too-long), ] Line too long (116/100)
+services\analyst_agent\analyst_service.py:123: [C0301(line-too-long), ] Line too long (117/100)
+services\analyst_agent\analyst_service.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+services\analyst_agent\analyst_service.py:13: [C0115(missing-class-docstring), AnalysisRequest] Missing class docstring
+services\analyst_agent\analyst_service.py:17: [C0115(missing-class-docstring), AnalysisResponse] Missing class docstring
+services\analyst_agent\analyst_service.py:25: [C0115(missing-class-docstring), RiskRequest] Missing class docstring
+services\analyst_agent\analyst_service.py:29: [C0115(missing-class-docstring), ApprovalWorkflowPayload] Missing class docstring
+services\analyst_agent\analyst_service.py:38: [C0115(missing-class-docstring), ApprovalResponse] Missing class docstring
+services\analyst_agent\analyst_service.py:81: [W0707(raise-missing-from), evaluate_approval_payload] Consider explicitly re-raising using 'raise HTTPException(status_code=500, detail=str(e)) from e'
+services\analyst_agent\analyst_service.py:101: [W0707(raise-missing-from), analyze_task] Consider explicitly re-raising using 'raise HTTPException(status_code=500, detail=str(e)) from e'
+services\analyst_agent\analyst_service.py:110: [W0707(raise-missing-from), assess_risks] Consider explicitly re-raising using 'raise HTTPException(status_code=500, detail=str(e)) from e'
+services\analyst_agent\analyst_service.py:3: [C0411(wrong-import-order), ] standard import "typing.List" should be placed before third party imports "fastapi.FastAPI", "pydantic.BaseModel"
+************* Module services.analyst_agent.confidence
+services\analyst_agent\confidence.py:14: [C0301(line-too-long), ] Line too long (118/100)
+services\analyst_agent\confidence.py:22: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\confidence.py:29: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\confidence.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+services\analyst_agent\confidence.py:4: [C0115(missing-class-docstring), ConfidenceFactors] Missing class docstring
+services\analyst_agent\confidence.py:9: [C0115(missing-class-docstring), ConfidenceScore] Missing class docstring
+services\analyst_agent\confidence.py:2: [C0411(wrong-import-order), ] standard import "typing.Dict" should be placed before third party import "pydantic.BaseModel"
+services\analyst_agent\confidence.py:2: [W0611(unused-import), ] Unused Dict imported from typing
+services\analyst_agent\confidence.py:2: [W0611(unused-import), ] Unused Any imported from typing
+************* Module services.analyst_agent.main
+services\analyst_agent\main.py:43: [C0115(missing-class-docstring), Settings] Missing class docstring
+services\analyst_agent\main.py:70: [C0415(import-outside-toplevel), _build_tool_verifier] Import outside toplevel (services.tool_sandbox.CosignVerifier)
+services\analyst_agent\main.py:71: [C0415(import-outside-toplevel), _build_tool_verifier] Import outside toplevel (services.tool_sandbox.verifier.AllowAllVerifier)
+services\analyst_agent\main.py:80: [C0115(missing-class-docstring), AnalystAgent] Missing class docstring
+services\analyst_agent\main.py:81: [W0621(redefined-outer-name), AnalystAgent.__init__] Redefining name 'settings' from outer scope (line 66)
+services\analyst_agent\main.py:90: [C0116(missing-function-docstring), AnalystAgent.start] Missing function or method docstring
+services\analyst_agent\main.py:94: [C0415(import-outside-toplevel), AnalystAgent.start] Import outside toplevel (services.tool_sandbox.ToolRegistry, services.tool_sandbox.WasmExecutor)
+services\analyst_agent\main.py:95: [C0415(import-outside-toplevel), AnalystAgent.start] Import outside toplevel (services.tool_sandbox.audit_adapter.PostgresToolAuditSink)
+services\analyst_agent\main.py:115: [C0116(missing-function-docstring), AnalystAgent.close] Missing function or method docstring
+services\analyst_agent\main.py:121: [C0116(missing-function-docstring), AnalystAgent.run] Missing function or method docstring
+services\analyst_agent\main.py:182: [W0718(broad-exception-caught), AnalystAgent._handle] Catching too general exception Exception
+services\analyst_agent\main.py:140: [E1101(no-member), AnalystAgent._handle] Instance of 'FieldInfo' has no 'get' member
+services\analyst_agent\main.py:219: [C0116(missing-function-docstring), lifespan] Missing function or method docstring
+services\analyst_agent\main.py:219: [W0621(redefined-outer-name), lifespan] Redefining name 'app' from outer scope (line 237)
+services\analyst_agent\main.py:242: [C0116(missing-function-docstring), health] Missing function or method docstring
+services\analyst_agent\main.py:247: [C0116(missing-function-docstring), ready] Missing function or method docstring
+services\analyst_agent\main.py:251: [W0718(broad-exception-caught), ready] Catching too general exception Exception
+************* Module services.analyst_agent.milvus_manager
+services\analyst_agent\milvus_manager.py:33: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\milvus_manager.py:46: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\milvus_manager.py:54: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\milvus_manager.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+services\analyst_agent\milvus_manager.py:5: [C0115(missing-class-docstring), MilvusManager] Missing class docstring
+services\analyst_agent\milvus_manager.py:19: [W0718(broad-exception-caught), MilvusManager.connect] Catching too general exception Exception
+services\analyst_agent\milvus_manager.py:3: [C0411(wrong-import-order), ] standard import "time" should be placed before third party imports "pymilvus.Collection", "sentence_transformers.SentenceTransformer"
+************* Module services.analyst_agent.recommendation_generator
+services\analyst_agent\recommendation_generator.py:10: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\recommendation_generator.py:12: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\recommendation_generator.py:23: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\recommendation_generator.py:58: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\recommendation_generator.py:62: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\recommendation_generator.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+services\analyst_agent\recommendation_generator.py:3: [C0115(missing-class-docstring), RecommendationGenerator] Missing class docstring
+services\analyst_agent\recommendation_generator.py:4: [W0613(unused-argument), RecommendationGenerator.generate] Unused argument 'analysis_text'
+services\analyst_agent\recommendation_generator.py:8: [W0612(unused-variable), RecommendationGenerator.generate] Unused variable 'overall_level'
+services\analyst_agent\recommendation_generator.py:3: [R0903(too-few-public-methods), RecommendationGenerator] Too few public methods (1/2)
+************* Module services.analyst_agent.risk_analyzer
+services\analyst_agent\risk_analyzer.py:19: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\risk_analyzer.py:25: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\risk_analyzer.py:31: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\risk_analyzer.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+services\analyst_agent\risk_analyzer.py:4: [C0115(missing-class-docstring), RiskAnalyzer] Missing class docstring
+services\analyst_agent\risk_analyzer.py:13: [W0613(unused-argument), RiskAnalyzer.assess] Unused argument 'citations'
+services\analyst_agent\risk_analyzer.py:4: [R0903(too-few-public-methods), RiskAnalyzer] Too few public methods (1/2)
+************* Module services.analyst_agent.tests.test_analyst_agent
+services\analyst_agent\tests\test_analyst_agent.py:22: [C0301(line-too-long), ] Line too long (179/100)
+services\analyst_agent\tests\test_analyst_agent.py:26: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\tests\test_analyst_agent.py:28: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\tests\test_analyst_agent.py:41: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\tests\test_analyst_agent.py:57: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\tests\test_analyst_agent.py:61: [C0301(line-too-long), ] Line too long (104/100)
+services\analyst_agent\tests\test_analyst_agent.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+services\analyst_agent\tests\test_analyst_agent.py:8: [C0116(missing-function-docstring), mock_rag] Missing function or method docstring
+services\analyst_agent\tests\test_analyst_agent.py:13: [C0116(missing-function-docstring), agent] Missing function or method docstring
+services\analyst_agent\tests\test_analyst_agent.py:13: [W0621(redefined-outer-name), agent] Redefining name 'mock_rag' from outer scope (line 8)
+services\analyst_agent\tests\test_analyst_agent.py:13: [W0613(unused-argument), agent] Unused argument 'mock_rag'
+services\analyst_agent\tests\test_analyst_agent.py:17: [W0621(redefined-outer-name), test_analyst_analyze] Redefining name 'agent' from outer scope (line 13)
+services\analyst_agent\tests\test_analyst_agent.py:17: [W0621(redefined-outer-name), test_analyst_analyze] Redefining name 'mock_rag' from outer scope (line 8)
+services\analyst_agent\tests\test_analyst_agent.py:17: [W0613(unused-argument), test_analyst_analyze] Unused argument 'mock_rag'
+services\analyst_agent\tests\test_analyst_agent.py:2: [C0411(wrong-import-order), ] standard import "unittest.mock.MagicMock" should be placed before third party import "pytest"
+services\analyst_agent\tests\test_analyst_agent.py:2: [W0611(unused-import), ] Unused MagicMock imported from unittest.mock
+************* Module services.analyst_agent.tests.test_analyst_endpoints
+services\analyst_agent\tests\test_analyst_endpoints.py:34: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\tests\test_analyst_endpoints.py:37: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\tests\test_analyst_endpoints.py:47: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\tests\test_analyst_endpoints.py:50: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\tests\test_analyst_endpoints.py:58: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\tests\test_analyst_endpoints.py:104: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\tests\test_analyst_endpoints.py:108: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\tests\test_analyst_endpoints.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+services\analyst_agent\tests\test_analyst_endpoints.py:9: [C0116(missing-function-docstring), mock_agent] Missing function or method docstring
+services\analyst_agent\tests\test_analyst_endpoints.py:14: [C0116(missing-function-docstring), mock_risk_analyzer] Missing function or method docstring
+services\analyst_agent\tests\test_analyst_endpoints.py:25: [W0621(redefined-outer-name), test_analyst_analyze_endpoint] Redefining name 'mock_agent' from outer scope (line 9)
+services\analyst_agent\tests\test_analyst_endpoints.py:44: [W0621(redefined-outer-name), test_analyst_risks_only_endpoint] Redefining name 'mock_risk_analyzer' from outer scope (line 14)
+services\analyst_agent\tests\test_analyst_endpoints.py:55: [W0621(redefined-outer-name), test_analyst_analyze_server_error] Redefining name 'mock_agent' from outer scope (line 9)
+services\analyst_agent\tests\test_analyst_endpoints.py:63: [C0116(missing-function-docstring), test_approval_evaluate_success] Missing function or method docstring
+services\analyst_agent\tests\test_analyst_endpoints.py:79: [C0116(missing-function-docstring), test_approval_evaluate_bad_request_type] Missing function or method docstring
+services\analyst_agent\tests\test_analyst_endpoints.py:93: [C0413(wrong-import-position), ] Import "import time" should be placed at the top of the module
+services\analyst_agent\tests\test_analyst_endpoints.py:95: [W0621(redefined-outer-name), test_analyst_latency] Redefining name 'mock_agent' from outer scope (line 9)
+services\analyst_agent\tests\test_analyst_endpoints.py:3: [C0411(wrong-import-order), ] standard import "unittest.mock.MagicMock" should be placed before third party imports "pytest", "fastapi.testclient.TestClient"
+services\analyst_agent\tests\test_analyst_endpoints.py:93: [C0411(wrong-import-order), ] standard import "time" should be placed before third party imports "pytest", "fastapi.testclient.TestClient" and first party import "services.analyst_agent.analyst_service.app" 
+services\analyst_agent\tests\test_analyst_endpoints.py:3: [W0611(unused-import), ] Unused MagicMock imported from unittest.mock
+************* Module services.analyst_agent.tests.test_explanation_endpoints
+services\analyst_agent\tests\test_explanation_endpoints.py:23: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\tests\test_explanation_endpoints.py:38: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\tests\test_explanation_endpoints.py:42: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\tests\test_explanation_endpoints.py:58: [C0303(trailing-whitespace), ] Trailing whitespace
+services\analyst_agent\tests\test_explanation_endpoints.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+services\analyst_agent\tests\test_explanation_endpoints.py:10: [C0116(missing-function-docstring), mock_agent] Missing function or method docstring
+services\analyst_agent\tests\test_explanation_endpoints.py:49: [W0621(redefined-outer-name), test_confidence_integration_in_analyze] Redefining name 'mock_agent' from outer scope (line 10)
+services\analyst_agent\tests\test_explanation_endpoints.py:3: [C0411(wrong-import-order), ] standard import "unittest.mock.MagicMock" should be placed before third party imports "pytest", "fastapi.testclient.TestClient"
+services\analyst_agent\tests\test_explanation_endpoints.py:3: [W0611(unused-import), ] Unused MagicMock imported from unittest.mock
+************* Module services.analyst_agent.tests.test_main
+services\analyst_agent\tests\test_main.py:66: [C0301(line-too-long), ] Line too long (106/100)
+services\analyst_agent\tests\test_main.py:66: [C0301(line-too-long), ] Line too long (106/100)
+services\analyst_agent\tests\test_main.py:22: [R0903(too-few-public-methods), _FakeTool] Too few public methods (0/2)
+services\analyst_agent\tests\test_main.py:35: [C0116(missing-function-docstring), _FakeRegistry.names] Missing function or method docstring
+services\analyst_agent\tests\test_main.py:38: [C0116(missing-function-docstring), _FakeRegistry.is_allowed] Missing function or method docstring
+services\analyst_agent\tests\test_main.py:38: [W0613(unused-argument), _FakeRegistry.is_allowed] Unused argument 'agent_id'
+services\analyst_agent\tests\test_main.py:38: [W0613(unused-argument), _FakeRegistry.is_allowed] Unused argument 'tool_name'
+services\analyst_agent\tests\test_main.py:41: [C0116(missing-function-docstring), _FakeRegistry.get] Missing function or method docstring
+services\analyst_agent\tests\test_main.py:41: [W0613(unused-argument), _FakeRegistry.get] Unused argument 'name'
+services\analyst_agent\tests\test_main.py:44: [C0116(missing-function-docstring), _FakeRegistry.execute] Missing function or method docstring
+services\analyst_agent\tests\test_main.py:58: [C0415(import-outside-toplevel), _build_agent] Import outside toplevel (asyncio)
+services\analyst_agent\tests\test_main.py:59: [W0212(protected-access), _build_agent] Access to a protected member _stop of a client class
+services\analyst_agent\tests\test_main.py:67: [C0415(import-outside-toplevel), patch_tracer] Import outside toplevel (contextlib.nullcontext)
+services\analyst_agent\tests\test_main.py:70: [C0116(missing-function-docstring), patch_tracer._Span.set_attribute] Missing function or method docstring
+services\analyst_agent\tests\test_main.py:70: [C0321(multiple-statements), patch_tracer._Span.set_attribute] More than one statement on a single line
+services\analyst_agent\tests\test_main.py:71: [C0116(missing-function-docstring), patch_tracer._Span.record_exception] Missing function or method docstring
+services\analyst_agent\tests\test_main.py:71: [C0321(multiple-statements), patch_tracer._Span.record_exception] More than one statement on a single line
+services\analyst_agent\tests\test_main.py:72: [C0116(missing-function-docstring), patch_tracer._Span.set_status] Missing function or method docstring
+services\analyst_agent\tests\test_main.py:72: [C0321(multiple-statements), patch_tracer._Span.set_status] More than one statement on a single line
+services\analyst_agent\tests\test_main.py:75: [C0116(missing-function-docstring), patch_tracer._Tracer.start_as_current_span] Missing function or method docstring
+services\analyst_agent\tests\test_main.py:74: [R0903(too-few-public-methods), patch_tracer._Tracer] Too few public methods (1/2)
+services\analyst_agent\tests\test_main.py:79: [C0321(multiple-statements), patch_tracer._ContextSpan.__enter__] More than one statement on a single line
+services\analyst_agent\tests\test_main.py:80: [C0321(multiple-statements), patch_tracer._ContextSpan.__exit__] More than one statement on a single line
+services\analyst_agent\tests\test_main.py:64: [W0613(unused-argument), patch_tracer] Unused argument 'monkeypatch'
+services\analyst_agent\tests\test_main.py:67: [W0611(unused-import), patch_tracer] Unused nullcontext imported from contextlib
+services\analyst_agent\tests\test_main.py:85: [C0116(missing-function-docstring), test_tool_descriptors_for_agent_filters_by_acl] Missing function or method docstring
+services\analyst_agent\tests\test_main.py:88: [W0212(protected-access), test_tool_descriptors_for_agent_filters_by_acl] Access to a protected member _tool_descriptors_for_agent of a client class
+services\analyst_agent\tests\test_main.py:92: [W0621(redefined-outer-name), test_handle_invokes_agent_loop_and_publishes_reply] Redefining name 'patch_tracer' from outer scope (line 64)
+services\analyst_agent\tests\test_main.py:101: [W0613(unused-argument), test_handle_invokes_agent_loop_and_publishes_reply.fake_publish] Unused argument 'client'
+services\analyst_agent\tests\test_main.py:101: [W0613(unused-argument), test_handle_invokes_agent_loop_and_publishes_reply.fake_publish] Unused argument 'kw'
+services\analyst_agent\tests\test_main.py:105: [W0613(unused-argument), test_handle_invokes_agent_loop_and_publishes_reply.fake_ack] Unused argument 'client'
+services\analyst_agent\tests\test_main.py:105: [W0613(unused-argument), test_handle_invokes_agent_loop_and_publishes_reply.fake_ack] Unused argument 'stream'
+services\analyst_agent\tests\test_main.py:105: [W0613(unused-argument), test_handle_invokes_agent_loop_and_publishes_reply.fake_ack] Unused argument 'group'
+services\analyst_agent\tests\test_main.py:108: [C0415(import-outside-toplevel), test_handle_invokes_agent_loop_and_publishes_reply] Import outside toplevel (services.analyst_agent.main)
+services\analyst_agent\tests\test_main.py:134: [W0212(protected-access), test_handle_invokes_agent_loop_and_publishes_reply] Access to a protected member _handle of a client class
+************* Module services.compliance_agent.main
+services\compliance_agent\main.py:40: [C0115(missing-class-docstring), Settings] Missing class docstring
+services\compliance_agent\main.py:103: [C0115(missing-class-docstring), ComplianceOfficer] Missing class docstring
+services\compliance_agent\main.py:104: [W0621(redefined-outer-name), ComplianceOfficer.__init__] Redefining name 'settings' from outer scope (line 52)
+services\compliance_agent\main.py:111: [C0116(missing-function-docstring), ComplianceOfficer.start_pg] Missing function or method docstring
+services\compliance_agent\main.py:115: [C0116(missing-function-docstring), ComplianceOfficer.close] Missing function or method docstring
+services\compliance_agent\main.py:121: [C0116(missing-function-docstring), ComplianceOfficer.run] Missing function or method docstring
+services\compliance_agent\main.py:176: [W0718(broad-exception-caught), ComplianceOfficer._handle] Catching too general exception Exception
+services\compliance_agent\main.py:149: [E1101(no-member), ComplianceOfficer._handle] Instance of 'FieldInfo' has no 'get' member
+services\compliance_agent\main.py:150: [E1101(no-member), ComplianceOfficer._handle] Instance of 'FieldInfo' has no 'get' member
+services\compliance_agent\main.py:197: [C0116(missing-function-docstring), lifespan] Missing function or method docstring
+services\compliance_agent\main.py:197: [W0621(redefined-outer-name), lifespan] Redefining name 'app' from outer scope (line 215)
+services\compliance_agent\main.py:220: [C0116(missing-function-docstring), health] Missing function or method docstring
+services\compliance_agent\main.py:225: [C0116(missing-function-docstring), ready] Missing function or method docstring
+services\compliance_agent\main.py:229: [W0718(broad-exception-caught), ready] Catching too general exception Exception
+************* Module services.compliance_agent.qdrant_indexer
+services\compliance_agent\qdrant_indexer.py:29: [C0303(trailing-whitespace), ] Trailing whitespace
+services\compliance_agent\qdrant_indexer.py:36: [C0301(line-too-long), ] Line too long (114/100)
+services\compliance_agent\qdrant_indexer.py:44: [C0301(line-too-long), ] Line too long (105/100)
+services\compliance_agent\qdrant_indexer.py:49: [C0303(trailing-whitespace), ] Trailing whitespace
+services\compliance_agent\qdrant_indexer.py:60: [C0303(trailing-whitespace), ] Trailing whitespace
+services\compliance_agent\qdrant_indexer.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+services\compliance_agent\qdrant_indexer.py:7: [C0115(missing-class-docstring), QdrantIndexer] Missing class docstring
+services\compliance_agent\qdrant_indexer.py:5: [C0411(wrong-import-order), ] standard import "hashlib" should be placed before third party imports "qdrant_client.QdrantClient", "qdrant_client.models.Distance", "requests", "sentence_transformers.SentenceTransformer"
+services\compliance_agent\qdrant_indexer.py:3: [W0611(unused-import), ] Unused import requests
+************* Module services.compliance_agent.tests.test_main
+services\compliance_agent\tests\test_main.py:12: [C0116(missing-function-docstring), test_clean_description_approved] Missing function or method docstring
+services\compliance_agent\tests\test_main.py:19: [C0116(missing-function-docstring), test_personal_data_amber] Missing function or method docstring
+services\compliance_agent\tests\test_main.py:26: [C0116(missing-function-docstring), test_violation_keyword_rejected] Missing function or method docstring
+services\compliance_agent\tests\test_main.py:39: [C0116(missing-function-docstring), test_inputs_are_inspected_too] Missing function or method docstring
+************* Module services.echo_agent.main
+services\echo_agent\main.py:58: [W0621(redefined-outer-name), EchoAgent.__init__] Redefining name 'settings' from outer scope (line 52)
+services\echo_agent\main.py:65: [C0116(missing-function-docstring), EchoAgent.start_pg] Missing function or method docstring
+services\echo_agent\main.py:70: [C0116(missing-function-docstring), EchoAgent.close] Missing function or method docstring
+services\echo_agent\main.py:120: [W0718(broad-exception-caught), EchoAgent._handle] Catching too general exception Exception
+services\echo_agent\main.py:153: [W0621(redefined-outer-name), lifespan] Redefining name 'app' from outer scope (line 175)
+services\echo_agent\main.py:191: [W0718(broad-exception-caught), ready] Catching too general exception Exception
+************* Module services.echo_agent.tests.test_main
+services\echo_agent\tests\test_main.py:16: [C0116(missing-function-docstring), test_build_echo_swaps_from_and_to] Missing function or method docstring
+services\echo_agent\tests\test_main.py:30: [W0212(protected-access), test_build_echo_swaps_from_and_to] Access to a protected member _build_echo of a client class
+************* Module services.orchestrator_agent.graph
+services\orchestrator_agent\graph.py:28: [W0613(unused-argument), _clarification_terminal] Unused argument 'state'
+services\orchestrator_agent\graph.py:33: [W0613(unused-argument), _completion_terminal] Unused argument 'state'
+************* Module services.orchestrator_agent.main
+services\orchestrator_agent\main.py:176: [C0301(line-too-long), ] Line too long (126/100)
+services\orchestrator_agent\main.py:40: [C0415(import-outside-toplevel), _build_tool_verifier] Import outside toplevel (pathlib.Path)
+services\orchestrator_agent\main.py:42: [C0415(import-outside-toplevel), _build_tool_verifier] Import outside toplevel (services.tool_sandbox.CosignVerifier)
+services\orchestrator_agent\main.py:43: [C0415(import-outside-toplevel), _build_tool_verifier] Import outside toplevel (services.tool_sandbox.verifier.AllowAllVerifier)
+services\orchestrator_agent\main.py:59: [C0115(missing-class-docstring), Settings] Missing class docstring
+services\orchestrator_agent\main.py:82: [C0115(missing-class-docstring), RequestPayload] Missing class docstring
+services\orchestrator_agent\main.py:87: [R0902(too-many-instance-attributes), OrchestratorService] Too many instance attributes (8/7)
+services\orchestrator_agent\main.py:90: [W0621(redefined-outer-name), OrchestratorService.__init__] Redefining name 'settings' from outer scope (line 79)
+services\orchestrator_agent\main.py:100: [C0116(missing-function-docstring), OrchestratorService.start] Missing function or method docstring
+services\orchestrator_agent\main.py:106: [C0415(import-outside-toplevel), OrchestratorService.start] Import outside toplevel (pathlib.Path)
+services\orchestrator_agent\main.py:108: [C0415(import-outside-toplevel), OrchestratorService.start] Import outside toplevel (services.tool_sandbox.CosignVerifier, services.tool_sandbox.ToolRegistry, services.tool_sandbox.WasmExecutor)
+services\orchestrator_agent\main.py:113: [C0415(import-outside-toplevel), OrchestratorService.start] Import outside toplevel (services.tool_sandbox.audit_adapter.PostgresToolAuditSink)
+services\orchestrator_agent\main.py:108: [W0611(unused-import), OrchestratorService.start] Unused CosignVerifier imported from services.tool_sandbox
+services\orchestrator_agent\main.py:140: [C0116(missing-function-docstring), OrchestratorService.close] Missing function or method docstring
+services\orchestrator_agent\main.py:184: [W0718(broad-exception-caught), OrchestratorService.consume_requests] Catching too general exception Exception
+services\orchestrator_agent\main.py:189: [C0116(missing-function-docstring), lifespan] Missing function or method docstring
+services\orchestrator_agent\main.py:189: [W0621(redefined-outer-name), lifespan] Redefining name 'app' from outer scope (line 207)
+services\orchestrator_agent\main.py:212: [C0116(missing-function-docstring), health] Missing function or method docstring
+services\orchestrator_agent\main.py:217: [C0116(missing-function-docstring), ready] Missing function or method docstring
+services\orchestrator_agent\main.py:221: [W0718(broad-exception-caught), ready] Catching too general exception Exception
+************* Module services.orchestrator_agent.monitor
+services\orchestrator_agent\monitor.py:50: [W0718(broad-exception-caught), make_monitor.monitor] Catching too general exception Exception
+************* Module services.orchestrator_agent.nodes
+services\orchestrator_agent\nodes.py:37: [C0116(missing-function-docstring), make_task_decomposer] Missing function or method docstring
+************* Module services.orchestrator_agent.router
+services\orchestrator_agent\router.py:66: [C0301(line-too-long), ] Line too long (102/100)
+************* Module services.orchestrator_agent.state
+services\orchestrator_agent\state.py:52: [C0301(line-too-long), ] Line too long (112/100)
+services\orchestrator_agent\state.py:26: [C0115(missing-class-docstring), ConflictRecord] Missing class docstring
+************* Module services.orchestrator_agent.tests.test_conflict
+services\orchestrator_agent\tests\test_conflict.py:15: [C0301(line-too-long), ] Line too long (105/100)
+services\orchestrator_agent\tests\test_conflict.py:12: [C0116(missing-function-docstring), test_no_conflicts_when_all_approve] Missing function or method docstring
+services\orchestrator_agent\tests\test_conflict.py:19: [C1803(use-implicit-booleaness-not-comparison), test_no_conflicts_when_all_approve] "conflicts == []" can be simplified to "not conflicts", if it is strictly a sequence, as an empty list is falsey
+services\orchestrator_agent\tests\test_conflict.py:22: [C0116(missing-function-docstring), test_compliance_rejection_recorded] Missing function or method docstring
+services\orchestrator_agent\tests\test_conflict.py:36: [C0116(missing-function-docstring), test_cross_agent_approval_conflict_recorded] Missing function or method docstring
+services\orchestrator_agent\tests\test_conflict.py:56: [C0116(missing-function-docstring), test_amber_alone_does_not_escalate] Missing function or method docstring
+services\orchestrator_agent\tests\test_conflict.py:66: [C1803(use-implicit-booleaness-not-comparison), test_amber_alone_does_not_escalate] "conflicts == []" can be simplified to "not conflicts", if it is strictly a sequence, as an empty list is falsey
+************* Module services.orchestrator_agent.tests.test_nodes
+services\orchestrator_agent\tests\test_nodes.py:17: [C0116(missing-function-docstring), test_intent_parser_records_clarification_flag] Missing function or method docstring
+services\orchestrator_agent\tests\test_nodes.py:37: [C0116(missing-function-docstring), test_intent_parser_routes_to_clarification_when_ambiguous] Missing function or method docstring
+services\orchestrator_agent\tests\test_nodes.py:56: [C0116(missing-function-docstring), test_task_decomposer_builds_typed_tasks] Missing function or method docstring
+services\orchestrator_agent\tests\test_nodes.py:96: [C0116(missing-function-docstring), test_task_decomposer_skips_when_clarification_needed] Missing function or method docstring
+services\orchestrator_agent\tests\test_nodes.py:102: [C1803(use-implicit-booleaness-not-comparison), test_task_decomposer_skips_when_clarification_needed] "stub.calls == []" can be simplified to "not stub.calls", if it is strictly a sequence, as an empty list is falsey
+services\orchestrator_agent\tests\test_nodes.py:105: [C0116(missing-function-docstring), test_conflict_branch_escalates_on_recorded_conflict] Missing function or method docstring
+************* Module services.orchestrator_agent.tests.test_router
+services\orchestrator_agent\tests\test_router.py:15: [C0116(missing-function-docstring), test_ready_when_no_deps] Missing function or method docstring
+services\orchestrator_agent\tests\test_router.py:19: [C0116(missing-function-docstring), test_not_ready_when_deps_unmet] Missing function or method docstring
+services\orchestrator_agent\tests\test_router.py:23: [C0116(missing-function-docstring), test_ready_when_deps_met] Missing function or method docstring
+services\orchestrator_agent\tests\test_router.py:27: [C0116(missing-function-docstring), test_router_dispatches_to_correct_stream] Missing function or method docstring
+services\orchestrator_agent\tests\test_router.py:57: [C0116(missing-function-docstring), test_router_respects_unmet_dependencies] Missing function or method docstring
+************* Module services.rag_system.citation_tracker
+services\rag_system\citation_tracker.py:13: [C0301(line-too-long), ] Line too long (111/100)
+services\rag_system\citation_tracker.py:18: [C0303(trailing-whitespace), ] Trailing whitespace
+services\rag_system\citation_tracker.py:24: [C0303(trailing-whitespace), ] Trailing whitespace
+services\rag_system\citation_tracker.py:37: [C0303(trailing-whitespace), ] Trailing whitespace
+services\rag_system\citation_tracker.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+services\rag_system\citation_tracker.py:4: [C0115(missing-class-docstring), CitationTracker] Missing class docstring
+************* Module services.rag_system.rag_service
+services\rag_system\rag_service.py:47: [C0301(line-too-long), ] Line too long (102/100)
+services\rag_system\rag_service.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+services\rag_system\rag_service.py:9: [C0115(missing-class-docstring), QueryRequest] Missing class docstring
+services\rag_system\rag_service.py:13: [C0115(missing-class-docstring), QueryResponse] Missing class docstring
+services\rag_system\rag_service.py:19: [C0115(missing-class-docstring), VerifyRequest] Missing class docstring
+services\rag_system\rag_service.py:35: [W0707(raise-missing-from), perform_rag_query] Consider explicitly re-raising using 'raise HTTPException(status_code=500, detail=str(e)) from e'
+services\rag_system\rag_service.py:50: [W0707(raise-missing-from), verify_citations] Consider explicitly re-raising using 'raise HTTPException(status_code=500, detail=str(e)) from e'
+services\rag_system\rag_service.py:3: [C0411(wrong-import-order), ] standard import "typing.List" should be placed before third party imports "fastapi.FastAPI", "pydantic.BaseModel"
+************* Module services.rag_system.rag_system
+services\rag_system\rag_system.py:12: [C0301(line-too-long), ] Line too long (108/100)
+services\rag_system\rag_system.py:20: [C0301(line-too-long), ] Line too long (116/100)
+services\rag_system\rag_system.py:55: [C0303(trailing-whitespace), ] Trailing whitespace
+services\rag_system\rag_system.py:58: [C0303(trailing-whitespace), ] Trailing whitespace
+services\rag_system\rag_system.py:61: [C0303(trailing-whitespace), ] Trailing whitespace
+services\rag_system\rag_system.py:64: [C0303(trailing-whitespace), ] Trailing whitespace
+services\rag_system\rag_system.py:79: [C0303(trailing-whitespace), ] Trailing whitespace
+services\rag_system\rag_system.py:103: [C0303(trailing-whitespace), ] Trailing whitespace
+services\rag_system\rag_system.py:109: [C0301(line-too-long), ] Line too long (102/100)
+services\rag_system\rag_system.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+services\rag_system\rag_system.py:8: [C0115(missing-class-docstring), RAGSystem] Missing class docstring
+services\rag_system\rag_system.py:22: [E1101(no-member), RAGSystem.search_qdrant] Instance of 'QdrantClient' has no 'search' member
+services\rag_system\rag_system.py:39: [W0613(unused-argument), RAGSystem.rerank_results] Unused argument 'query'
+services\rag_system\rag_system.py:109: [R1728(consider-using-generator), RAGSystem.query] Consider using a generator instead 'max(doc['score'] for doc in reranked_docs)'
+************* Module services.rag_system.tests.test_rag_endpoints
+services\rag_system\tests\test_rag_endpoints.py:29: [C0303(trailing-whitespace), ] Trailing whitespace
+services\rag_system\tests\test_rag_endpoints.py:32: [C0303(trailing-whitespace), ] Trailing whitespace
+services\rag_system\tests\test_rag_endpoints.py:48: [C0303(trailing-whitespace), ] Trailing whitespace
+services\rag_system\tests\test_rag_endpoints.py:54: [C0303(trailing-whitespace), ] Trailing whitespace
+services\rag_system\tests\test_rag_endpoints.py:63: [C0303(trailing-whitespace), ] Trailing whitespace
+services\rag_system\tests\test_rag_endpoints.py:75: [C0303(trailing-whitespace), ] Trailing whitespace
+services\rag_system\tests\test_rag_endpoints.py:79: [C0303(trailing-whitespace), ] Trailing whitespace
+services\rag_system\tests\test_rag_endpoints.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+services\rag_system\tests\test_rag_endpoints.py:9: [C0116(missing-function-docstring), mock_rag_system] Missing function or method docstring
+services\rag_system\tests\test_rag_endpoints.py:20: [W0621(redefined-outer-name), test_rag_query_endpoint] Redefining name 'mock_rag_system' from outer scope (line 9)
+services\rag_system\tests\test_rag_endpoints.py:44: [W0621(redefined-outer-name), test_rag_verify_endpoint] Redefining name 'mock_rag_system' from outer scope (line 9)
+services\rag_system\tests\test_rag_endpoints.py:60: [W0621(redefined-outer-name), test_rag_query_server_error] Redefining name 'mock_rag_system' from outer scope (line 9)
+services\rag_system\tests\test_rag_endpoints.py:68: [C0413(wrong-import-position), ] Import "import time" should be placed at the top of the module
+services\rag_system\tests\test_rag_endpoints.py:70: [W0621(redefined-outer-name), test_rag_latency] Redefining name 'mock_rag_system' from outer scope (line 9)
+services\rag_system\tests\test_rag_endpoints.py:3: [C0411(wrong-import-order), ] standard import "unittest.mock.MagicMock" should be placed before third party imports "pytest", "fastapi.testclient.TestClient"
+services\rag_system\tests\test_rag_endpoints.py:68: [C0411(wrong-import-order), ] standard import "time" should be placed before third party imports "pytest", "fastapi.testclient.TestClient" and first party import "services.rag_system.rag_service.app" 
+services\rag_system\tests\test_rag_endpoints.py:3: [W0611(unused-import), ] Unused MagicMock imported from unittest.mock
+************* Module services.rag_system.tests.test_rag_system
+services\rag_system\tests\test_rag_system.py:40: [C0303(trailing-whitespace), ] Trailing whitespace
+services\rag_system\tests\test_rag_system.py:44: [C0303(trailing-whitespace), ] Trailing whitespace
+services\rag_system\tests\test_rag_system.py:77: [C0305(trailing-newlines), ] Trailing newlines
+services\rag_system\tests\test_rag_system.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+services\rag_system\tests\test_rag_system.py:7: [C0116(missing-function-docstring), mock_qdrant] Missing function or method docstring
+services\rag_system\tests\test_rag_system.py:12: [C0116(missing-function-docstring), mock_transformer] Missing function or method docstring
+services\rag_system\tests\test_rag_system.py:17: [C0116(missing-function-docstring), mock_anthropic] Missing function or method docstring
+services\rag_system\tests\test_rag_system.py:22: [C0116(missing-function-docstring), rag_system] Missing function or method docstring
+services\rag_system\tests\test_rag_system.py:22: [W0621(redefined-outer-name), rag_system] Redefining name 'mock_qdrant' from outer scope (line 7)
+services\rag_system\tests\test_rag_system.py:22: [W0621(redefined-outer-name), rag_system] Redefining name 'mock_transformer' from outer scope (line 12)
+services\rag_system\tests\test_rag_system.py:22: [W0621(redefined-outer-name), rag_system] Redefining name 'mock_anthropic' from outer scope (line 17)
+services\rag_system\tests\test_rag_system.py:22: [W0613(unused-argument), rag_system] Unused argument 'mock_qdrant'
+services\rag_system\tests\test_rag_system.py:22: [W0613(unused-argument), rag_system] Unused argument 'mock_transformer'
+services\rag_system\tests\test_rag_system.py:22: [W0613(unused-argument), rag_system] Unused argument 'mock_anthropic'
+services\rag_system\tests\test_rag_system.py:25: [C0116(missing-function-docstring), test_vectorize_query] Missing function or method docstring
+services\rag_system\tests\test_rag_system.py:25: [W0621(redefined-outer-name), test_vectorize_query] Redefining name 'rag_system' from outer scope (line 22)
+services\rag_system\tests\test_rag_system.py:25: [W0621(redefined-outer-name), test_vectorize_query] Redefining name 'mock_transformer' from outer scope (line 12)
+services\rag_system\tests\test_rag_system.py:25: [W0613(unused-argument), test_vectorize_query] Unused argument 'mock_transformer'
+services\rag_system\tests\test_rag_system.py:31: [C0116(missing-function-docstring), test_citation_extraction] Missing function or method docstring
+services\rag_system\tests\test_rag_system.py:37: [C0116(missing-function-docstring), test_citation_validation] Missing function or method docstring
+services\rag_system\tests\test_rag_system.py:51: [C0116(missing-function-docstring), test_rag_query_pipeline] Missing function or method docstring
+services\rag_system\tests\test_rag_system.py:51: [W0621(redefined-outer-name), test_rag_query_pipeline] Redefining name 'rag_system' from outer scope (line 22)
+services\rag_system\tests\test_rag_system.py:51: [W0621(redefined-outer-name), test_rag_query_pipeline] Redefining name 'mock_qdrant' from outer scope (line 7)
+services\rag_system\tests\test_rag_system.py:51: [W0621(redefined-outer-name), test_rag_query_pipeline] Redefining name 'mock_transformer' from outer scope (line 12)
+services\rag_system\tests\test_rag_system.py:51: [W0621(redefined-outer-name), test_rag_query_pipeline] Redefining name 'mock_anthropic' from outer scope (line 17)
+services\rag_system\tests\test_rag_system.py:51: [W0613(unused-argument), test_rag_query_pipeline] Unused argument 'mock_qdrant'
+services\rag_system\tests\test_rag_system.py:51: [W0613(unused-argument), test_rag_query_pipeline] Unused argument 'mock_transformer'
+services\rag_system\tests\test_rag_system.py:51: [W0613(unused-argument), test_rag_query_pipeline] Unused argument 'mock_anthropic'
+services\rag_system\tests\test_rag_system.py:2: [C0411(wrong-import-order), ] standard import "unittest.mock.MagicMock" should be placed before third party import "pytest"
+************* Module services.semantic_search.tests.benchmarks
+services\semantic_search\tests\benchmarks.py:13: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\benchmarks.py:18: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\benchmarks.py:26: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\benchmarks.py:36: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\benchmarks.py:44: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\benchmarks.py:49: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\benchmarks.py:54: [C0301(line-too-long), ] Line too long (102/100)
+services\semantic_search\tests\benchmarks.py:55: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\benchmarks.py:56: [C0301(line-too-long), ] Line too long (106/100)
+services\semantic_search\tests\benchmarks.py:70: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\benchmarks.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+services\semantic_search\tests\benchmarks.py:11: [C0116(missing-function-docstring), run_benchmarks] Missing function or method docstring
+services\semantic_search\tests\benchmarks.py:11: [R0914(too-many-locals), run_benchmarks] Too many local variables (17/15)
+services\semantic_search\tests\benchmarks.py:71: [W1514(unspecified-encoding), run_benchmarks] Using open without explicitly specifying an encoding
+************* Module services.semantic_search.tests.cold_embedding_variance
+services\semantic_search\tests\cold_embedding_variance.py:10: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\cold_embedding_variance.py:13: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\cold_embedding_variance.py:17: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\cold_embedding_variance.py:23: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\cold_embedding_variance.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+services\semantic_search\tests\cold_embedding_variance.py:7: [C0116(missing-function-docstring), test_cold_embedding_variance] Missing function or method docstring
+services\semantic_search\tests\cold_embedding_variance.py:24: [W1309(f-string-without-interpolation), test_cold_embedding_variance] Using an f-string that does not have any interpolated variables
+************* Module services.semantic_search.tests.detailed_benchmarks
+services\semantic_search\tests\detailed_benchmarks.py:28: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\detailed_benchmarks.py:33: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\detailed_benchmarks.py:36: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\detailed_benchmarks.py:41: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\detailed_benchmarks.py:46: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\detailed_benchmarks.py:47: [C0301(line-too-long), ] Line too long (105/100)
+services\semantic_search\tests\detailed_benchmarks.py:48: [C0301(line-too-long), ] Line too long (105/100)
+services\semantic_search\tests\detailed_benchmarks.py:49: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\detailed_benchmarks.py:59: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\detailed_benchmarks.py:67: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\detailed_benchmarks.py:72: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\detailed_benchmarks.py:76: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\detailed_benchmarks.py:82: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\detailed_benchmarks.py:86: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\detailed_benchmarks.py:88: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\detailed_benchmarks.py:96: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\detailed_benchmarks.py:101: [C0301(line-too-long), ] Line too long (126/100)
+services\semantic_search\tests\detailed_benchmarks.py:103: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\detailed_benchmarks.py:121: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\detailed_benchmarks.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+services\semantic_search\tests\detailed_benchmarks.py:7: [E0401(import-error), ] Unable to import 'psutil'
+services\semantic_search\tests\detailed_benchmarks.py:15: [C0116(missing-function-docstring), get_hardware_info] Missing function or method docstring
+services\semantic_search\tests\detailed_benchmarks.py:24: [C0116(missing-function-docstring), run_detailed_benchmarks] Missing function or method docstring
+services\semantic_search\tests\detailed_benchmarks.py:24: [R0914(too-many-locals), run_detailed_benchmarks] Too many local variables (27/15)
+services\semantic_search\tests\detailed_benchmarks.py:122: [W1514(unspecified-encoding), run_detailed_benchmarks] Using open without explicitly specifying an encoding
+services\semantic_search\tests\detailed_benchmarks.py:85: [W0612(unused-variable), run_detailed_benchmarks] Unused variable 'agent'
+************* Module services.semantic_search.tests.test_api
+services\semantic_search\tests\test_api.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+services\semantic_search\tests\test_api.py:7: [C0116(missing-function-docstring), test_health_check] Missing function or method docstring
+services\semantic_search\tests\test_api.py:14: [C0116(missing-function-docstring), test_search_api] Missing function or method docstring
+services\semantic_search\tests\test_api.py:24: [C0116(missing-function-docstring), test_search_with_filters] Missing function or method docstring
+services\semantic_search\tests\test_api.py:37: [C0116(missing-function-docstring), test_embed_api] Missing function or method docstring
+services\semantic_search\tests\test_api.py:1: [W0611(unused-import), ] Unused import pytest
+************* Module services.semantic_search.tests.test_embedder
+services\semantic_search\tests\test_embedder.py:27: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\test_embedder.py:38: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\test_embedder.py:42: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\test_embedder.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+services\semantic_search\tests\test_embedder.py:5: [C0116(missing-function-docstring), embedder] Missing function or method docstring
+services\semantic_search\tests\test_embedder.py:8: [C0116(missing-function-docstring), test_embed_single] Missing function or method docstring
+services\semantic_search\tests\test_embedder.py:8: [W0621(redefined-outer-name), test_embed_single] Redefining name 'embedder' from outer scope (line 5)
+services\semantic_search\tests\test_embedder.py:13: [C0116(missing-function-docstring), test_embed_batch] Missing function or method docstring
+services\semantic_search\tests\test_embedder.py:13: [W0621(redefined-outer-name), test_embed_batch] Redefining name 'embedder' from outer scope (line 5)
+services\semantic_search\tests\test_embedder.py:20: [C0116(missing-function-docstring), test_caching] Missing function or method docstring
+services\semantic_search\tests\test_embedder.py:20: [W0621(redefined-outer-name), test_caching] Redefining name 'embedder' from outer scope (line 5)
+services\semantic_search\tests\test_embedder.py:34: [C0116(missing-function-docstring), test_lru_eviction] Missing function or method docstring
+services\semantic_search\tests\test_embedder.py:34: [W0621(redefined-outer-name), test_lru_eviction] Redefining name 'embedder' from outer scope (line 5)
+services\semantic_search\tests\test_embedder.py:41: [W0612(unused-variable), test_lru_eviction] Unused variable 'initial_hits'
+************* Module services.semantic_search.tests.test_knowledge_base
+services\semantic_search\tests\test_knowledge_base.py:10: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\test_knowledge_base.py:19: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\test_knowledge_base.py:23: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\test_knowledge_base.py:32: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\test_knowledge_base.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+services\semantic_search\tests\test_knowledge_base.py:8: [C0116(missing-function-docstring), kb_manager] Missing function or method docstring
+services\semantic_search\tests\test_knowledge_base.py:15: [C0116(missing-function-docstring), test_add_sample_data] Missing function or method docstring
+services\semantic_search\tests\test_knowledge_base.py:15: [W0621(redefined-outer-name), test_add_sample_data] Redefining name 'kb_manager' from outer scope (line 8)
+services\semantic_search\tests\test_knowledge_base.py:29: [C0116(missing-function-docstring), test_document_listing] Missing function or method docstring
+services\semantic_search\tests\test_knowledge_base.py:29: [W0621(redefined-outer-name), test_document_listing] Redefining name 'kb_manager' from outer scope (line 8)
+************* Module services.semantic_search.tests.test_search
+services\semantic_search\tests\test_search.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+services\semantic_search\tests\test_search.py:9: [C0116(missing-function-docstring), search_engine] Missing function or method docstring
+services\semantic_search\tests\test_search.py:16: [C0116(missing-function-docstring), test_semantic_search_basic] Missing function or method docstring
+services\semantic_search\tests\test_search.py:16: [W0621(redefined-outer-name), test_semantic_search_basic] Redefining name 'search_engine' from outer scope (line 9)
+services\semantic_search\tests\test_search.py:23: [C0116(missing-function-docstring), test_semantic_search_filtering] Missing function or method docstring
+services\semantic_search\tests\test_search.py:23: [W0621(redefined-outer-name), test_semantic_search_filtering] Redefining name 'search_engine' from outer scope (line 9)
+services\semantic_search\tests\test_search.py:29: [C0116(missing-function-docstring), test_query_expansion] Missing function or method docstring
+services\semantic_search\tests\test_search.py:29: [W0621(redefined-outer-name), test_query_expansion] Redefining name 'search_engine' from outer scope (line 9)
+************* Module services.semantic_search.tests.test_vector_store
+services\semantic_search\tests\test_vector_store.py:18: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\test_vector_store.py:31: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\test_vector_store.py:43: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\test_vector_store.py:55: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\test_vector_store.py:58: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\tests\test_vector_store.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+services\semantic_search\tests\test_vector_store.py:9: [C0116(missing-function-docstring), store] Missing function or method docstring
+services\semantic_search\tests\test_vector_store.py:12: [C0116(missing-function-docstring), test_add_search] Missing function or method docstring
+services\semantic_search\tests\test_vector_store.py:12: [W0621(redefined-outer-name), test_add_search] Redefining name 'store' from outer scope (line 9)
+services\semantic_search\tests\test_vector_store.py:25: [C0116(missing-function-docstring), test_metadata_filtering] Missing function or method docstring
+services\semantic_search\tests\test_vector_store.py:25: [W0621(redefined-outer-name), test_metadata_filtering] Redefining name 'store' from outer scope (line 9)
+services\semantic_search\tests\test_vector_store.py:37: [C0116(missing-function-docstring), test_delete] Missing function or method docstring
+services\semantic_search\tests\test_vector_store.py:37: [W0621(redefined-outer-name), test_delete] Redefining name 'store' from outer scope (line 9)
+services\semantic_search\tests\test_vector_store.py:47: [C0116(missing-function-docstring), test_persistence] Missing function or method docstring
+services\semantic_search\tests\test_vector_store.py:49: [W0621(redefined-outer-name), test_persistence] Redefining name 'store' from outer scope (line 9)
+services\semantic_search\tests\test_vector_store.py:3: [C0411(wrong-import-order), ] standard import "os" should be placed before third party imports "pytest", "numpy"
+services\semantic_search\tests\test_vector_store.py:4: [C0411(wrong-import-order), ] standard import "shutil" should be placed before third party imports "pytest", "numpy"
+services\semantic_search\tests\test_vector_store.py:2: [W0611(unused-import), ] Unused numpy imported as np
+services\semantic_search\tests\test_vector_store.py:3: [W0611(unused-import), ] Unused import os
+services\semantic_search\tests\test_vector_store.py:4: [W0611(unused-import), ] Unused import shutil
+************* Module services.semantic_search.vector_store.faiss_store
+services\semantic_search\vector_store\faiss_store.py:14: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\vector_store\faiss_store.py:22: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\vector_store\faiss_store.py:40: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\vector_store\faiss_store.py:48: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\vector_store\faiss_store.py:51: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\vector_store\faiss_store.py:56: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\vector_store\faiss_store.py:64: [C0301(line-too-long), ] Line too long (119/100)
+services\semantic_search\vector_store\faiss_store.py:69: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\vector_store\faiss_store.py:73: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\vector_store\faiss_store.py:77: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\vector_store\faiss_store.py:80: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\vector_store\faiss_store.py:82: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\vector_store\faiss_store.py:91: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\vector_store\faiss_store.py:97: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\vector_store\faiss_store.py:100: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\vector_store\faiss_store.py:114: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\vector_store\faiss_store.py:122: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\vector_store\faiss_store.py:124: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\vector_store\faiss_store.py:139: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\vector_store\faiss_store.py:142: [C0303(trailing-whitespace), ] Trailing whitespace
+services\semantic_search\vector_store\faiss_store.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+services\semantic_search\vector_store\faiss_store.py:1: [E0401(import-error), ] Unable to import 'faiss'
+services\semantic_search\vector_store\faiss_store.py:9: [C0115(missing-class-docstring), FAISSStore] Missing class docstring
+services\semantic_search\vector_store\faiss_store.py:9: [R0902(too-many-instance-attributes), FAISSStore] Too many instance attributes (8/7)
+services\semantic_search\vector_store\faiss_store.py:64: [R0914(too-many-locals), FAISSStore.search] Too many local variables (16/15)
+services\semantic_search\vector_store\faiss_store.py:76: [C0321(multiple-statements), FAISSStore.search] More than one statement on a single line
+services\semantic_search\vector_store\faiss_store.py:79: [C0321(multiple-statements), FAISSStore.search] More than one statement on a single line
+services\semantic_search\vector_store\faiss_store.py:90: [C0321(multiple-statements), FAISSStore.search] More than one statement on a single line
+services\semantic_search\vector_store\faiss_store.py:3: [C0411(wrong-import-order), ] standard import "os" should be placed before third party imports "faiss", "numpy"
+services\semantic_search\vector_store\faiss_store.py:4: [C0411(wrong-import-order), ] standard import "json" should be placed before third party imports "faiss", "numpy"
+services\semantic_search\vector_store\faiss_store.py:5: [C0411(wrong-import-order), ] standard import "pickle" should be placed before third party imports "faiss", "numpy"
+services\semantic_search\vector_store\faiss_store.py:6: [C0411(wrong-import-order), ] standard import "typing.List" should be placed before third party imports "faiss", "numpy"
+services\semantic_search\vector_store\faiss_store.py:4: [W0611(unused-import), ] Unused import json
+services\semantic_search\vector_store\faiss_store.py:6: [W0611(unused-import), ] Unused Optional imported from typing
+************* Module services.semantic_search.vector_store.schemas
+services\semantic_search\vector_store\schemas.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+services\semantic_search\vector_store\schemas.py:4: [C0115(missing-class-docstring), VectorItem] Missing class docstring
+services\semantic_search\vector_store\schemas.py:9: [C0115(missing-class-docstring), SearchResult] Missing class docstring
+services\semantic_search\vector_store\schemas.py:2: [C0411(wrong-import-order), ] standard import "typing.List" should be placed before third party import "pydantic.BaseModel"
+services\semantic_search\vector_store\schemas.py:2: [W0611(unused-import), ] Unused Optional imported from typing
+************* Module services.tool_sandbox.audit_adapter
+services\tool_sandbox\audit_adapter.py:61: [C0116(missing-function-docstring), PostgresToolAuditSink.record] Missing function or method docstring
+services\tool_sandbox\audit_adapter.py:61: [R0913(too-many-arguments), PostgresToolAuditSink.record] Too many arguments (8/5)
+services\tool_sandbox\audit_adapter.py:92: [W0718(broad-exception-caught), PostgresToolAuditSink.record] Catching too general exception Exception
+services\tool_sandbox\audit_adapter.py:53: [R0903(too-few-public-methods), PostgresToolAuditSink] Too few public methods (1/2)
+************* Module services.tool_sandbox.executor
+services\tool_sandbox\executor.py:74: [C0116(missing-function-docstring), ExecutionResult.succeeded] Missing function or method docstring
+services\tool_sandbox\executor.py:112: [R0914(too-many-locals), WasmExecutor._execute_sync] Too many local variables (28/15)
+services\tool_sandbox\executor.py:155: [C0415(import-outside-toplevel), WasmExecutor._execute_sync] Import outside toplevel (time)
+services\tool_sandbox\executor.py:84: [R0903(too-few-public-methods), WasmExecutor] Too few public methods (1/2)
+services\tool_sandbox\executor.py:216: [W0718(broad-exception-caught), _safe_fuel] Catching too general exception Exception
+services\tool_sandbox\executor.py:22: [W0611(unused-import), ] Unused import os
+************* Module services.tool_sandbox.registry
+services\tool_sandbox\registry.py:37: [C0301(line-too-long), ] Line too long (108/100)
+services\tool_sandbox\registry.py:38: [C0301(line-too-long), ] Line too long (108/100)
+services\tool_sandbox\registry.py:39: [C0301(line-too-long), ] Line too long (109/100)
+services\tool_sandbox\registry.py:62: [C0116(missing-function-docstring), AuditSink.record] Missing function or method docstring
+services\tool_sandbox\registry.py:62: [R0913(too-many-arguments), AuditSink.record] Too many arguments (8/5)
+services\tool_sandbox\registry.py:55: [R0903(too-few-public-methods), AuditSink] Too few public methods (1/2)
+services\tool_sandbox\registry.py:77: [R0902(too-many-instance-attributes), ToolDescriptor] Too many instance attributes (10/7)
+services\tool_sandbox\registry.py:92: [C0116(missing-function-docstring), ToolDescriptor.limits] Missing function or method docstring
+services\tool_sandbox\registry.py:97: [C0115(missing-class-docstring), ToolRegistry] Missing class docstring
+services\tool_sandbox\registry.py:127: [W0718(broad-exception-caught), ToolRegistry.reload] Catching too general exception Exception
+services\tool_sandbox\registry.py:146: [C0415(import-outside-toplevel), ToolRegistry._load_descriptor] Import outside toplevel (json)
+services\tool_sandbox\registry.py:170: [C0116(missing-function-docstring), ToolRegistry.names] Missing function or method docstring
+services\tool_sandbox\registry.py:173: [C0116(missing-function-docstring), ToolRegistry.get] Missing function or method docstring
+services\tool_sandbox\registry.py:179: [C0116(missing-function-docstring), ToolRegistry.is_allowed] Missing function or method docstring
+************* Module services.tool_sandbox.verifier
+services\tool_sandbox\verifier.py:44: [W2301(unnecessary-ellipsis), SignatureVerifier.verify] Unnecessary ellipsis constant
+services\tool_sandbox\verifier.py:39: [R0903(too-few-public-methods), SignatureVerifier] Too few public methods (1/2)
+services\tool_sandbox\verifier.py:60: [C0116(missing-function-docstring), CosignVerifier.verify] Missing function or method docstring
+services\tool_sandbox\verifier.py:47: [R0903(too-few-public-methods), CosignVerifier] Too few public methods (1/2)
+services\tool_sandbox\verifier.py:81: [C0116(missing-function-docstring), AllowAllVerifier.verify] Missing function or method docstring
+services\tool_sandbox\verifier.py:81: [W0613(unused-argument), AllowAllVerifier.verify] Unused argument 'blob'
+services\tool_sandbox\verifier.py:81: [W0613(unused-argument), AllowAllVerifier.verify] Unused argument 'signature_b64'
+services\tool_sandbox\verifier.py:74: [R0903(too-few-public-methods), AllowAllVerifier] Too few public methods (1/2)
+************* Module services.tool_sandbox
+services\tool_sandbox\__init__.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+************* Module services.tool_sandbox.tests.test_audit_adapter
+services\tool_sandbox\tests\test_audit_adapter.py:14: [C0116(missing-function-docstring), test_digest_is_stable_and_64_hex_chars] Missing function or method docstring
+services\tool_sandbox\tests\test_audit_adapter.py:22: [C0116(missing-function-docstring), test_digest_for_empty_payload_is_constant] Missing function or method docstring
+services\tool_sandbox\tests\test_audit_adapter.py:31: [C0116(missing-function-docstring), _FakeConn.execute] Missing function or method docstring
+services\tool_sandbox\tests\test_audit_adapter.py:27: [R0903(too-few-public-methods), _FakeConn] Too few public methods (1/2)
+services\tool_sandbox\tests\test_audit_adapter.py:41: [C0116(missing-function-docstring), _FakePool.acquire] Missing function or method docstring
+services\tool_sandbox\tests\test_audit_adapter.py:35: [R0903(too-few-public-methods), _FakePool] Too few public methods (1/2)
+services\tool_sandbox\tests\test_audit_adapter.py:53: [C0116(missing-function-docstring), test_record_writes_one_audit_row] Missing function or method docstring
+services\tool_sandbox\tests\test_audit_adapter.py:75: [C0415(import-outside-toplevel), test_record_writes_one_audit_row] Import outside toplevel (json)
+services\tool_sandbox\tests\test_audit_adapter.py:87: [C0116(missing-function-docstring), test_record_swallows_db_errors_without_raising._BoomPool.acquire] Missing function or method docstring
+services\tool_sandbox\tests\test_audit_adapter.py:86: [R0903(too-few-public-methods), test_record_swallows_db_errors_without_raising._BoomPool] Too few public methods (1/2)
+services\tool_sandbox\tests\test_audit_adapter.py:108: [C0116(missing-function-docstring), test_record_falls_back_to_default_agent_id_when_missing] Missing function or method docstring
+services\tool_sandbox\tests\test_audit_adapter.py:4: [W0611(unused-import), ] Unused Any imported from typing
+services\tool_sandbox\tests\test_audit_adapter.py:5: [W0611(unused-import), ] Unused AsyncMock imported from unittest.mock
+services\tool_sandbox\tests\test_audit_adapter.py:5: [W0611(unused-import), ] Unused MagicMock imported from unittest.mock
+************* Module services.tool_sandbox.tests.test_executor
+services\tool_sandbox\tests\test_executor.py:44: [C0116(missing-function-docstring), test_executor_echoes_json_through_wasi] Missing function or method docstring
+services\tool_sandbox\tests\test_executor.py:83: [C0116(missing-function-docstring), test_execution_limits_defaults_are_sane] Missing function or method docstring
+services\tool_sandbox\tests\test_executor.py:18: [W0611(unused-import), ] Unused import json
+************* Module services.tool_sandbox.tests.test_registry
+services\tool_sandbox\tests\test_registry.py:187: [C0301(line-too-long), ] Line too long (106/100)
+services\tool_sandbox\tests\test_registry.py:44: [R0903(too-few-public-methods), FakeExecutor] Too few public methods (1/2)
+services\tool_sandbox\tests\test_registry.py:57: [R0913(too-many-arguments), _make_tool] Too many arguments (7/5)
+services\tool_sandbox\tests\test_registry.py:106: [C0116(missing-function-docstring), test_registry_discovers_tools] Missing function or method docstring
+services\tool_sandbox\tests\test_registry.py:117: [C0116(missing-function-docstring), test_registry_skips_directories_without_tool_yaml] Missing function or method docstring
+services\tool_sandbox\tests\test_registry.py:129: [C0116(missing-function-docstring), test_registry_skips_invalid_tool_yaml] Missing function or method docstring
+services\tool_sandbox\tests\test_registry.py:129: [W0613(unused-argument), test_registry_skips_invalid_tool_yaml] Unused argument 'caplog'
+services\tool_sandbox\tests\test_registry.py:143: [C0116(missing-function-docstring), test_get_raises_on_unknown_tool] Missing function or method docstring
+services\tool_sandbox\tests\test_registry.py:153: [C0116(missing-function-docstring), test_execute_enforces_agent_acl] Missing function or method docstring
+services\tool_sandbox\tests\test_registry.py:169: [C0116(missing-function-docstring), test_execute_rejects_bad_input_schema] Missing function or method docstring
+services\tool_sandbox\tests\test_registry.py:180: [C0116(missing-function-docstring), test_execute_rejects_bad_output_schema] Missing function or method docstring
+services\tool_sandbox\tests\test_registry.py:199: [C0116(missing-function-docstring), test_execute_verifies_signature_when_present] Missing function or method docstring
+services\tool_sandbox\tests\test_registry.py:214: [C0116(missing-function-docstring), test_execute_rejects_invalid_signature] Missing function or method docstring
+services\tool_sandbox\tests\test_registry.py:17: [W0611(unused-import), ] Unused dataclass imported from dataclasses
+services\tool_sandbox\tests\test_registry.py:19: [W0611(unused-import), ] Unused Mapping imported from typing
+************* Module services.tool_sandbox.tests.test_verifier
+services\tool_sandbox\tests\test_verifier.py:22: [C0116(missing-function-docstring), keypair] Missing function or method docstring
+services\tool_sandbox\tests\test_verifier.py:26: [C0116(missing-function-docstring), test_verifies_a_valid_signature] Missing function or method docstring
+services\tool_sandbox\tests\test_verifier.py:26: [W0621(redefined-outer-name), test_verifies_a_valid_signature] Redefining name 'keypair' from outer scope (line 22)
+services\tool_sandbox\tests\test_verifier.py:34: [C0116(missing-function-docstring), test_rejects_tampered_blob] Missing function or method docstring
+services\tool_sandbox\tests\test_verifier.py:34: [W0621(redefined-outer-name), test_rejects_tampered_blob] Redefining name 'keypair' from outer scope (line 22)
+services\tool_sandbox\tests\test_verifier.py:43: [C0116(missing-function-docstring), test_rejects_tampered_signature] Missing function or method docstring
+services\tool_sandbox\tests\test_verifier.py:43: [W0621(redefined-outer-name), test_rejects_tampered_signature] Redefining name 'keypair' from outer scope (line 22)
+services\tool_sandbox\tests\test_verifier.py:55: [C0116(missing-function-docstring), test_rejects_signature_from_different_key] Missing function or method docstring
+services\tool_sandbox\tests\test_verifier.py:55: [W0621(redefined-outer-name), test_rejects_signature_from_different_key] Redefining name 'keypair' from outer scope (line 22)
+services\tool_sandbox\tests\test_verifier.py:56: [W0612(unused-variable), test_rejects_signature_from_different_key] Unused variable 'public_pem'
+services\tool_sandbox\tests\test_verifier.py:66: [C0116(missing-function-docstring), test_rejects_non_base64_signature] Missing function or method docstring
+services\tool_sandbox\tests\test_verifier.py:66: [W0621(redefined-outer-name), test_rejects_non_base64_signature] Redefining name 'keypair' from outer scope (line 22)
+services\tool_sandbox\tests\test_verifier.py:81: [C0415(import-outside-toplevel), test_rejects_non_ecdsa_public_key] Import outside toplevel (cryptography.hazmat.primitives.serialization)
+services\tool_sandbox\tests\test_verifier.py:82: [C0415(import-outside-toplevel), test_rejects_non_ecdsa_public_key] Import outside toplevel (cryptography.hazmat.primitives.asymmetric.ed25519)
+************* Module scripts.security.audit_rbac
+scripts\security\audit_rbac.py:129: [C0301(line-too-long), ] Line too long (107/100)
+scripts\security\audit_rbac.py:131: [C0301(line-too-long), ] Line too long (110/100)
+scripts\security\audit_rbac.py:137: [C0301(line-too-long), ] Line too long (109/100)
+scripts\security\audit_rbac.py:138: [C0301(line-too-long), ] Line too long (107/100)
+scripts\security\audit_rbac.py:140: [C0301(line-too-long), ] Line too long (103/100)
+scripts\security\audit_rbac.py:166: [C0301(line-too-long), ] Line too long (102/100)
+scripts\security\audit_rbac.py:186: [C0301(line-too-long), ] Line too long (105/100)
+scripts\security\audit_rbac.py:240: [C0301(line-too-long), ] Line too long (102/100)
+scripts\security\audit_rbac.py:54: [C0115(missing-class-docstring), Severity] Missing class docstring
+scripts\security\audit_rbac.py:61: [C0115(missing-class-docstring), Finding] Missing class docstring
+scripts\security\audit_rbac.py:69: [C0116(missing-function-docstring), Finding.format] Missing function or method docstring
+scripts\security\audit_rbac.py:135: [C0116(missing-function-docstring), diff_rolebinding] Missing function or method docstring
+scripts\security\audit_rbac.py:168: [W1309(f-string-without-interpolation), audit] Using an f-string that does not have any interpolated variables
+scripts\security\audit_rbac.py:211: [W1309(f-string-without-interpolation), audit] Using an f-string that does not have any interpolated variables
+scripts\security\audit_rbac.py:223: [W1510(subprocess-run-check), fetch_kubectl_json] 'subprocess.run' used without explicitly defining the value for 'check'.
+scripts\security\audit_rbac.py:235: [C0116(missing-function-docstring), main] Missing function or method docstring
+scripts\security\audit_rbac.py:260: [W0718(broad-exception-caught), main] Catching too general exception Exception
+scripts\security\audit_rbac.py:40: [W0611(unused-import), ] Unused import yaml
+************* Module scripts.security.generate_policies
+scripts\security\generate_policies.py:35: [C0116(missing-function-docstring), load_capabilities] Missing function or method docstring
+************* Module libs.communication.message
+libs\communication\message.py:18: [C0115(missing-class-docstring), MessageType] Missing class docstring
+libs\communication\message.py:49: [C0115(missing-class-docstring), RiskLevel] Missing class docstring
+libs\communication\message.py:73: [C0415(import-outside-toplevel), AgentMessage.to_stream_fields] Import outside toplevel (json)
+libs\communication\message.py:90: [C0415(import-outside-toplevel), AgentMessage.from_stream_fields] Import outside toplevel (json)
+************* Module libs.communication.postgres_client
+libs\communication\postgres_client.py:28: [C0209(consider-using-f-string), _dsn] Formatting a regular string which could be an f-string
+libs\communication\postgres_client.py:50: [R0913(too-many-arguments), audit] Too many arguments (8/5)
+************* Module libs.communication.protocol
+libs\communication\protocol.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+libs\communication\protocol.py:5: [R0913(too-many-arguments), create_message] Too many arguments (6/5)
+libs\communication\protocol.py:5: [R0917(too-many-positional-arguments), create_message] Too many positional arguments (6/5)
+libs\communication\protocol.py:1: [W0611(unused-import), ] Unused import json
+************* Module libs.communication.redis_client
+libs\communication\redis_client.py:64: [R0913(too-many-arguments), consume] Too many arguments (6/5)
+libs\communication\redis_client.py:64: [R0917(too-many-positional-arguments), consume] Too many positional arguments (6/5)
+************* Module libs.communication.telemetry
+libs\communication\telemetry.py:22: [C0103(invalid-name), ] Constant name "_initialized" doesn't conform to UPPER_CASE naming style
+libs\communication\telemetry.py:45: [W0603(global-statement), init_telemetry] Using the global statement
+************* Module libs.communication.tools
+libs\communication\tools.py:16: [C0303(trailing-whitespace), ] Trailing whitespace
+libs\communication\tools.py:48: [C0303(trailing-whitespace), ] Trailing whitespace
+libs\communication\tools.py:52: [C0303(trailing-whitespace), ] Trailing whitespace
+libs\communication\tools.py:57: [C0303(trailing-whitespace), ] Trailing whitespace
+libs\communication\tools.py:62: [C0301(line-too-long), ] Line too long (110/100)
+libs\communication\tools.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+libs\communication\tools.py:64: [W0718(broad-exception-caught), lookup_cvss_score] Catching too general exception Exception
+libs\communication\tools.py:2: [C0411(wrong-import-order), ] standard import "datetime.datetime" should be placed before third party import "httpx"
+libs\communication\tools.py:3: [W0611(unused-import), ] Unused MilvusManager imported from services.analyst_agent.milvus_manager
+************* Module libs.communication
+libs\communication\__init__.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+************* Module libs.llm.client
+libs\llm\client.py:34: [W2301(unnecessary-ellipsis), LLMClient.chat_json] Unnecessary ellipsis constant
+libs\llm\client.py:25: [R0903(too-few-public-methods), LLMClient] Too few public methods (1/2)
+libs\llm\client.py:48: [C0415(import-outside-toplevel), AnthropicClient.__init__] Import outside toplevel (langchain_anthropic.ChatAnthropic)
+libs\llm\client.py:56: [C0116(missing-function-docstring), AnthropicClient.chat_json] Missing function or method docstring
+libs\llm\client.py:76: [C0415(import-outside-toplevel), AnthropicClient.chat_with_tools] Import outside toplevel (anthropic.AsyncAnthropic)
+libs\llm\client.py:78: [C0415(import-outside-toplevel), AnthropicClient.chat_with_tools] Import outside toplevel (libs.llm.tools.AssistantResponse, libs.llm.tools.TextBlock, libs.llm.tools.ToolUseBlock)
+libs\llm\client.py:134: [C0116(missing-function-docstring), StubLLMClient.chat_json] Missing function or method docstring
+libs\llm\client.py:140: [C0116(missing-function-docstring), StubLLMClient.chat_with_tools] Missing function or method docstring
+libs\llm\client.py:148: [C0415(import-outside-toplevel), StubLLMClient.chat_with_tools] Import outside toplevel (copy)
+libs\llm\client.py:146: [W0613(unused-argument), StubLLMClient.chat_with_tools] Unused argument 'max_tokens'
+************* Module libs.llm.tools
+libs\llm\tools.py:27: [C0115(missing-class-docstring), TextBlock] Missing class docstring
+libs\llm\tools.py:31: [C0116(missing-function-docstring), TextBlock.to_dict] Missing function or method docstring
+libs\llm\tools.py:36: [C0115(missing-class-docstring), ToolUseBlock] Missing class docstring
+libs\llm\tools.py:42: [C0116(missing-function-docstring), ToolUseBlock.to_dict] Missing function or method docstring
+libs\llm\tools.py:47: [C0115(missing-class-docstring), ToolResultBlock] Missing class docstring
+libs\llm\tools.py:53: [C0116(missing-function-docstring), ToolResultBlock.to_dict] Missing function or method docstring
+libs\llm\tools.py:75: [C0116(missing-function-docstring), AssistantResponse.tool_uses] Missing function or method docstring
+libs\llm\tools.py:79: [C0116(missing-function-docstring), AssistantResponse.text] Missing function or method docstring
+libs\llm\tools.py:92: [C0116(missing-function-docstring), ToolCapableLLMClient.chat_with_tools] Missing function or method docstring
+libs\llm\tools.py:85: [R0903(too-few-public-methods), ToolCapableLLMClient] Too few public methods (1/2)
+libs\llm\tools.py:109: [R0903(too-few-public-methods), _DescriptorLike] Too few public methods (0/2)
+libs\llm\tools.py:134: [R0913(too-many-arguments), agent_loop] Too many arguments (7/5)
+libs\llm\tools.py:134: [R0914(too-many-locals), agent_loop] Too many local variables (16/15)
+libs\llm\tools.py:160: [C0415(import-outside-toplevel), agent_loop] Import outside toplevel (json)
+libs\llm\tools.py:195: [W0718(broad-exception-caught), agent_loop] Catching too general exception Exception
+libs\llm\tools.py:165: [W0612(unused-variable), agent_loop] Unused variable 'iteration'
+************* Module libs.llm
+libs\llm\__init__.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+************* Module libs.llm.__init__
+libs\llm\__init__.py:1: [R0801(duplicate-code), ] Similar lines in 2 files
+==services.analyst_agent.main:[170:182]
+==services.compliance_agent.main:[164:176]
+                    metadata={"in_reply_to": incoming.message_id, **incoming.metadata},
+                )
+                await publish(self.redis, self.settings.reply_stream, reply.to_stream_fields())
+                await self._audit("out", reply)
+                await ack(
+                    self.redis,
+                    stream=self.settings.input_stream,
+                    group=self.settings.consumer_group,
+                    message_id=redis_id,
+                )
+                span.set_status(Status(StatusCode.OK))
+            except Exception as exc:
+libs\llm\__init__.py:1: [R0801(duplicate-code), ] Similar lines in 2 files
+==services.analyst_agent.main:[196:211]
+==services.compliance_agent.main:[181:197]
+        if not (self.settings.audit_enabled and self.pg_pool):
+            return
+        await audit(
+            self.pg_pool,
+            agent_id=self.settings.agent_id,
+            message_id=message.message_id,
+            task_id=message.task_id,
+            direction=direction,
+            message_type=message.message_type.value,
+            status=message.status.value,
+            payload=message.data,
+        )
+
+
+async def _no_tools_executor(agent_id: str, tool_name: str, input_payload: dict[str, Any]):
+libs\llm\__init__.py:1: [R0801(duplicate-code), ] Similar lines in 2 files
+==services.analyst_agent.main:[224:236]
+==services.echo_agent.main:[162:174]
+    app.state.agent = agent
+    try:
+        yield
+    finally:
+        consumer_task.cancel()
+        try:
+            await consumer_task
+        except asyncio.CancelledError:
+            pass
+        await agent.close()
+
+
+libs\llm\__init__.py:1: [R0801(duplicate-code), ] Similar lines in 2 files
+==services.analyst_agent.main:[121:132]
+==services.compliance_agent.main:[126:137]
+        async for msg in consume(
+            self.redis,
+            stream=self.settings.input_stream,
+            group=self.settings.consumer_group,
+            consumer=self.settings.consumer_name,
+        ):
+            if self._stop.is_set():
+                break
+            await self._handle(msg.message_id, msg.fields)
+
+    async def _handle(self, redis_id: str, fields: dict[str, str]) -> None:
+libs\llm\__init__.py:1: [R0801(duplicate-code), ] Similar lines in 2 files
+==services.analyst_agent.main:[173:182]
+==services.echo_agent.main:[111:120]
+                await self._audit("out", reply)
+                await ack(
+                    self.redis,
+                    stream=self.settings.input_stream,
+                    group=self.settings.consumer_group,
+                    message_id=redis_id,
+                )
+                span.set_status(Status(StatusCode.OK))
+            except Exception as exc:
+libs\llm\__init__.py:1: [R0801(duplicate-code), ] Similar lines in 2 files
+==services.analyst_agent.main:[225:233]
+==services.compliance_agent.main:[203:211]
+    try:
+        yield
+    finally:
+        consumer_task.cancel()
+        try:
+            await consumer_task
+        except asyncio.CancelledError:
+            pass
+libs\llm\__init__.py:1: [R0801(duplicate-code), ] Similar lines in 2 files
+==services.echo_agent.main:[163:171]
+==services.orchestrator_agent.main:[195:203]
+    try:
+        yield
+    finally:
+        consumer_task.cancel()
+        try:
+            await consumer_task
+        except asyncio.CancelledError:
+            pass
+libs\llm\__init__.py:1: [R0801(duplicate-code), ] Similar lines in 2 files
+==services.analyst_agent.main:[96:103]
+==services.orchestrator_agent.main:[115:122]
+            audit_sink = (
+                PostgresToolAuditSink(self.pg_pool, self.settings.agent_id)
+                if self.pg_pool
+                else None
+            )
+            self.tool_registry = ToolRegistry(
+                tools_root=Path(self.settings.tools_root),
+libs\llm\__init__.py:1: [R0801(duplicate-code), ] Similar lines in 2 files
+==services.compliance_agent.main:[104:115]
+==services.echo_agent.main:[58:67]
+        self.settings = settings
+        self.tracer = init_telemetry(service_name=settings.otel_service_name)
+        self.redis = build_client()
+        self.pg_pool = None
+        self._stop = asyncio.Event()
+
+    async def start_pg(self) -> None:
+        if self.settings.audit_enabled:
+            self.pg_pool = await build_pool()
+
+    async def close(self) -> None:
+libs\llm\__init__.py:1: [R0801(duplicate-code), ] Similar lines in 2 files
+==services.analyst_agent.main:[156:162]
+==services.compliance_agent.main:[157:163]
+                reply = AgentMessage(
+                    from_agent=self.settings.agent_id,
+                    to_agent=incoming.from_agent,
+                    task_id=incoming.task_id,
+                    message_type=MessageType.TASK_COMPLETE,
+                    status=MessageStatus.COMPLETED,
+libs\llm\__init__.py:1: [R0801(duplicate-code), ] Similar lines in 2 files
+==services.compliance_agent.main:[125:131]
+==services.echo_agent.main:[82:88]
+        )
+        async for msg in consume(
+            self.redis,
+            stream=self.settings.input_stream,
+            group=self.settings.consumer_group,
+            consumer=self.settings.consumer_name,
+libs\llm\__init__.py:1: [R0801(duplicate-code), ] Similar lines in 2 files
+==services.analyst_agent.main:[133:139]
+==services.compliance_agent.main:[140:147]
+            try:
+                incoming = AgentMessage.from_stream_fields(fields)
+                span.set_attribute("agent.task_id", incoming.task_id)
+
+                await self._audit("in", incoming)
+
+                assignment = incoming.data
+libs\llm\__init__.py:1: [R0801(duplicate-code), ] Similar lines in 2 files
+==services.analyst_agent.main:[121:126]
+==services.echo_agent.main:[83:88]
+        async for msg in consume(
+            self.redis,
+            stream=self.settings.input_stream,
+            group=self.settings.consumer_group,
+            consumer=self.settings.consumer_name,
+libs\llm\__init__.py:1: [R0801(duplicate-code), ] Similar lines in 2 files
+==services.analyst_agent.main:[81:86]
+==services.orchestrator_agent.main:[90:95]
+        self.settings = settings
+        self.tracer = init_telemetry(service_name=settings.otel_service_name)
+        self.redis = build_client()
+        self.pg_pool = None
+        self.llm = llm or build_default_client()
+libs\llm\__init__.py:1: [R0801(duplicate-code), ] Similar lines in 2 files
+==services.analyst_agent.main:[86:96]
+==services.orchestrator_agent.main:[96:114]
+        self.tool_registry = None  # populated in start() if tools_root is set
+        self._stop = asyncio.Event()
+
+    async def start(self) -> None:
+        if self.settings.audit_enabled:
+            self.pg_pool = await build_pool()
+        if self.settings.tools_root:
+            # Imported here so the orchestrator can still run without the
+            # tool_sandbox optional deps installed (e.g. minimal dev images).
+            from pathlib import Path
+
+            from services.tool_sandbox import (
+                CosignVerifier,
+                ToolRegistry,
+                WasmExecutor,
+            )
+            from services.tool_sandbox.audit_adapter import PostgresToolAuditSink
+
+libs\llm\__init__.py:1: [R0801(duplicate-code), ] Similar lines in 2 files
+==services.compliance_agent.main:[115:122]
+==services.echo_agent.main:[70:78]
+        self._stop.set()
+        await self.redis.close()
+        if self.pg_pool:
+            await self.pg_pool.close()
+
+    async def run(self) -> None:
+        """Main consumer loop. Yields one message at a time."""
+        logger.info(
+
+-----------------------------------
+Your code has been rated at 7.77/10
+

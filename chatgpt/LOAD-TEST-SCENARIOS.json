@@ -1,0 +1,215 @@
+{
+  "version": "1.0",
+  "owner": "ChatGPT",
+  "scope": "Sprint 8 compliance-service load testing",
+  "target_service": "compliance-service",
+  "base_endpoints": [
+    {
+      "name": "health",
+      "method": "GET",
+      "path": "/health",
+      "expected_status": 200,
+      "expected_body_subset": {
+        "status": "ok"
+      },
+      "p95_latency_ms": 500
+    },
+    {
+      "name": "ready",
+      "method": "GET",
+      "path": "/ready",
+      "expected_status": 200,
+      "expected_body_subset": {
+        "status": "ready"
+      },
+      "p95_latency_ms": 500
+    },
+    {
+      "name": "policy_evaluation",
+      "method": "POST",
+      "path": "/compliance/evaluate",
+      "headers": {
+        "content-type": "application/json",
+        "x-agent-id": "load_test_user",
+        "x-project-id": "sprint-8-load",
+        "x-capability": "policy_evaluation"
+      },
+      "expected_status": 200,
+      "expected_body_fields": [
+        "allowed",
+        "reason",
+        "policy_version"
+      ],
+      "p95_latency_ms": 1500
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "lt-001-smoke",
+      "name": "5-user smoke sample",
+      "purpose": "Prove the load test runner, target URL, and endpoint mix are wired correctly.",
+      "users": 5,
+      "spawn_rate_per_second": 1,
+      "duration": "10s",
+      "endpoint_weights": {
+        "health": 3,
+        "ready": 2,
+        "policy_evaluation": 5
+      },
+      "payloads": [
+        {
+          "agent_id": "domain_analyst_v1_20250520",
+          "project_id": "sprint-8-smoke",
+          "capability": "draft"
+        }
+      ],
+      "success_thresholds": {
+        "max_error_rate_percent": 0,
+        "max_p95_latency_ms": 1500,
+        "max_pod_restarts": 0
+      },
+      "interpretation": "Pass means scripts and service routing work. It is not capacity evidence."
+    },
+    {
+      "id": "lt-002-baseline",
+      "name": "10-user baseline",
+      "purpose": "Establish low-concurrency baseline latency and error rate.",
+      "users": 10,
+      "spawn_rate_per_second": 2,
+      "duration": "5m",
+      "endpoint_weights": {
+        "health": 2,
+        "ready": 2,
+        "policy_evaluation": 6
+      },
+      "payloads": [
+        {
+          "agent_id": "orchestrator_v1_20250520",
+          "project_id": "sprint-8-baseline",
+          "capability": "route_task"
+        },
+        {
+          "agent_id": "compliance_officer_v1_20250520",
+          "project_id": "sprint-8-baseline",
+          "capability": "policy_evaluation"
+        }
+      ],
+      "success_thresholds": {
+        "max_error_rate_percent": 0.1,
+        "health_ready_p95_latency_ms": 500,
+        "evaluate_p95_latency_ms": 1500,
+        "max_pod_restarts": 0
+      },
+      "interpretation": "Pass establishes baseline; compare future runs against this before scaling to 50+ users."
+    },
+    {
+      "id": "lt-003-business-mix",
+      "name": "50-user compliance business mix",
+      "purpose": "Exercise realistic policy checks across agent identities and capabilities.",
+      "users": 50,
+      "spawn_rate_per_second": 5,
+      "duration": "15m",
+      "endpoint_weights": {
+        "health": 1,
+        "ready": 1,
+        "policy_evaluation": 8
+      },
+      "payloads": [
+        {
+          "agent_id": "domain_analyst_v1_20250520",
+          "project_id": "client-alpha",
+          "capability": "draft"
+        },
+        {
+          "agent_id": "editor_v1_20250520",
+          "project_id": "client-alpha",
+          "capability": "format_document"
+        },
+        {
+          "agent_id": "orchestrator_v1_20250520",
+          "project_id": "client-beta",
+          "capability": "assign_task"
+        },
+        {
+          "agent_id": "compliance_officer_v1_20250520",
+          "project_id": "client-beta",
+          "capability": "external_send"
+        }
+      ],
+      "success_thresholds": {
+        "max_error_rate_percent": 0.1,
+        "health_ready_p95_latency_ms": 500,
+        "evaluate_p95_latency_ms": 1500,
+        "max_pod_restarts": 0,
+        "max_cpu_sustained_percent": 80,
+        "max_memory_sustained_percent": 80
+      },
+      "interpretation": "Pass means the service can handle realistic Sprint 8 compliance traffic at moderate concurrency."
+    },
+    {
+      "id": "lt-004-production-target",
+      "name": "1000-user production target",
+      "purpose": "Sprint 8 acceptance load target.",
+      "users": 1000,
+      "spawn_rate_per_second": 50,
+      "duration": "30m",
+      "endpoint_weights": {
+        "health": 1,
+        "ready": 1,
+        "policy_evaluation": 10
+      },
+      "payloads": [
+        {
+          "agent_id": "domain_analyst_v1_20250520",
+          "project_id": "sprint-8-prod",
+          "capability": "draft"
+        },
+        {
+          "agent_id": "editor_v1_20250520",
+          "project_id": "sprint-8-prod",
+          "capability": "format_document"
+        },
+        {
+          "agent_id": "orchestrator_v1_20250520",
+          "project_id": "sprint-8-prod",
+          "capability": "assign_task"
+        },
+        {
+          "agent_id": "compliance_officer_v1_20250520",
+          "project_id": "sprint-8-prod",
+          "capability": "external_send"
+        }
+      ],
+      "success_thresholds": {
+        "max_error_rate_percent": 0.1,
+        "health_ready_p95_latency_ms": 500,
+        "evaluate_p95_latency_ms": 1500,
+        "max_pod_restarts": 0,
+        "max_cpu_sustained_percent": 85,
+        "max_memory_sustained_percent": 85
+      },
+      "interpretation": "Pass means Sprint 8 production load target is met. Failure requires capacity tuning or rollback before release."
+    }
+  ],
+  "ramp_strategy": {
+    "sequence": [
+      "lt-001-smoke",
+      "lt-002-baseline",
+      "lt-003-business-mix",
+      "lt-004-production-target"
+    ],
+    "rule": "Do not advance to the next scenario unless the previous scenario passes with zero pod restarts and error rate within threshold."
+  },
+  "result_interpretation": {
+    "pass": "All scenario thresholds met; attach Locust report and kubectl pod/deployment evidence.",
+    "warn": "Only non-critical latency drift or known informational warnings; document and decide whether to continue.",
+    "fail": "Any threshold breach, pod restart, sustained 5xx, or wrong cluster context. Stop and inspect before rerun."
+  },
+  "evidence_to_capture": [
+    "Locust HTML report",
+    "Locust console summary",
+    "kubectl get deploy,pods,svc,endpoints -n synthetic-enterprise",
+    "kubectl top pods -n synthetic-enterprise if metrics server is available",
+    "kubectl get events -n synthetic-enterprise --sort-by=.lastTimestamp"
+  ]
+}

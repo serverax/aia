@@ -1,0 +1,8 @@
+{
+    "benchmarks": {
+        "embedding_avg_ms": 30.39,
+        "search_avg_ms": 27.03,
+        "search_p95_ms": 100.74
+    },
+    "integration": "Verified"
+}

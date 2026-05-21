@@ -1,0 +1,46 @@
+# Helm values for actions/gha-runner-scale-set v0.9.3
+# Run with:
+#   helm install aia-runners --namespace arc-runners \
+#       -f infrastructure/security/runner-scale-set.yaml \
+#       oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set \
+#       --version 0.9.3
+
+githubConfigUrl: "https://github.com/serverax/aia"
+githubConfigSecret: github-pat        # created in step 2 of INSTALL.md
+
+# Min/max pods. ARC scales the pool based on queued jobs.
+minRunners: 1
+maxRunners: 4
+
+# Custom image baked with rust + cosign + vault CLI.
+template:
+  spec:
+    serviceAccountName: aia-runner-sa
+    containers:
+      - name: runner
+        image: ghcr.io/serverax/aia/wasm-runner:latest
+        imagePullPolicy: IfNotPresent
+        command: ["/home/runner/run.sh"]
+        env:
+          # Where the runner finds Vault in-cluster. Service is DNS-routed.
+          - name: VAULT_ADDR
+            value: "http://vault.vault.svc.cluster.local:8200"
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "1Gi"
+          limits:
+            cpu: "2"
+            memory: "4Gi"
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1001
+          capabilities:
+            drop: ["ALL"]
+
+# Service account for the runner. RoleBinding to Vault auth is set up
+# out-of-band — see infrastructure/security/INSTALL.md step 2.
+controllerServiceAccount:
+  namespace: arc-system
+  name: arc-gha-rs-controller

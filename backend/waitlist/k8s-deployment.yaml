@@ -1,0 +1,134 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: aia-waitlist
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: waitlist-config
+  namespace: aia-waitlist
+data:
+  FLASK_ENV: "production"
+  DEBUG: "False"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: waitlist-secrets
+  namespace: aia-waitlist
+type: Opaque
+stringData:
+  SENDER_EMAIL: "noreply@aia.ordinoxai.com"
+  SENDER_PASSWORD: "your-app-password"
+  ADMIN_EMAIL: "admin@aia.ordinoxai.com"
+  ADMIN_API_KEY: "dev-key-change-in-production"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: waitlist-api
+  namespace: aia-waitlist
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: waitlist-api
+  template:
+    metadata:
+      labels:
+        app: waitlist-api
+    spec:
+      containers:
+      - name: api
+        image: aia-waitlist:latest
+        ports:
+        - containerPort: 5000
+        envFrom:
+        - configMapRef:
+            name: waitlist-config
+        - secretRef:
+            name: waitlist-secrets
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: data
+          mountPath: /app/data
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: waitlist-data
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: waitlist-data
+  namespace: aia-waitlist
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: local-storage
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: waitlist-api
+  namespace: aia-waitlist
+spec:
+  type: ClusterIP
+  selector:
+    app: waitlist-api
+  ports:
+  - port: 5000
+    targetPort: 5000
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: waitlist-api-ingress
+  namespace: aia-waitlist
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - api.aia.ordinoxai.com
+    secretName: waitlist-api-tls
+  rules:
+  - host: api.aia.ordinoxai.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: waitlist-api
+            port:
+              number: 5000

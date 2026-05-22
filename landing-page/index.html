@@ -126,44 +126,123 @@
             max-width: 600px;
         }
 
-        .cta-buttons {
-            display: flex;
-            gap: 20px;
+        /* Waitlist Form */
+        .waitlist-form {
+            background: rgba(100, 200, 255, 0.05);
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid rgba(100, 200, 255, 0.2);
+            max-width: 500px;
             margin: 40px 0;
+            animation: slideUp 0.8s ease-out;
         }
 
-        .btn {
-            padding: 15px 40px;
-            border: none;
-            border-radius: 50px;
-            font-size: 16px;
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #64c8ff;
             font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-decoration: none;
-            display: inline-block;
+            font-size: 14px;
         }
 
-        .btn-primary {
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(100, 200, 255, 0.3);
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .form-group input::placeholder {
+            color: #666;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(100, 200, 255, 0.6);
+            box-shadow: 0 0 15px rgba(100, 200, 255, 0.2);
+        }
+
+        .form-group select {
+            cursor: pointer;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
             background: linear-gradient(135deg, #64c8ff 0%, #00ffff 100%);
             color: #0f0f1e;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
             box-shadow: 0 10px 30px rgba(100, 200, 255, 0.4);
         }
 
-        .btn-primary:hover {
-            transform: translateY(-3px);
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
             box-shadow: 0 15px 40px rgba(100, 200, 255, 0.6);
         }
 
-        .btn-secondary {
-            border: 2px solid #64c8ff;
-            color: #64c8ff;
-            background: transparent;
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
 
-        .btn-secondary:hover {
-            background: rgba(100, 200, 255, 0.1);
-            transform: translateY(-3px);
+        .form-message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .form-message.success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4CAF50;
+            color: #81C784;
+            display: block;
+        }
+
+        .form-message.error {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid #F44336;
+            color: #EF9A9A;
+            display: block;
+        }
+
+        .waitlist-count {
+            text-align: center;
+            margin-top: 15px;
+            color: #a0a0a0;
+            font-size: 14px;
+        }
+
+        .waitlist-count strong {
+            color: #64c8ff;
         }
 
         /* 3D Factory Animation */
@@ -194,7 +273,6 @@
             transform-style: preserve-3d;
         }
 
-        /* Animated Machines */
         .machine {
             position: absolute;
             width: 100px;
@@ -252,7 +330,6 @@
             50% { transform: translateY(-45px) rotateZ(4deg); }
         }
 
-        /* Center Orb */
         .center-orb {
             position: absolute;
             width: 120px;
@@ -283,7 +360,6 @@
             }
         }
 
-        /* Rotating Ring */
         .ring {
             position: absolute;
             width: 280px;
@@ -322,17 +398,6 @@
         .stat:nth-child(2) { animation-delay: 0.2s; }
         .stat:nth-child(3) { animation-delay: 0.3s; }
         .stat:nth-child(4) { animation-delay: 0.4s; }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
 
         .stat-number {
             font-size: 36px;
@@ -426,10 +491,6 @@
                 grid-template-columns: 1fr;
             }
 
-            .cta-buttons {
-                flex-direction: column;
-            }
-
             nav {
                 flex-direction: column;
                 gap: 20px;
@@ -446,13 +507,13 @@
     <nav>
         <div class="logo">AiA</div>
         <div>
+            <a href="#waitlist">Waitlist</a>
             <a href="#features">Features</a>
-            <a href="#about">About</a>
             <a href="#contact">Contact</a>
         </div>
     </nav>
 
-    <section class="hero">
+    <section class="hero" id="waitlist">
         <div class="hero-content">
             <h1>
                 AI Manufacturing
@@ -463,27 +524,67 @@
                 Real-time monitoring, predictive analytics, and autonomous decision-making 
                 for industrial operations at scale.
             </p>
-            <div class="cta-buttons">
-                <button class="btn btn-primary">Get Started</button>
-                <button class="btn btn-secondary">Learn More</button>
-            </div>
 
-            <div class="stats">
-                <div class="stat">
-                    <div class="stat-number">99.9%</div>
-                    <div class="stat-label">Uptime SLA</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-number">1000+</div>
-                    <div class="stat-label">Metrics/sec</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-number">50ms</div>
-                    <div class="stat-label">Alert Latency</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-number">100%</div>
-                    <div class="stat-label">Kubernetes Native</div>
+            <!-- Waitlist Form -->
+            <div class="waitlist-form">
+                <h3 style="color: #64c8ff; margin-bottom: 20px;">🚀 Join the Waitlist</h3>
+                
+                <form id="waitlistForm">
+                    <div class="form-group">
+                        <label for="name">Full Name *</label>
+                        <input 
+                            type="text" 
+                            id="name" 
+                            name="name" 
+                            placeholder="John Doe"
+                            required
+                            minlength="2"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email Address *</label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email" 
+                            placeholder="john@company.com"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="profession">Profession *</label>
+                        <select id="profession" name="profession" required>
+                            <option value="">Select your profession</option>
+                            <option value="Manufacturing Engineer">Manufacturing Engineer</option>
+                            <option value="Operations Manager">Operations Manager</option>
+                            <option value="Plant Manager">Plant Manager</option>
+                            <option value="Quality Assurance">Quality Assurance</option>
+                            <option value="Supply Chain">Supply Chain</option>
+                            <option value="IT/Systems">IT/Systems</option>
+                            <option value="Executive">Executive</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="company">Company (Optional)</label>
+                        <input 
+                            type="text" 
+                            id="company" 
+                            name="company" 
+                            placeholder="Your Company"
+                        >
+                    </div>
+
+                    <button type="submit" class="submit-btn">Join Waitlist</button>
+                </form>
+
+                <div id="formMessage" class="form-message"></div>
+
+                <div class="waitlist-count">
+                    <span id="waitlistCount">Loading...</span>
                 </div>
             </div>
         </div>
@@ -536,12 +637,83 @@
         </div>
     </section>
 
-    <footer>
+    <footer id="contact">
         <p>&copy; 2026 AiA - AI Manufacturing Intelligence. All rights reserved.</p>
         <p>Kubernetes | Prometheus | Grafana | Cloud Native | Open Source</p>
     </footer>
 
     <script>
+        const API_BASE_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:5000' 
+            : 'https://api.aia.ordinoxai.com';
+
+        // Load waitlist count
+        async function loadWaitlistCount() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/waitlist/count`);
+                const data = await response.json();
+                const countEl = document.getElementById('waitlistCount');
+                if (data.status === 'success') {
+                    countEl.innerHTML = `🎯 <strong>${data.count}</strong> people ahead of you on the waitlist`;
+                }
+            } catch (e) {
+                console.log('Waitlist count service not available');
+            }
+        }
+
+        // Form submission
+        document.getElementById('waitlistForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const submitBtn = e.target.querySelector('.submit-btn');
+            const messageEl = document.getElementById('formMessage');
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Joining...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/waitlist/join`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: document.getElementById('name').value,
+                        email: document.getElementById('email').value,
+                        profession: document.getElementById('profession').value,
+                        company: document.getElementById('company').value,
+                    })
+                });
+
+                const data = await response.json();
+
+                messageEl.className = 'form-message ' + (response.ok ? 'success' : 'error');
+                
+                if (response.ok) {
+                    messageEl.textContent = `✅ ${data.message} You're #${data.position}!`;
+                    document.getElementById('waitlistForm').reset();
+                    loadWaitlistCount();
+                    submitBtn.textContent = 'Successfully Joined!';
+                } else {
+                    messageEl.textContent = `❌ ${data.message}`;
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Join Waitlist';
+                }
+
+            } catch (error) {
+                messageEl.className = 'form-message error';
+                messageEl.textContent = '❌ Connection error. Please try again.';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Join Waitlist';
+            }
+        });
+
+        // Load count on page load
+        loadWaitlistCount();
+        
+        // Refresh count every 30 seconds
+        setInterval(loadWaitlistCount, 30000);
+
         // Smooth scroll
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
@@ -551,24 +723,6 @@
                     target.scrollIntoView({ behavior: 'smooth' });
                 }
             });
-        });
-
-        // Add animation on scroll
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = '1';
-                }
-            });
-        }, observerOptions);
-
-        document.querySelectorAll('.feature-card').forEach(card => {
-            observer.observe(card);
         });
     </script>
 </body>

@@ -4,7 +4,7 @@
 --
 --   psql -h <host> -U synthetic -d synthetic -f 0002_audit_tool.sql
 -- or, in-cluster:
---   kubectl exec -n synthetic-enterprise postgres-0 -- \
+--   kubectl exec -n ordinox-ai postgres-0 -- \
 --     psql -U synthetic -d synthetic -f /docker-entrypoint-initdb.d/migrations/0002.sql
 --
 -- Idempotent: safe to re-run.

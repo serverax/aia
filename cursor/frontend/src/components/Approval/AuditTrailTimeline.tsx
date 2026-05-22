@@ -1,4 +1,4 @@
-import type { AuditOutcomeFilter } from '../../hooks/useApprovalAuditTrail'
+import type { AuditEventTypeFilter, AuditOutcomeFilter } from '../../hooks/useApprovalAuditTrail'
 import type { ApprovalAuditEvent } from '../../types/api'
 
 interface AuditTrailTimelineProps {
@@ -8,11 +8,13 @@ interface AuditTrailTimelineProps {
   agentFilter: string
   policyFilter: string
   outcomeFilter: AuditOutcomeFilter
+  eventTypeFilter: AuditEventTypeFilter
   agentOptions: string[]
   policyOptions: string[]
   onAgentFilterChange: (value: string) => void
   onPolicyFilterChange: (value: string) => void
   onOutcomeFilterChange: (value: AuditOutcomeFilter) => void
+  onEventTypeFilterChange: (value: AuditEventTypeFilter) => void
   startDate: string
   endDate: string
   retentionPolicy: {
@@ -33,11 +35,13 @@ export function AuditTrailTimeline({
   agentFilter,
   policyFilter,
   outcomeFilter,
+  eventTypeFilter,
   agentOptions,
   policyOptions,
   onAgentFilterChange,
   onPolicyFilterChange,
   onOutcomeFilterChange,
+  onEventTypeFilterChange,
   startDate,
   endDate,
   retentionPolicy,
@@ -74,6 +78,16 @@ export function AuditTrailTimeline({
           <option value="approved">approved</option>
           <option value="rejected">rejected</option>
           <option value="overrode">overrode</option>
+        </select>
+        <select
+          value={eventTypeFilter}
+          onChange={(event) => onEventTypeFilterChange(event.target.value as AuditEventTypeFilter)}
+        >
+          <option value="all">All event types</option>
+          <option value="decision">decision</option>
+          <option value="bulk_action">bulk_action</option>
+          <option value="template">template</option>
+          <option value="undo">undo</option>
         </select>
       </div>
       <div className="audit-date-range">
@@ -117,6 +131,10 @@ export function AuditTrailTimeline({
             </p>
             <p>Policy: {event.policy}</p>
             <p>Reason: {event.reason}</p>
+            <p>Event type: {event.event_type ?? 'decision'}</p>
+            {typeof event.metadata?.write_latency_ms === 'number' ? (
+              <p>Write latency: {event.metadata.write_latency_ms}ms</p>
+            ) : null}
           </li>
         ))}
       </ul>

@@ -1,0 +1,36 @@
+{
+  "snapshot_format": "qdrant-collection-metadata-v1",
+  "namespace": "ordinox-ai",
+  "collections": [
+    {
+      "name": "compliance_regulations",
+      "vectors_count": 128,
+      "vector_size": 1536,
+      "distance": "Cosine",
+      "payload_schema": {
+        "jurisdiction": "keyword",
+        "regulation": "keyword",
+        "source_uri": "keyword",
+        "effective_date": "datetime"
+      },
+      "aliases": [
+        "active_compliance_kb"
+      ]
+    },
+    {
+      "name": "audit_event_embeddings",
+      "vectors_count": 100,
+      "vector_size": 1536,
+      "distance": "Cosine",
+      "payload_schema": {
+        "event_id": "keyword",
+        "project_id": "keyword",
+        "agent_id": "keyword",
+        "occurred_at": "datetime"
+      },
+      "aliases": [
+        "active_audit_search"
+      ]
+    }
+  ]
+}

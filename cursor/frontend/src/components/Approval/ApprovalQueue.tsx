@@ -1,5 +1,10 @@
 import { useState } from 'react'
-import type { ApprovalQueueFilter, QueueOutcomeFilter } from '../../hooks/useApprovalQueue'
+import type {
+  ApprovalQueueFilter,
+  QueueOutcomeFilter,
+  QueueSlaFilter,
+  QueueStatusFilter,
+} from '../../hooks/useApprovalQueue'
 import type { ApprovalWorkflowRequest } from '../../types/api'
 
 interface ApprovalQueueProps {
@@ -14,19 +19,32 @@ interface ApprovalQueueProps {
   onToggleSelectAll: (checked: boolean) => void
   onBulkApprove: () => void
   onBulkReject: () => void
+  onBulkRequestChanges: () => void
   onBulkEscalate: () => void
   isBulkSubmitting: boolean
   bulkStatusMessage: string | null
+  undoSecondsRemaining: number
+  onUndoBulkAction: () => void
   requestorQuery: string
   policyQuery: string
   commentQuery: string
   outcomeFilter: QueueOutcomeFilter
+  statusFilter: QueueStatusFilter
+  assigneeQuery: string
+  requestIdQuery: string
+  slaFilter: QueueSlaFilter
+  templateFilter: string
   dateFrom: string
   dateTo: string
   onRequestorQueryChange: (value: string) => void
   onPolicyQueryChange: (value: string) => void
   onCommentQueryChange: (value: string) => void
   onOutcomeFilterChange: (value: QueueOutcomeFilter) => void
+  onStatusFilterChange: (value: QueueStatusFilter) => void
+  onAssigneeQueryChange: (value: string) => void
+  onRequestIdQueryChange: (value: string) => void
+  onSlaFilterChange: (value: QueueSlaFilter) => void
+  onTemplateFilterChange: (value: string) => void
   onDateFromChange: (value: string) => void
   onDateToChange: (value: string) => void
   presets: Array<{ id: string; name: string; custom: boolean }>
@@ -47,19 +65,32 @@ export function ApprovalQueue({
   onToggleSelectAll,
   onBulkApprove,
   onBulkReject,
+  onBulkRequestChanges,
   onBulkEscalate,
   isBulkSubmitting,
   bulkStatusMessage,
+  undoSecondsRemaining,
+  onUndoBulkAction,
   requestorQuery,
   policyQuery,
   commentQuery,
   outcomeFilter,
+  statusFilter,
+  assigneeQuery,
+  requestIdQuery,
+  slaFilter,
+  templateFilter,
   dateFrom,
   dateTo,
   onRequestorQueryChange,
   onPolicyQueryChange,
   onCommentQueryChange,
   onOutcomeFilterChange,
+  onStatusFilterChange,
+  onAssigneeQueryChange,
+  onRequestIdQueryChange,
+  onSlaFilterChange,
+  onTemplateFilterChange,
   onDateFromChange,
   onDateToChange,
   presets,
@@ -102,12 +133,27 @@ export function ApprovalQueue({
           <button type="button" onClick={onBulkReject} disabled={isBulkSubmitting || selectedRequestIds.length === 0}>
             Bulk Reject
           </button>
+          <button
+            type="button"
+            onClick={onBulkRequestChanges}
+            disabled={isBulkSubmitting || selectedRequestIds.length === 0}
+          >
+            Bulk Request Changes
+          </button>
           <button type="button" onClick={onBulkEscalate} disabled={isBulkSubmitting || selectedRequestIds.length === 0}>
             Bulk Escalate
           </button>
         </div>
       </div>
       {bulkStatusMessage ? <p className="success">{bulkStatusMessage}</p> : null}
+      {undoSecondsRemaining > 0 ? (
+        <div className="bulk-undo">
+          <span>Undo available for {undoSecondsRemaining}s</span>
+          <button type="button" onClick={onUndoBulkAction}>
+            Undo Bulk Action
+          </button>
+        </div>
+      ) : null}
 
       <div className="approval-search-grid">
         <input
@@ -125,6 +171,16 @@ export function ApprovalQueue({
           value={commentQuery}
           onChange={(event) => onCommentQueryChange(event.target.value)}
         />
+        <input
+          placeholder="Search request ID/content"
+          value={requestIdQuery}
+          onChange={(event) => onRequestIdQueryChange(event.target.value)}
+        />
+        <input
+          placeholder="Filter assignee"
+          value={assigneeQuery}
+          onChange={(event) => onAssigneeQueryChange(event.target.value)}
+        />
         <select
           value={outcomeFilter}
           onChange={(event) => onOutcomeFilterChange(event.target.value as QueueOutcomeFilter)}
@@ -134,6 +190,26 @@ export function ApprovalQueue({
           <option value="rejected">rejected</option>
           <option value="escalated">escalated</option>
           <option value="pending">pending</option>
+        </select>
+        <select value={statusFilter} onChange={(event) => onStatusFilterChange(event.target.value as QueueStatusFilter)}>
+          <option value="all">All status</option>
+          <option value="pending">pending</option>
+          <option value="in_progress">in_progress</option>
+          <option value="approved">approved</option>
+          <option value="rejected">rejected</option>
+        </select>
+        <select value={slaFilter} onChange={(event) => onSlaFilterChange(event.target.value as QueueSlaFilter)}>
+          <option value="all">All SLA</option>
+          <option value="healthy">healthy</option>
+          <option value="at_risk">at_risk</option>
+          <option value="breached">breached</option>
+        </select>
+        <select value={templateFilter} onChange={(event) => onTemplateFilterChange(event.target.value)}>
+          <option value="all">All templates</option>
+          <option value="policy-standard">policy-standard</option>
+          <option value="exception-fastlane">exception-fastlane</option>
+          <option value="document-release">document-release</option>
+          <option value="custom">custom</option>
         </select>
         <input type="date" value={dateFrom} onChange={(event) => onDateFromChange(event.target.value)} />
         <input type="date" value={dateTo} onChange={(event) => onDateToChange(event.target.value)} />

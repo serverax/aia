@@ -7,7 +7,7 @@ are at the bottom.
 > **Cluster prerequisite reality check** (as of 2026-05-21):
 > - Hetzner cluster at `148.251.247.56` is unreachable (SSH refused; Talos doesn't have sshd anyway — see `provision-cluster-full.sh` deprecation banner).
 > - WSL/Talos cluster ops is bringing up — use `talosctl kubeconfig` to grab credentials.
-> - All Sprint 6 manifests target namespace `synthetic-enterprise`.
+> - All Sprint 6 manifests target namespace `ordinox-ai`.
 > - This runbook assumes the cluster CNI **enforces** NetworkPolicy. See `docs/NETWORK-POLICY-TROUBLESHOOTING.md` § Step 0 to verify before applying anything.
 
 ---
@@ -20,7 +20,7 @@ export KUBECONFIG=~/.kube/aia-config.yaml   # or talosctl-issued config
 # 0.1 Context + connectivity
 kubectl config current-context
 kubectl get nodes -o wide          # expect Ready
-kubectl get ns                     # expect synthetic-enterprise OR be ready to create
+kubectl get ns                     # expect ordinox-ai OR be ready to create
 
 # 0.2 CNI enforces NetworkPolicy?
 # See docs/NETWORK-POLICY-TROUBLESHOOTING.md § Step 0 for the deny-all probe.
@@ -32,7 +32,7 @@ kubectl -n vault exec vault-0 -- vault status | grep -E 'Initialized|Sealed'
 # If sealed: follow infrastructure/vault/PREFLIGHT-UNSEAL.md
 
 # 0.4 Image registry creds (needed for the agent images)
-kubectl get secret ghcr-credentials -n synthetic-enterprise 2>&1 \
+kubectl get secret ghcr-credentials -n ordinox-ai 2>&1 \
   || echo "MISSING — create with: kubectl create secret docker-registry ghcr-credentials ..."
 ```
 
@@ -46,9 +46,9 @@ kubectl get secret ghcr-credentials -n synthetic-enterprise 2>&1 \
 kubectl apply -f infrastructure/k3s/namespace.yaml
 
 # Verify
-kubectl get ns synthetic-enterprise -o jsonpath='{.metadata.labels}' ; echo
-kubectl get sa agent-sa -n synthetic-enterprise
-kubectl get networkpolicy -n synthetic-enterprise
+kubectl get ns ordinox-ai -o jsonpath='{.metadata.labels}' ; echo
+kubectl get sa agent-sa -n ordinox-ai
+kubectl get networkpolicy -n ordinox-ai
 # Expect: default-deny-all + allow-internal
 ```
 
@@ -65,7 +65,7 @@ The runbook does NOT commit secret values. Source them from `~/.aia/secrets/` (S
 # Either reuse the inline Secret in postgres.yaml after editing REPLACE_ME_BEFORE_APPLY,
 # or apply your own Secret:
 kubectl create secret generic postgres-credentials \
-  -n synthetic-enterprise \
+  -n ordinox-ai \
   --from-literal=POSTGRES_DB=synthetic \
   --from-literal=POSTGRES_USER=synthetic \
   --from-literal=POSTGRES_PASSWORD="$(jq -r .pg_password ~/.aia/secrets/postgres.json)" \
@@ -73,12 +73,12 @@ kubectl create secret generic postgres-credentials \
 
 # 2.2 LLM API key (Sprint 2 dep, used by orchestrator + analyst)
 kubectl create secret generic llm-api-keys \
-  -n synthetic-enterprise \
+  -n ordinox-ai \
   --from-literal=ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
   --dry-run=client -o yaml | kubectl apply -f -
 
 # Verify
-kubectl get secret -n synthetic-enterprise | grep -E 'postgres-credentials|llm-api-keys'
+kubectl get secret -n ordinox-ai | grep -E 'postgres-credentials|llm-api-keys'
 ```
 
 ✅ Gate: both secrets present. Never log the values.
@@ -93,12 +93,12 @@ kubectl apply -f infrastructure/k3s/redis.yaml
 kubectl apply -f infrastructure/k3s/jaeger.yaml
 
 # Wait for the StatefulSets to come up
-kubectl rollout status statefulset/postgres  -n synthetic-enterprise --timeout=5m
-kubectl rollout status statefulset/redis     -n synthetic-enterprise --timeout=3m
-kubectl rollout status deployment/jaeger     -n synthetic-enterprise --timeout=3m
+kubectl rollout status statefulset/postgres  -n ordinox-ai --timeout=5m
+kubectl rollout status statefulset/redis     -n ordinox-ai --timeout=3m
+kubectl rollout status deployment/jaeger     -n ordinox-ai --timeout=3m
 
 # 3.1 Apply audit_log migration (Sprint 6 added direction='tool')
-kubectl exec -n synthetic-enterprise postgres-0 -- \
+kubectl exec -n ordinox-ai postgres-0 -- \
   psql -U synthetic -d synthetic < infrastructure/k3s/migrations/0002_audit_tool.sql
 ```
 
@@ -106,7 +106,7 @@ kubectl exec -n synthetic-enterprise postgres-0 -- \
 
 ```bash
 # Smoke test the migration
-kubectl exec -n synthetic-enterprise postgres-0 -- \
+kubectl exec -n ordinox-ai postgres-0 -- \
   psql -U synthetic -d synthetic -c \
   "INSERT INTO audit_log (timestamp, agent_id, message_id, task_id, direction, message_type, status) VALUES (now(), 'preflight', 'mig-test', 'mig-test', 'tool', 'tool_call', 'ok'); DELETE FROM audit_log WHERE message_id='mig-test';"
 ```
@@ -182,15 +182,15 @@ Order: data-layer-dependent → orchestrator → tool-using agents → echo.
 ```bash
 # Sprint 1 PoC
 kubectl apply -f infrastructure/k3s/echo-agent.yaml
-kubectl rollout status deployment/echo-agent -n synthetic-enterprise --timeout=3m
+kubectl rollout status deployment/echo-agent -n ordinox-ai --timeout=3m
 
 # Sprint 2 — Compliance Officer skeleton
 kubectl apply -f infrastructure/k3s/compliance-agent.yaml
-kubectl rollout status deployment/compliance-agent -n synthetic-enterprise --timeout=3m
+kubectl rollout status deployment/compliance-agent -n ordinox-ai --timeout=3m
 
 # Sprint 2 — Orchestrator (depends on llm-api-keys + compliance agent up)
 kubectl apply -f infrastructure/k3s/orchestrator-agent.yaml
-kubectl rollout status deployment/orchestrator-agent -n synthetic-enterprise --timeout=5m
+kubectl rollout status deployment/orchestrator-agent -n ordinox-ai --timeout=5m
 
 # Sprint 3 — Analyst Agent (deploy only after Gemini ships Sprint 3 RAG stack)
 # Skip in staging until Sprint 3's manifests + Qdrant/Milvus are ready.
@@ -199,9 +199,9 @@ kubectl rollout status deployment/orchestrator-agent -n synthetic-enterprise --t
 ✅ Gate: all 3 deployed agents show `Available True` + 0 restarts after 60s.
 
 ```bash
-kubectl get deploy -n synthetic-enterprise -o wide
-kubectl get pods -n synthetic-enterprise -o wide
-kubectl get events -n synthetic-enterprise --sort-by='.lastTimestamp' | tail -20
+kubectl get deploy -n ordinox-ai -o wide
+kubectl get pods -n ordinox-ai -o wide
+kubectl get events -n ordinox-ai --sort-by='.lastTimestamp' | tail -20
 ```
 
 ---
@@ -210,9 +210,9 @@ kubectl get events -n synthetic-enterprise --sort-by='.lastTimestamp' | tail -20
 
 ```bash
 # 8.1 Echo Agent loop
-kubectl run -n synthetic-enterprise smoke-probe \
+kubectl run -n ordinox-ai smoke-probe \
   --rm -it --image=redis:7-alpine --restart=Never \
-  -- redis-cli -h redis.synthetic-enterprise.svc.cluster.local <<EOF
+  -- redis-cli -h redis.ordinox-ai.svc.cluster.local <<EOF
 XADD agent:echo:tasks * from_agent smoke to_agent echo-agent-v1 task_id smoke-1 message_type echo status pending data {} metadata {}
 SLEEP 2
 XREAD COUNT 1 STREAMS agent:echo:results 0
@@ -220,9 +220,9 @@ EOF
 # Expect: a matching ECHO reply within 2 seconds.
 
 # 8.2 Compliance Officer
-kubectl run -n synthetic-enterprise compliance-probe \
+kubectl run -n ordinox-ai compliance-probe \
   --rm -it --image=redis:7-alpine --restart=Never \
-  -- redis-cli -h redis.synthetic-enterprise.svc.cluster.local <<EOF
+  -- redis-cli -h redis.ordinox-ai.svc.cluster.local <<EOF
 XADD agent:compliance_officer:tasks * from_agent smoke to_agent compliance_officer task_id smoke-2 message_type task_assignment status in_progress data {"description":"safe NDA review"} metadata {}
 SLEEP 2
 XREAD COUNT 1 STREAMS orchestrator:replies 0
@@ -230,7 +230,7 @@ EOF
 # Expect: verdict=approved, risk_level=green within 2 seconds.
 
 # 8.3 Orchestrator end-to-end (requires ANTHROPIC_API_KEY in llm-api-keys)
-kubectl exec -n synthetic-enterprise deploy/orchestrator-agent -- \
+kubectl exec -n ordinox-ai deploy/orchestrator-agent -- \
   curl -sS -X POST http://localhost:8000/requests \
   -H 'content-type: application/json' \
   -d '{"user_request":"Draft a vanilla NDA","project_id":"smoke-3"}'
@@ -251,7 +251,7 @@ bash scripts/security/audit_rbac.sh
 pytest tests/security -m security --tb=short
 
 # Recent events should be clean
-kubectl get events -n synthetic-enterprise --field-selector type=Warning --sort-by='.lastTimestamp' | tail -10
+kubectl get events -n ordinox-ai --field-selector type=Warning --sort-by='.lastTimestamp' | tail -10
 ```
 
 ✅ Gate: zero drift, all security tests pass or skip (skips OK if optional policies aren't applied yet), no recent Warning events.
@@ -264,7 +264,7 @@ If anything in steps 4–7 goes sideways:
 
 ```bash
 # Quickest rollback — delete the failed component, leave the rest
-kubectl delete deployment <name> -n synthetic-enterprise
+kubectl delete deployment <name> -n ordinox-ai
 
 # Full Sprint 6 controller rollback (keeps data layer + agents)
 kubectl delete clusterimagepolicy aia-images-must-be-signed
@@ -277,7 +277,7 @@ helm uninstall kyverno -n kyverno
 # Data layer rollback (destructive — wipes Postgres volume!)
 # Only do this if the cluster needs a clean reset.
 kubectl delete -f infrastructure/k3s/postgres.yaml -f infrastructure/k3s/redis.yaml
-kubectl delete pvc -n synthetic-enterprise --all
+kubectl delete pvc -n ordinox-ai --all
 ```
 
 ---

@@ -3,6 +3,7 @@ import { approvalService } from '../services/approval/approvalService'
 import type { ApprovalAuditEvent, ApprovalAuditOutcome } from '../types/api'
 
 export type AuditOutcomeFilter = 'all' | ApprovalAuditOutcome
+export type AuditEventTypeFilter = 'all' | 'decision' | 'bulk_action' | 'template' | 'undo'
 
 export function useApprovalAuditTrail() {
   const [events, setEvents] = useState<ApprovalAuditEvent[]>([])
@@ -11,6 +12,7 @@ export function useApprovalAuditTrail() {
   const [agentFilter, setAgentFilter] = useState('all')
   const [policyFilter, setPolicyFilter] = useState('all')
   const [outcomeFilter, setOutcomeFilter] = useState<AuditOutcomeFilter>('all')
+  const [eventTypeFilter, setEventTypeFilter] = useState<AuditEventTypeFilter>('all')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
 
@@ -82,8 +84,9 @@ export function useApprovalAuditTrail() {
         .filter((event) => (agentFilter === 'all' ? true : event.actor === agentFilter))
         .filter((event) => (policyFilter === 'all' ? true : event.policy === policyFilter))
         .filter((event) => (outcomeFilter === 'all' ? true : event.outcome === outcomeFilter))
+        .filter((event) => (eventTypeFilter === 'all' ? true : event.event_type === eventTypeFilter))
         .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()),
-    [agentFilter, events, outcomeFilter, policyFilter],
+    [agentFilter, eventTypeFilter, events, outcomeFilter, policyFilter],
   )
 
   return {
@@ -97,6 +100,8 @@ export function useApprovalAuditTrail() {
     setPolicyFilter,
     outcomeFilter,
     setOutcomeFilter,
+    eventTypeFilter,
+    setEventTypeFilter,
     startDate,
     setStartDate,
     endDate,

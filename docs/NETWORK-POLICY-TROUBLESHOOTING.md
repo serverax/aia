@@ -1,6 +1,6 @@
 # NetworkPolicy Troubleshooting Guide
 
-Ops reference for the `synthetic-enterprise` namespace. Use this when a
+Ops reference for the `ordinox-ai` namespace. Use this when a
 pod can't reach Redis, an external API call hangs, or a fresh policy
 apply didn't seem to change anything.
 
@@ -14,11 +14,11 @@ apply didn't seem to change anything.
 
 ```bash
 # 0. List policies that apply to a pod
-kubectl describe pod -n synthetic-enterprise <pod>      | grep -A2 'Labels'
-kubectl get networkpolicies -n synthetic-enterprise -o wide
+kubectl describe pod -n ordinox-ai <pod>      | grep -A2 'Labels'
+kubectl get networkpolicies -n ordinox-ai -o wide
 
 # 1. Watch a probe pod do DNS + TCP from inside the namespace
-kubectl run -n synthetic-enterprise probe --rm -it \
+kubectl run -n ordinox-ai probe --rm -it \
   --image=nicolaka/netshoot --labels=app=echo-agent --restart=Never -- bash
 
 # 2. Confirm CoreDNS is reachable + serving
@@ -106,7 +106,7 @@ Three rules of thumb that catch most misunderstandings:
 
 In our setup:
 - `infrastructure/k3s/namespace.yaml` has a `default-deny-all` NetworkPolicy.
-  Once applied, **every pod** in `synthetic-enterprise` is default-deny.
+  Once applied, **every pod** in `ordinox-ai` is default-deny.
 - `infrastructure/k3s/namespace.yaml` also has `allow-internal` which
   re-allows same-namespace traffic + DNS to kube-system.
 - `infrastructure/k3s/network-policies-per-agent.yaml` adds per-agent
@@ -117,7 +117,7 @@ In our setup:
 
 ## Failure scenarios
 
-### Scenario 1 — Agent can't reach `redis.synthetic-enterprise.svc.cluster.local`
+### Scenario 1 — Agent can't reach `redis.ordinox-ai.svc.cluster.local`
 
 **Symptoms**
 - Agent logs show `redis.exceptions.ConnectionError: Error -2 connecting to redis...`
@@ -127,9 +127,9 @@ In our setup:
 
 ```bash
 # A. Is DNS even working?
-kubectl run -n synthetic-enterprise dns-probe --rm -i \
+kubectl run -n ordinox-ai dns-probe --rm -i \
   --image=busybox:1.36 --labels=app=echo-agent --restart=Never \
-  -- nslookup redis.synthetic-enterprise.svc.cluster.local
+  -- nslookup redis.ordinox-ai.svc.cluster.local
 ```
 
 - ❌ `can't resolve` → go to **Scenario 2** (DNS).
@@ -137,7 +137,7 @@ kubectl run -n synthetic-enterprise dns-probe --rm -i \
 
 ```bash
 # B. Can we actually TCP to it?
-kubectl run -n synthetic-enterprise tcp-probe --rm -i \
+kubectl run -n ordinox-ai tcp-probe --rm -i \
   --image=busybox:1.36 --labels=app=echo-agent --restart=Never \
   -- sh -c 'nc -zv -w 3 redis 6379'
 ```
@@ -147,11 +147,11 @@ kubectl run -n synthetic-enterprise tcp-probe --rm -i \
 
 ```bash
 # C. What policies select this pod?
-kubectl get networkpolicies -n synthetic-enterprise -o json \
+kubectl get networkpolicies -n ordinox-ai -o json \
   | jq '.items[] | {name:.metadata.name, podSelector:.spec.podSelector, policyTypes:.spec.policyTypes}'
 
 # D. Does the agent's Deployment actually carry the label our NP expects?
-kubectl get deploy -n synthetic-enterprise echo-agent -o jsonpath='{.spec.template.metadata.labels}'
+kubectl get deploy -n ordinox-ai echo-agent -o jsonpath='{.spec.template.metadata.labels}'
 ```
 
 **Common root causes**
@@ -166,7 +166,7 @@ kubectl get deploy -n synthetic-enterprise echo-agent -o jsonpath='{.spec.templa
 **Verify**
 
 ```bash
-kubectl rollout restart deploy/echo-agent -n synthetic-enterprise
+kubectl rollout restart deploy/echo-agent -n ordinox-ai
 # Then re-run probe A and B above.
 ```
 
@@ -175,7 +175,7 @@ kubectl rollout restart deploy/echo-agent -n synthetic-enterprise
 ### Scenario 2 — DNS lookups time out / return NXDOMAIN
 
 **Symptoms**
-- `nslookup redis.synthetic-enterprise.svc.cluster.local` from inside a pod
+- `nslookup redis.ordinox-ai.svc.cluster.local` from inside a pod
   hangs or returns `;; connection timed out; no servers could be reached`
 - BUT `nslookup 8.8.8.8` works (or fails differently)
 
@@ -206,7 +206,7 @@ kubectl get ns kube-system -o jsonpath='{.metadata.labels}' ; echo
 # Look for "kubernetes.io/metadata.name":"kube-system"
 
 # 2. What does the agent's NP actually allow for DNS?
-kubectl get networkpolicy <agent>-agent-egress -n synthetic-enterprise -o yaml \
+kubectl get networkpolicy <agent>-agent-egress -n ordinox-ai -o yaml \
   | grep -A4 'namespaceSelector'
 ```
 
@@ -232,11 +232,11 @@ This is a stopgap; commit the proper fix to the generator.
 **Verify**
 
 ```bash
-kubectl run -n synthetic-enterprise dns-probe --rm -i \
+kubectl run -n ordinox-ai dns-probe --rm -i \
   --image=busybox:1.36 --labels=app=echo-agent --restart=Never \
   -- sh -c '
     nslookup kubernetes.default
-    nslookup redis.synthetic-enterprise.svc.cluster.local
+    nslookup redis.ordinox-ai.svc.cluster.local
   '
 # Both should resolve in <1s.
 ```
@@ -253,7 +253,7 @@ kubectl run -n synthetic-enterprise dns-probe --rm -i \
 
 ```bash
 # Is there an in-cluster egress rule for the destination?
-kubectl get networkpolicy <agent>-agent-egress -n synthetic-enterprise -o yaml
+kubectl get networkpolicy <agent>-agent-egress -n ordinox-ai -o yaml
 # Look for an egress entry with the destination's podSelector
 ```
 
@@ -282,7 +282,7 @@ kubectl get networkpolicy <agent>-agent-egress -n synthetic-enterprise -o yaml
 grep -A5 'external_allow' infrastructure/security/capabilities.yaml | grep -B1 anthropic
 
 # B. Is the ipBlock rule actually in the deployed NP?
-kubectl get networkpolicy orchestrator-agent-egress -n synthetic-enterprise -o yaml \
+kubectl get networkpolicy orchestrator-agent-egress -n ordinox-ai -o yaml \
   | grep -A6 'ipBlock'
 ```
 
@@ -302,7 +302,7 @@ kubectl apply -f infrastructure/k3s/network-policies-per-agent.yaml
 **Verify**
 
 ```bash
-kubectl exec -n synthetic-enterprise <orchestrator-pod> -- \
+kubectl exec -n ordinox-ai <orchestrator-pod> -- \
   curl -sS -o /dev/null -w "%{http_code}\n" \
   https://api.anthropic.com/v1/messages
 # Expect 401 (no auth) — not "Could not resolve host" or "Connection timed out".
@@ -327,7 +327,7 @@ node-local and bypass NetworkPolicy ingress rules. Some don't.
 kubectl -n kube-system get pods -o wide | grep -E 'calico|cilium|flannel'
 
 # Test from inside a pod (NP applies to this path)
-kubectl run -n synthetic-enterprise probe --rm -i \
+kubectl run -n ordinox-ai probe --rm -i \
   --image=busybox:1.36 --labels=app=client-test --restart=Never \
   -- wget -q -T 3 -O - http://echo-agent:8000/health
 ```
@@ -353,12 +353,12 @@ kubectl run -n synthetic-enterprise probe --rm -i \
 
 ```bash
 # A. Did the NP actually land?
-kubectl get networkpolicy -n synthetic-enterprise
+kubectl get networkpolicy -n ordinox-ai
 
 # B. Does it select the pods you think it does?
-kubectl get networkpolicy <agent>-agent-egress -n synthetic-enterprise \
+kubectl get networkpolicy <agent>-agent-egress -n ordinox-ai \
   -o jsonpath='{.spec.podSelector}' ; echo
-kubectl get pod -n synthetic-enterprise -l app=<agent>-agent
+kubectl get pod -n ordinox-ai -l app=<agent>-agent
 
 # C. Does your CNI actually enforce? (Go back to Step 0.)
 ```
@@ -383,7 +383,7 @@ kubectl get pod -n synthetic-enterprise -l app=<agent>-agent
 git grep -l "name: <suspicious-name>" infrastructure/ services/
 
 # Did somebody hand-apply something?
-kubectl get <kind> <name> -n synthetic-enterprise -o yaml \
+kubectl get <kind> <name> -n ordinox-ai -o yaml \
   | grep -E 'last-applied|creationTimestamp|annotations'
 ```
 
@@ -394,7 +394,7 @@ kubectl get <kind> <name> -n synthetic-enterprise -o yaml \
 
 **Fix**
 - If intentional → add the resource to `capabilities.yaml` so audit stops flagging it.
-- If orphan → `kubectl delete <kind> <name> -n synthetic-enterprise`.
+- If orphan → `kubectl delete <kind> <name> -n ordinox-ai`.
 
 ---
 
@@ -405,7 +405,7 @@ Run this after `kubectl apply -f infrastructure/k3s/network-policies-per-agent.y
 ```bash
 set -e
 
-NS=synthetic-enterprise
+NS=ordinox-ai
 
 # 1. Policies are present
 kubectl get networkpolicy -n "$NS" \
@@ -499,7 +499,7 @@ you get default-deny behavior and conclude things are broken when they
 aren't:
 
 ```bash
-kubectl run probe -n synthetic-enterprise \
+kubectl run probe -n ordinox-ai \
   --rm -i --restart=Never \
   --image=nicolaka/netshoot \
   --labels=app=echo-agent \
@@ -516,5 +516,5 @@ kubectl run probe -n synthetic-enterprise \
 | Step 0 reveals CNI doesn't enforce | Page platform team — CNI swap is cluster-wide |
 | Audit drift you didn't cause | Check git blame on `capabilities.yaml` + recent kubectl history |
 | DNS works for some pods, not others | Likely pod-label mismatch — check Deployment template labels |
-| Worked yesterday, broken today | `kubectl get events -n synthetic-enterprise --sort-by='.lastTimestamp' \| tail -30` |
+| Worked yesterday, broken today | `kubectl get events -n ordinox-ai --sort-by='.lastTimestamp' \| tail -30` |
 | Test pod works, real agent doesn't | Real agent's labels probably differ — `kubectl get deploy <agent> -o jsonpath='{.spec.template.metadata.labels}'` |

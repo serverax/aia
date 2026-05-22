@@ -1,0 +1,43 @@
+{
+  "backup_id": "sample-dr-backup-20260521-090000z",
+  "backup_timestamp": "2026-05-21T09:00:00Z",
+  "cluster_version": "v1.36.0",
+  "talos_version": "v1.13.2",
+  "namespace": "ordinox-ai",
+  "resource_count": {
+    "pods": 2,
+    "pvcs": 1,
+    "secrets": 1,
+    "configmaps": 1,
+    "services": 1,
+    "deployments": 1,
+    "networkpolicies": 1,
+    "ingresses": 1
+  },
+  "database": {
+    "dump_file": "audit-backup.sql.gz",
+    "uncompressed_file": "audit-backup.sql",
+    "audit_event_count": 100,
+    "chronological_order": true,
+    "hash_chain_algorithm": "sha256(previous_hash + event canonical fields)",
+    "first_event_id": "audit-0001",
+    "last_event_id": "audit-0100",
+    "initial_previous_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "final_event_hash": "2970a51847757dbb775a22f9f721cbc9c546479ea92ec30c6d3e45994f27f057",
+    "sql_sha256": "c91de579e2fce451de0ed6fca379ccae343eb64765819f6720c52266455ebd57",
+    "sql_gzip_sha256": "14b48fce7ad42c9f6f66aec027108e2153178e5262fa4d78c6252cccd8d4e058"
+  },
+  "restore_targets": [
+    "compliance_audit_log",
+    "compliance-service configuration",
+    "llm-api-keys secret metadata",
+    "network policy state"
+  ],
+  "verification_steps": [
+    "decompress audit-backup.sql.gz",
+    "restore SQL into PostgreSQL",
+    "count 100 audit events",
+    "verify occurred_at is monotonic",
+    "recompute hash chain through audit-0100"
+  ]
+}

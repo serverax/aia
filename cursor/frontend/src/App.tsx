@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { DashboardPage } from './pages/DashboardPage'
 import { EditorPage } from './pages/EditorPage'
+import { ApprovalRequestPage } from './pages/ApprovalRequestPage'
 
 function App() {
-  const [activePage, setActivePage] = useState<'dashboard' | 'editor'>('dashboard')
+  const [activePage, setActivePage] = useState<'dashboard' | 'approvals' | 'editor'>('dashboard')
 
   return (
     <>
@@ -11,11 +12,16 @@ function App() {
         <button type="button" onClick={() => setActivePage('dashboard')}>
           Dashboard
         </button>
+        <button type="button" onClick={() => setActivePage('approvals')}>
+          Approvals
+        </button>
         <button type="button" onClick={() => setActivePage('editor')}>
           Editor
         </button>
       </nav>
-      {activePage === 'dashboard' ? <DashboardPage /> : <EditorPage />}
+      {activePage === 'dashboard' ? <DashboardPage /> : null}
+      {activePage === 'approvals' ? <ApprovalRequestPage /> : null}
+      {activePage === 'editor' ? <EditorPage /> : null}
     </>
   )
 }

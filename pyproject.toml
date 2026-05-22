@@ -1,5 +1,5 @@
 [project]
-name = "synthetic-enterprise"
+name = "ordinox-ai"
 version = "0.1.0"
 description = "Synthetic Enterprise - multi-agent AI platform"
 requires-python = ">=3.11"

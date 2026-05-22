@@ -11,12 +11,17 @@ await page.locator('.top-nav').getByRole('button', { name: 'Approvals', exact: t
 await page.getByRole('heading', { name: 'Approval Request UI' }).waitFor({ state: 'visible', timeout: 10000 });
 const end = performance.now();
 
+const rowChecks = page.locator('.approval-row-select input[type="checkbox"]');
+const rowCount = await rowChecks.count();
+const targetCount = Math.min(50, rowCount);
+for (let index = 0; index < targetCount; index += 1) {
+  await rowChecks.nth(index).check();
+}
 const bulkStart = performance.now();
-await page.locator('.bulk-select-all input[type="checkbox"]').check();
 await page.getByRole('button', { name: 'Bulk Approve' }).click();
 await page
   .locator('.approval-card .success')
-  .filter({ hasText: 'Bulk approve applied' })
+  .filter({ hasText: 'Bulk approve:' })
   .first()
   .waitFor({ state: 'visible', timeout: 10000 });
 const bulkEnd = performance.now();
@@ -36,16 +41,36 @@ await page.waitForTimeout(50);
 const filterEnd = performance.now();
 const filterActionMs = Number((filterEnd - filterStart).toFixed(2));
 
+await page
+  .locator('section.approval-card:has(h2:has-text("Create Approval Request")) select')
+  .first()
+  .selectOption('policy-standard');
+const templateApplyMs = Number(
+  (
+    await page.evaluate(async () => {
+      const start = performance.now();
+      const buttons = Array.from(document.querySelectorAll('button'));
+      const applyButton = buttons.find((button) => button.textContent?.includes('Apply Template'));
+      applyButton?.click();
+      await new Promise((resolve) => requestAnimationFrame(() => resolve(true)));
+      return performance.now() - start;
+    })
+  ).toFixed(2),
+);
+
 const benchmark = {
   page: 'ApprovalRequestPage',
   load_ms: loadMs,
   under_2s: loadMs < 2000,
+  bulk_items_target: targetCount,
   bulk_action_ms: bulkActionMs,
-  bulk_under_2s: bulkActionMs < 2000,
+  bulk_50_under_2s: targetCount >= 50 && bulkActionMs < 2000,
   search_action_ms: searchActionMs,
   search_under_500ms: searchActionMs < 500,
   filter_action_ms: filterActionMs,
   filter_under_500ms: filterActionMs < 500,
+  template_apply_ms: templateApplyMs,
+  template_apply_under_500ms: templateApplyMs < 500,
 };
 
 await fs.writeFile(path.resolve('approval-benchmark.json'), JSON.stringify(benchmark, null, 2), 'utf-8');

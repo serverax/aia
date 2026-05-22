@@ -7,13 +7,13 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: analyst-agent-sa
-  namespace: synthetic-enterprise
+  namespace: ordinox-ai
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: analyst-agent-role
-  namespace: synthetic-enterprise
+  namespace: ordinox-ai
 rules:
 - apiGroups:
   - ''
@@ -39,11 +39,11 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: analyst-agent-rolebinding
-  namespace: synthetic-enterprise
+  namespace: ordinox-ai
 subjects:
 - kind: ServiceAccount
   name: analyst-agent-sa
-  namespace: synthetic-enterprise
+  namespace: ordinox-ai
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -53,13 +53,13 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: compliance-agent-sa
-  namespace: synthetic-enterprise
+  namespace: ordinox-ai
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: compliance-agent-role
-  namespace: synthetic-enterprise
+  namespace: ordinox-ai
 rules:
 - apiGroups:
   - ''
@@ -84,11 +84,11 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: compliance-agent-rolebinding
-  namespace: synthetic-enterprise
+  namespace: ordinox-ai
 subjects:
 - kind: ServiceAccount
   name: compliance-agent-sa
-  namespace: synthetic-enterprise
+  namespace: ordinox-ai
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -98,13 +98,13 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: echo-agent-sa
-  namespace: synthetic-enterprise
+  namespace: ordinox-ai
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: echo-agent-role
-  namespace: synthetic-enterprise
+  namespace: ordinox-ai
 rules:
 - apiGroups:
   - ''
@@ -129,11 +129,11 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: echo-agent-rolebinding
-  namespace: synthetic-enterprise
+  namespace: ordinox-ai
 subjects:
 - kind: ServiceAccount
   name: echo-agent-sa
-  namespace: synthetic-enterprise
+  namespace: ordinox-ai
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -143,13 +143,13 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: orchestrator-agent-sa
-  namespace: synthetic-enterprise
+  namespace: ordinox-ai
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: orchestrator-agent-role
-  namespace: synthetic-enterprise
+  namespace: ordinox-ai
 rules:
 - apiGroups:
   - ''
@@ -175,11 +175,11 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: orchestrator-agent-rolebinding
-  namespace: synthetic-enterprise
+  namespace: ordinox-ai
 subjects:
 - kind: ServiceAccount
   name: orchestrator-agent-sa
-  namespace: synthetic-enterprise
+  namespace: ordinox-ai
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role

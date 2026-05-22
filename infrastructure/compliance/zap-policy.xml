@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Sprint 8 ZAP scan policy for compliance-service security baseline.
+
+  Intended use:
+    zap-baseline.py -t "$TARGET_URL" \
+      -n /zap/context/zap-context.xml \
+      -c /zap/context/zap-policy.xml \
+      -r zap-baseline-report.html \
+      -I
+
+  Sprint 8 pass criteria:
+    - Critical findings: 0
+    - High findings: 0 unless explicitly approved before execution
+    - Medium findings: <= 5 and no auth/data-exposure finding
+    - Low/informational findings: logged for Sprint 9 backlog
+-->
+<configuration>
+  <policy>
+    <name>Synthetic Enterprise Compliance API Baseline</name>
+    <description>
+      OWASP Top 10 focused scan policy for compliance, approvals, audit trail,
+      and decision explanation endpoints. This policy prioritizes injection,
+      broken access control, authentication, sensitive data exposure, security
+      headers, and server-side misconfiguration.
+    </description>
+
+    <thresholds>
+      <critical max="0" action="fail" owner="security"/>
+      <high max="0" action="fail" owner="security"/>
+      <medium max="5" action="review" owner="ChatGPT"/>
+      <low max="unbounded" action="log" owner="ChatGPT"/>
+      <informational max="unbounded" action="log" owner="ChatGPT"/>
+    </thresholds>
+
+    <ruleMappings>
+      <rule id="40018" name="SQL Injection" severity="critical" action="fail"/>
+      <rule id="40019" name="SQL Injection - MySQL" severity="critical" action="fail"/>
+      <rule id="40020" name="SQL Injection - Hypersonic SQL" severity="critical" action="fail"/>
+      <rule id="40021" name="SQL Injection - Oracle" severity="critical" action="fail"/>
+      <rule id="40022" name="SQL Injection - PostgreSQL" severity="critical" action="fail"/>
+      <rule id="40024" name="SQL Injection - SQLite" severity="critical" action="fail"/>
+      <rule id="90019" name="Server Side Code Injection" severity="critical" action="fail"/>
+      <rule id="90020" name="Remote OS Command Injection" severity="critical" action="fail"/>
+      <rule id="40012" name="Cross Site Scripting - Reflected" severity="high" action="fail"/>
+      <rule id="40014" name="Cross Site Scripting - Persistent" severity="high" action="fail"/>
+      <rule id="40016" name="Cross Site Scripting - Persistent Prime" severity="high" action="fail"/>
+      <rule id="40017" name="Cross Site Scripting - Persistent Spider" severity="high" action="fail"/>
+      <rule id="40003" name="CRLF Injection" severity="high" action="fail"/>
+      <rule id="6" name="Path Traversal" severity="high" action="fail"/>
+      <rule id="7" name="Remote File Inclusion" severity="high" action="fail"/>
+      <rule id="90033" name="Loosely Scoped Cookie" severity="medium" action="review"/>
+      <rule id="10010" name="Cookie No HttpOnly Flag" severity="medium" action="review"/>
+      <rule id="10011" name="Cookie Without Secure Flag" severity="medium" action="review"/>
+      <rule id="10015" name="Incomplete or No Cache-control Header Set" severity="low" action="log"/>
+      <rule id="10016" name="Web Browser XSS Protection Not Enabled" severity="low" action="log"/>
+      <rule id="10017" name="Cross-Domain JavaScript Source File Inclusion" severity="medium" action="review"/>
+      <rule id="10020" name="Anti-clickjacking Header" severity="medium" action="review"/>
+      <rule id="10021" name="X-Content-Type-Options Header Missing" severity="medium" action="review"/>
+      <rule id="10035" name="Strict-Transport-Security Header" severity="medium" action="review"/>
+      <rule id="10036" name="Server Leaks Version Information" severity="low" action="log"/>
+      <rule id="10038" name="Content Security Policy Header Not Set" severity="medium" action="review"/>
+      <rule id="10054" name="Cookie Without SameSite Attribute" severity="medium" action="review"/>
+      <rule id="10055" name="CSP Scanner" severity="medium" action="review"/>
+      <rule id="10096" name="Timestamp Disclosure" severity="low" action="log"/>
+      <rule id="10105" name="Weak Authentication Method" severity="high" action="fail"/>
+      <rule id="10109" name="Modern Web Application" severity="informational" action="log"/>
+      <rule id="10111" name="Authentication Request Identified" severity="informational" action="log"/>
+      <rule id="10112" name="Session Management Response Identified" severity="informational" action="log"/>
+      <rule id="10114" name="User Agent Fuzzer" severity="medium" action="review"/>
+      <rule id="10202" name="Absence of Anti-CSRF Tokens" severity="medium" action="review"/>
+    </ruleMappings>
+
+    <owaspFocus>
+      <category id="A01" name="Broken Access Control" required="true"/>
+      <category id="A02" name="Cryptographic Failures" required="true"/>
+      <category id="A03" name="Injection" required="true"/>
+      <category id="A04" name="Insecure Design" required="true"/>
+      <category id="A05" name="Security Misconfiguration" required="true"/>
+      <category id="A06" name="Vulnerable and Outdated Components" required="true"/>
+      <category id="A07" name="Identification and Authentication Failures" required="true"/>
+      <category id="A08" name="Software and Data Integrity Failures" required="true"/>
+      <category id="A09" name="Security Logging and Monitoring Failures" required="true"/>
+      <category id="A10" name="Server-Side Request Forgery" required="true"/>
+    </owaspFocus>
+
+    <falsePositiveExclusions>
+      <exclusion>
+        <ruleId>10036</ruleId>
+        <name>Server version header on placeholder runtime</name>
+        <matchUrl>http.*/compliance/.*</matchUrl>
+        <risk>low</risk>
+        <expiresAfter>Sprint 9 header hardening</expiresAfter>
+        <justification>
+          Python placeholder runtime may expose a server header. This is known,
+          documented, and non-blocking for Sprint 8. The production image must
+          suppress it before final hardening.
+        </justification>
+      </exclusion>
+      <exclusion>
+        <ruleId>10015</ruleId>
+        <name>Cacheable 404 on placeholder runtime</name>
+        <matchUrl>http.*/(health|ready|docs|metrics|unknown).*</matchUrl>
+        <risk>informational</risk>
+        <expiresAfter>Sprint 9 header hardening</expiresAfter>
+        <justification>
+          Cache headers on generated 404 responses are a tuning item and do not
+          expose protected data in the Sprint 8 placeholder runtime.
+        </justification>
+      </exclusion>
+      <exclusion>
+        <ruleId>10109</ruleId>
+        <name>Modern web application informational notice</name>
+        <matchUrl>http.*</matchUrl>
+        <risk>informational</risk>
+        <expiresAfter>Never</expiresAfter>
+        <justification>
+          Informational technology classification does not indicate a
+          vulnerability. Retain in report but do not block release.
+        </justification>
+      </exclusion>
+    </falsePositiveExclusions>
+
+    <customAssertions>
+      <assertion id="compliance-json-no-secret-leak" severity="critical" action="fail">
+        <description>Responses must not expose API keys or bearer tokens.</description>
+        <paths>
+          <path>/compliance/evaluate</path>
+          <path>/decision/explain</path>
+          <path>/audit/trail</path>
+        </paths>
+        <failRegex>(sk-ant-|sk-proj-|BEGIN PRIVATE KEY|Authorization:\s*Bearer\s+[A-Za-z0-9._-]+)</failRegex>
+      </assertion>
+      <assertion id="compliance-decision-shape" severity="high" action="fail">
+        <description>
+          /compliance/evaluate must return allowed, reason, and policy_version.
+        </description>
+        <path>/compliance/evaluate</path>
+        <requiredJsonFields>
+          <field>allowed</field>
+          <field>reason</field>
+          <field>policy_version</field>
+        </requiredJsonFields>
+      </assertion>
+      <assertion id="audit-trail-no-cross-project-data" severity="critical" action="fail">
+        <description>
+          Audit trail responses must only include events for the requested
+          project_id. Cross-project disclosure is a release blocker.
+        </description>
+        <path>/audit/trail</path>
+        <requestParameter>project_id</requestParameter>
+        <responseField>project_id</responseField>
+      </assertion>
+      <assertion id="approval-endpoint-requires-identity" severity="high" action="fail">
+        <description>
+          /approvals must require an agent/project identity header or equivalent
+          authenticated session in the production backend.
+        </description>
+        <path>/approvals</path>
+        <requiredHeaders>
+          <header>x-agent-id</header>
+          <header>x-project-id</header>
+        </requiredHeaders>
+      </assertion>
+    </customAssertions>
+
+    <deprecatedLibraryPolicy>
+      <scanForDeprecatedLibraries>false</scanForDeprecatedLibraries>
+      <reason>
+        ZAP baseline is not the source of truth for dependency age. Trivy and
+        SBOM checks own deprecated package findings in Sprint 8/9.
+      </reason>
+    </deprecatedLibraryPolicy>
+  </policy>
+</configuration>

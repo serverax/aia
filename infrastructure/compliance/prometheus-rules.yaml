@@ -1,0 +1,343 @@
+# Prometheus alerting rules for the ordinox-ai namespace.
+#
+# Consumed by the kube-prometheus-stack Prometheus instance via the
+# PrometheusRule CRD. The `release: prometheus` label is what the
+# default kube-prometheus-stack ruleSelector matches — keep it.
+#
+# Runbook for each alert lives in docs/OBSERVABILITY-RUNBOOKS.md;
+# the `runbook_url` annotation points at the anchor for each section.
+# Update GH_BLOB_URL if you fork the repo or move the docs.
+#
+# Metric source assumptions are documented in OBSERVABILITY-RUNBOOKS.md
+# § Metric inventory. If a metric is "PROVIDED-BY: TBD", the alert will
+# evaluate to no-data until the relevant exporter is shipped — that's
+# itself a useful signal (NoComplianceMetrics fires after 10 min).
+
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: ordinox-ai-alerts
+  namespace: monitoring
+  labels:
+    release: prometheus
+    app.kubernetes.io/part-of: ordinox-ai
+spec:
+  groups:
+
+  # ────────────────────────────────────────────────────────────
+  # 1. Policy drift — NetworkPolicy + RBAC must match what
+  #    capabilities.yaml declares. Drift indicates either an
+  #    unauthorized hand-edit or a failed reconcile.
+  # ────────────────────────────────────────────────────────────
+  - name: ordinox-ai.policy-drift
+    interval: 30s
+    rules:
+
+      - alert: NetworkPolicyCountChanged
+        # Baseline: 2 (namespace.yaml: default-deny-all + allow-internal)
+        # + 4 (per-agent egress) = 6. Anything else for 5+ minutes = drift.
+        expr: |
+          count(kube_networkpolicy_created{namespace="ordinox-ai"}) != 6
+        for: 5m
+        labels:
+          severity: warning
+          namespace: ordinox-ai
+          category: policy-drift
+        annotations:
+          summary: "NetworkPolicy count in ordinox-ai is {{ $value }}, expected 6"
+          description: |
+            The ordinox-ai namespace should have exactly 6 NetworkPolicies
+            (2 baseline + 4 per-agent from generate_policies.py). The current
+            count is {{ $value }}, indicating either a manual delete, manual
+            add, or a failed Flux reconcile.
+          runbook_url: "https://github.com/serverax/aia/blob/main/docs/OBSERVABILITY-RUNBOOKS.md#networkpolicycountchanged"
+
+      - alert: RBACDriftDetected
+        # Provided by a CronJob that runs `audit_rbac.sh` and pushes the
+        # exit code as a gauge. See OBSERVABILITY-RUNBOOKS.md § "RBAC
+        # drift exporter" for the CronJob spec.
+        expr: |
+          aia_rbac_audit_exit_code > 0
+        for: 5m
+        labels:
+          severity: warning
+          namespace: ordinox-ai
+          category: policy-drift
+        annotations:
+          summary: "RBAC drift detected by nightly audit"
+          description: |
+            scripts/security/audit_rbac.sh reports drift between
+            capabilities.yaml and the live cluster. Run the script
+            interactively to see which findings fired.
+          runbook_url: "https://github.com/serverax/aia/blob/main/docs/OBSERVABILITY-RUNBOOKS.md#rbacdriftdetected"
+
+  # ────────────────────────────────────────────────────────────
+  # 2. Pod health — surface the usual K8s failure modes fast.
+  # ────────────────────────────────────────────────────────────
+  - name: ordinox-ai.pod-health
+    interval: 30s
+    rules:
+
+      - alert: PodCrashLooping
+        expr: |
+          increase(kube_pod_container_status_restarts_total{namespace="ordinox-ai"}[15m]) > 3
+        for: 5m
+        labels:
+          severity: critical
+          namespace: ordinox-ai
+          category: pod-health
+        annotations:
+          summary: "Pod {{ $labels.pod }} restarted {{ $value }} times in 15m"
+          description: |
+            Container {{ $labels.container }} in pod {{ $labels.pod }} has
+            restarted {{ $value }} times in the last 15 minutes — typically
+            CrashLoopBackOff. Check `kubectl logs --previous` for the cause.
+          runbook_url: "https://github.com/serverax/aia/blob/main/docs/OBSERVABILITY-RUNBOOKS.md#podcrashlooping"
+
+      - alert: PodImagePullFailing
+        expr: |
+          kube_pod_container_status_waiting_reason{
+            namespace="ordinox-ai",
+            reason=~"ImagePullBackOff|ErrImagePull"
+          } > 0
+        for: 5m
+        labels:
+          severity: critical
+          namespace: ordinox-ai
+          category: pod-health
+        annotations:
+          summary: "Pod {{ $labels.pod }} cannot pull image"
+          description: |
+            Container {{ $labels.container }} in {{ $labels.pod }} is stuck
+            in {{ $labels.reason }}. Common causes: image tag doesn't exist
+            in registry, ImagePullSecret missing, sigstore policy-controller
+            rejecting an unsigned image.
+          runbook_url: "https://github.com/serverax/aia/blob/main/docs/OBSERVABILITY-RUNBOOKS.md#podimagepullfailing"
+
+      - alert: PodNotReady
+        expr: |
+          kube_pod_status_ready{namespace="ordinox-ai", condition="false"} == 1
+        for: 10m
+        labels:
+          severity: warning
+          namespace: ordinox-ai
+          category: pod-health
+        annotations:
+          summary: "Pod {{ $labels.pod }} not ready for 10+ minutes"
+          description: |
+            Pod {{ $labels.pod }} has failed its readiness probe for over
+            10 minutes. Service traffic will not be routed to it. Either
+            the app is broken (`kubectl logs`) or the probe spec is wrong.
+          runbook_url: "https://github.com/serverax/aia/blob/main/docs/OBSERVABILITY-RUNBOOKS.md#podnotready"
+
+  # ────────────────────────────────────────────────────────────
+  # 3. Compliance service metrics — application-level health
+  #    of the agents that actually do compliance decisions.
+  # ────────────────────────────────────────────────────────────
+  - name: ordinox-ai.compliance-service
+    interval: 30s
+    rules:
+
+      - alert: ComplianceDecisionLatencyP99High
+        # Histogram emitted by the Compliance Officer agent over OTLP.
+        # See OBSERVABILITY-RUNBOOKS.md § "Metric inventory".
+        expr: |
+          histogram_quantile(
+            0.99,
+            sum by (le) (rate(compliance_decision_duration_seconds_bucket{namespace="ordinox-ai"}[5m]))
+          ) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          namespace: ordinox-ai
+          category: compliance-service
+        annotations:
+          summary: "Compliance decision p99 latency {{ $value | humanizeDuration }} > 100ms"
+          description: |
+            99th-percentile compliance decision latency is above the
+            100ms SLO over the last 5 minutes. Check Qdrant query latency
+            and Postgres connection pool saturation.
+          runbook_url: "https://github.com/serverax/aia/blob/main/docs/OBSERVABILITY-RUNBOOKS.md#compliancedecisionlatencyp99high"
+
+      - alert: ComplianceErrorRateHigh
+        # Counter: compliance_decisions_total{status="error"} / total.
+        expr: |
+          (
+            sum(rate(compliance_decisions_total{namespace="ordinox-ai", status="error"}[5m]))
+            /
+            sum(rate(compliance_decisions_total{namespace="ordinox-ai"}[5m]))
+          ) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+          namespace: ordinox-ai
+          category: compliance-service
+        annotations:
+          summary: "Compliance error rate {{ $value | humanizePercentage }} > 1%"
+          description: |
+            More than 1% of compliance decisions are failing over the
+            last 5 minutes. Check the agent logs for the failure mode —
+            could be an LLM API outage, malformed input, or schema mismatch.
+          runbook_url: "https://github.com/serverax/aia/blob/main/docs/OBSERVABILITY-RUNBOOKS.md#complianceerrorratehigh"
+
+      - alert: ComplianceThroughputDrop
+        # Current 5m rate < 80% of the same window 1h ago.
+        expr: |
+          (
+            sum(rate(compliance_decisions_total{namespace="ordinox-ai"}[5m]))
+            /
+            sum(rate(compliance_decisions_total{namespace="ordinox-ai"}[5m] offset 1h))
+          ) < 0.8
+        for: 10m
+        labels:
+          severity: warning
+          namespace: ordinox-ai
+          category: compliance-service
+        annotations:
+          summary: "Compliance throughput dropped >20% vs 1h ago"
+          description: |
+            Decision throughput is below 80% of the baseline from 1 hour
+            ago. Could indicate upstream blockage (orchestrator stuck),
+            scaling event, or simply a quiet period — verify against
+            request volume.
+          runbook_url: "https://github.com/serverax/aia/blob/main/docs/OBSERVABILITY-RUNBOOKS.md#compliancethroughputdrop"
+
+      - alert: NoComplianceMetrics
+        # If the metric is missing entirely for 10+ minutes, the exporter
+        # is down or the agent isn't scraped. This catches "I deployed
+        # but forgot to wire OTLP" silently-broken setups.
+        expr: |
+          absent(compliance_decisions_total{namespace="ordinox-ai"})
+        for: 10m
+        labels:
+          severity: warning
+          namespace: ordinox-ai
+          category: compliance-service
+        annotations:
+          summary: "No compliance_decisions_total metric for 10+ minutes"
+          description: |
+            Either the compliance-agent isn't exporting metrics, the
+            ServiceMonitor isn't picking it up, or the agent isn't
+            running. Verify with `kubectl get pod -n ordinox-ai -l app=compliance-agent`.
+          runbook_url: "https://github.com/serverax/aia/blob/main/docs/OBSERVABILITY-RUNBOOKS.md#nocompliancemetrics"
+
+  # ────────────────────────────────────────────────────────────
+  # 4. Audit log anomalies — quiet or noisy = both worth a look.
+  # ────────────────────────────────────────────────────────────
+  - name: ordinox-ai.audit-log
+    interval: 30s
+    rules:
+
+      - alert: AuditLogSilence
+        # Emitted by postgres_exporter custom query that selects
+        # COUNT(*) FROM audit_log WHERE timestamp > now() - 1 minute.
+        # See OBSERVABILITY-RUNBOOKS.md § "Postgres exporter query".
+        expr: |
+          rate(aia_audit_log_inserts_total[10m]) == 0
+        for: 10m
+        labels:
+          severity: warning
+          namespace: ordinox-ai
+          category: audit
+        annotations:
+          summary: "No audit_log inserts in 10+ minutes"
+          description: |
+            audit_log table hasn't received any new rows in 10 minutes.
+            Either no agent traffic (verify against orchestrator request
+            metrics) OR the audit path is broken (check the agents'
+            Postgres connection logs).
+          runbook_url: "https://github.com/serverax/aia/blob/main/docs/OBSERVABILITY-RUNBOOKS.md#auditlogsilence"
+
+      - alert: BulkComplianceRejections
+        expr: |
+          sum(increase(compliance_decisions_total{namespace="ordinox-ai", verdict="rejected"}[1m])) > 10
+        for: 1m
+        labels:
+          severity: critical
+          namespace: ordinox-ai
+          category: audit
+        annotations:
+          summary: "{{ $value }} compliance rejections in 1 minute — possible attack"
+          description: |
+            Compliance Officer rejected {{ $value }} requests in the last
+            minute. Normal baseline is <2 per minute. Possible causes:
+            (a) coordinated attack pattern, (b) upstream pushing malformed
+            data, (c) a regulator-rule update that started catching
+            legitimate traffic. Pull recent audit_log entries to triage.
+          runbook_url: "https://github.com/serverax/aia/blob/main/docs/OBSERVABILITY-RUNBOOKS.md#bulkcompliancerejections"
+
+  # ────────────────────────────────────────────────────────────
+  # 5. Resource exhaustion — pre-empt OOMKills and PVC fillups.
+  # ────────────────────────────────────────────────────────────
+  - name: ordinox-ai.resources
+    interval: 30s
+    rules:
+
+      - alert: PodCPUUsageHigh
+        expr: |
+          (
+            sum by (pod, container) (
+              rate(container_cpu_usage_seconds_total{namespace="ordinox-ai", container!=""}[5m])
+            )
+            /
+            sum by (pod, container) (
+              kube_pod_container_resource_limits{namespace="ordinox-ai", resource="cpu"}
+            )
+          ) > 0.8
+        for: 10m
+        labels:
+          severity: warning
+          namespace: ordinox-ai
+          category: resources
+        annotations:
+          summary: "Pod {{ $labels.pod }}/{{ $labels.container }} CPU {{ $value | humanizePercentage }}"
+          description: |
+            Container has used >80% of its CPU limit for 10+ minutes.
+            Either bump the limit in the Deployment or investigate why
+            it's burning cycles (`kubectl top pod` + profile).
+          runbook_url: "https://github.com/serverax/aia/blob/main/docs/OBSERVABILITY-RUNBOOKS.md#podcpuusagehigh"
+
+      - alert: PodMemoryUsageHigh
+        expr: |
+          (
+            sum by (pod, container) (
+              container_memory_working_set_bytes{namespace="ordinox-ai", container!=""}
+            )
+            /
+            sum by (pod, container) (
+              kube_pod_container_resource_limits{namespace="ordinox-ai", resource="memory"}
+            )
+          ) > 0.85
+        for: 10m
+        labels:
+          severity: critical
+          namespace: ordinox-ai
+          category: resources
+        annotations:
+          summary: "Pod {{ $labels.pod }}/{{ $labels.container }} memory {{ $value | humanizePercentage }}"
+          description: |
+            Container has used >85% of its memory limit for 10+ minutes.
+            At 100% the kernel will OOMKill it. Bump the memory limit OR
+            investigate the leak. Check `container_memory_working_set_bytes`
+            trend over the last hour.
+          runbook_url: "https://github.com/serverax/aia/blob/main/docs/OBSERVABILITY-RUNBOOKS.md#podmemoryusagehigh"
+
+      - alert: PersistentVolumeAlmostFull
+        expr: |
+          (
+            kubelet_volume_stats_used_bytes{namespace="ordinox-ai"}
+            /
+            kubelet_volume_stats_capacity_bytes{namespace="ordinox-ai"}
+          ) > 0.9
+        for: 5m
+        labels:
+          severity: critical
+          namespace: ordinox-ai
+          category: resources
+        annotations:
+          summary: "PVC {{ $labels.persistentvolumeclaim }} at {{ $value | humanizePercentage }} usage"
+          description: |
+            Volume is >90% full. Once it hits 100%, writes will fail —
+            Postgres can corrupt, Redis appendonly file refuses appends.
+            Either grow the PVC (`kubectl edit pvc`) or clean up old data.
+          runbook_url: "https://github.com/serverax/aia/blob/main/docs/OBSERVABILITY-RUNBOOKS.md#persistentvolumealmostfull"

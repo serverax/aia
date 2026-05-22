@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: synthetic-enterprise
+  name: ordinox-ai
   labels:
-    name: synthetic-enterprise
-    app: synthetic-enterprise
+    name: ordinox-ai
+    app: ordinox-ai
     environment: production
 ---
 # Generic agent ServiceAccount. Sprint 1/2/7 manifests reference this name.
@@ -14,13 +14,13 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: agent-sa
-  namespace: synthetic-enterprise
+  namespace: ordinox-ai
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: agent-role
-  namespace: synthetic-enterprise
+  namespace: ordinox-ai
 rules:
 - apiGroups: [""]
   resources: ["pods", "pods/log", "configmaps"]
@@ -36,7 +36,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: agent-rolebinding
-  namespace: synthetic-enterprise
+  namespace: ordinox-ai
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -44,13 +44,13 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: agent-sa
-  namespace: synthetic-enterprise
+  namespace: ordinox-ai
 ---
 apiVersion: v1
 kind: ResourceQuota
 metadata:
-  name: synthetic-enterprise-quota
-  namespace: synthetic-enterprise
+  name: ordinox-ai-quota
+  namespace: ordinox-ai
 spec:
   hard:
     requests.cpu: "200"
@@ -64,7 +64,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: default-deny-all
-  namespace: synthetic-enterprise
+  namespace: ordinox-ai
 spec:
   podSelector: {}
   policyTypes:
@@ -75,7 +75,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-internal
-  namespace: synthetic-enterprise
+  namespace: ordinox-ai
 spec:
   podSelector: {}
   policyTypes:
@@ -85,12 +85,12 @@ spec:
   - from:
     - namespaceSelector:
         matchLabels:
-          name: synthetic-enterprise
+          name: ordinox-ai
   egress:
   - to:
     - namespaceSelector:
         matchLabels:
-          name: synthetic-enterprise
+          name: ordinox-ai
   - to:
     - namespaceSelector:
         matchLabels:

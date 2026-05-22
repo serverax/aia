@@ -6,7 +6,7 @@
 #
 # Verify enforcement:
 #   # Try to deploy an unsigned image — should be denied:
-#   kubectl run unsigned-test -n synthetic-enterprise --image=nginx:latest
+#   kubectl run unsigned-test -n ordinox-ai --image=nginx:latest
 #   # Expect: "admission webhook ... denied the request: ... no signature found"
 
 apiVersion: policy.sigstore.dev/v1beta1

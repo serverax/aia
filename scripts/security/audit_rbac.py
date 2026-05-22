@@ -18,7 +18,7 @@ Usage:
     python scripts/security/audit_rbac.py
 
     # Offline / CI: feed the kubectl JSON in
-    kubectl get sa,role,rolebinding -n synthetic-enterprise -o json \\
+    kubectl get sa,role,rolebinding -n ordinox-ai -o json \\
         > /tmp/state.json
     python scripts/security/audit_rbac.py --from-json /tmp/state.json
 
@@ -183,7 +183,7 @@ def audit(
                 severity=Severity.WARNING,
                 detail=f"cluster has {kind}/{name}; not declared in capabilities.yaml",
                 remediation=(
-                    f"either delete (`kubectl delete {kind_lower[:-1]} {name} -n synthetic-enterprise`) "
+                    f"either delete (`kubectl delete {kind_lower[:-1]} {name} -n ordinox-ai`) "
                     "or add it to infrastructure/security/capabilities.yaml"
                 ),
             ))

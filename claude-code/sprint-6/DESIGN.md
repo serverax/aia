@@ -158,9 +158,9 @@ spec:
   rules:
     - name: read-only-root-fs
       match:
-        any: [{ resources: { namespaces: ["synthetic-enterprise"] } }]
+        any: [{ resources: { namespaces: ["ordinox-ai"] } }]
       validate:
-        message: "Pods in synthetic-enterprise must use read-only root filesystem"
+        message: "Pods in ordinox-ai must use read-only root filesystem"
         pattern:
           spec:
             containers:
@@ -170,7 +170,7 @@ spec:
                   runAsNonRoot: true
     - name: drop-all-caps
       match:
-        any: [{ resources: { namespaces: ["synthetic-enterprise"] } }]
+        any: [{ resources: { namespaces: ["ordinox-ai"] } }]
       validate:
         message: "Containers must drop ALL Linux capabilities"
         pattern:
@@ -181,7 +181,7 @@ spec:
                     drop: ["ALL"]
     - name: no-host-mounts
       match:
-        any: [{ resources: { namespaces: ["synthetic-enterprise"] } }]
+        any: [{ resources: { namespaces: ["ordinox-ai"] } }]
       validate:
         message: "Host path volumes are forbidden"
         deny:
@@ -442,7 +442,7 @@ Day 0 = your preflight (Vault init+unseal per `infrastructure/vault/PREFLIGHT-UN
 When you ping me to start Sprint 6:
 
 - [ ] This DESIGN.md is approved verbatim (or with marked diffs)
-- [ ] `provision-cluster-full.sh` has been run successfully — namespace `synthetic-enterprise` exists
+- [ ] `provision-cluster-full.sh` has been run successfully — namespace `ordinox-ai` exists
 - [ ] **Vault preflight done** — `infrastructure/vault/PREFLIGHT-UNSEAL.md` followed; `vault status` shows `Sealed: false`; `~/.aia/secrets/vault-init.json` exists with 600 perms
 - [ ] `ANTHROPIC_API_KEY` is set in `llm-api-keys` Secret (from Sprint 2)
 - [ ] You've confirmed which agents (from Sprints 3, 4, 5) actually use tools — currently the design assumes Orchestrator + Analyst do, Echo + Editor don't. If that's wrong, the capability matrix changes.

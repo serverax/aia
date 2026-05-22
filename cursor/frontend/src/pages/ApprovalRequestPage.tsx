@@ -12,6 +12,7 @@ import { useApprovalMetrics } from '../hooks/useApprovalMetrics'
 import { type ApprovalQueueFilter, useApprovalQueue } from '../hooks/useApprovalQueue'
 import { useApprovalRequest } from '../hooks/useApprovalRequest'
 import { approvalService } from '../services/approval/approvalService'
+import type { ApprovalWorkflowRequest } from '../types/api'
 
 interface ApprovalRequestPageProps {
   initialFilter?: ApprovalQueueFilter
@@ -23,6 +24,11 @@ export function ApprovalRequestPage({ initialFilter = 'waiting_me' }: ApprovalRe
   const [selectedRequestIds, setSelectedRequestIds] = useState<string[]>([])
   const [isBulkSubmitting, setIsBulkSubmitting] = useState(false)
   const [bulkStatusMessage, setBulkStatusMessage] = useState<string | null>(null)
+  const [undoExpiresAt, setUndoExpiresAt] = useState<number | null>(null)
+  const [undoSecondsRemaining, setUndoSecondsRemaining] = useState(0)
+  const [undoRestorePayload, setUndoRestorePayload] = useState<
+    Array<{ id: string; status: 'pending' | 'in_progress' | 'approved' | 'rejected'; reviewers: ApprovalWorkflowRequest['reviewers']; feedback_thread: ApprovalWorkflowRequest['feedback_thread'] }>
+  >([])
   const {
     requests,
     filteredRequests,
@@ -41,6 +47,16 @@ export function ApprovalRequestPage({ initialFilter = 'waiting_me' }: ApprovalRe
     setCommentQuery,
     outcomeFilter: queueOutcomeFilter,
     setOutcomeFilter: setQueueOutcomeFilter,
+    statusFilter,
+    setStatusFilter,
+    assigneeQuery,
+    setAssigneeQuery,
+    requestIdQuery,
+    setRequestIdQuery,
+    slaFilter,
+    setSlaFilter,
+    templateFilter,
+    setTemplateFilter,
     dateFrom,
     setDateFrom,
     dateTo,
@@ -74,6 +90,8 @@ export function ApprovalRequestPage({ initialFilter = 'waiting_me' }: ApprovalRe
     setPolicyFilter,
     outcomeFilter: auditOutcomeFilter,
     setOutcomeFilter: setAuditOutcomeFilter,
+    eventTypeFilter,
+    setEventTypeFilter,
     startDate,
     setStartDate,
     endDate,
@@ -158,15 +176,57 @@ export function ApprovalRequestPage({ initialFilter = 'waiting_me' }: ApprovalRe
 
   const handleBulkDecision = async (decision: 'approve' | 'reject') => {
     if (selectedRequestIds.length === 0) return
+    const selectedSnapshots = requests
+      .filter((request) => selectedRequestIds.includes(request.id))
+      .map((request) => ({
+        id: request.id,
+        status: request.status,
+        reviewers: request.reviewers,
+        feedback_thread: request.feedback_thread,
+      }))
+    setUndoRestorePayload(selectedSnapshots)
     setIsBulkSubmitting(true)
-    const updated = await approvalService.submitBulkWorkflowDecision({
+    const result = await approvalService.submitBulkWorkflowDecision({
       requestIds: selectedRequestIds,
       reviewerId: currentReviewerId,
       decision,
       feedback: `Bulk ${decision} by ${currentReviewerId}`,
     })
     setIsBulkSubmitting(false)
-    setBulkStatusMessage(`Bulk ${decision} applied to ${updated.length} requests.`)
+    setBulkStatusMessage(
+      `Bulk ${decision}: ${result.updatedCount} succeeded, ${result.failedCount} failed${result.failedIds.length ? ` (${result.failedIds.join(', ')})` : ''}.`,
+    )
+    setUndoExpiresAt(Date.now() + 30_000)
+    setUndoSecondsRemaining(30)
+    setSelectedRequestIds([])
+    await refresh()
+    await refreshAudit()
+  }
+
+  const handleBulkRequestChanges = async () => {
+    if (selectedRequestIds.length === 0) return
+    const selectedSnapshots = requests
+      .filter((request) => selectedRequestIds.includes(request.id))
+      .map((request) => ({
+        id: request.id,
+        status: request.status,
+        reviewers: request.reviewers,
+        feedback_thread: request.feedback_thread,
+      }))
+    setUndoRestorePayload(selectedSnapshots)
+    setIsBulkSubmitting(true)
+    const result = await approvalService.submitBulkWorkflowDecision({
+      requestIds: selectedRequestIds,
+      reviewerId: currentReviewerId,
+      decision: 'request_changes',
+      feedback: `Bulk request_changes by ${currentReviewerId}`,
+    })
+    setIsBulkSubmitting(false)
+    setBulkStatusMessage(
+      `Bulk request changes: ${result.updatedCount} succeeded, ${result.failedCount} failed${result.failedIds.length ? ` (${result.failedIds.join(', ')})` : ''}.`,
+    )
+    setUndoExpiresAt(Date.now() + 30_000)
+    setUndoSecondsRemaining(30)
     setSelectedRequestIds([])
     await refresh()
     await refreshAudit()
@@ -174,18 +234,58 @@ export function ApprovalRequestPage({ initialFilter = 'waiting_me' }: ApprovalRe
 
   const handleBulkEscalate = async () => {
     if (selectedRequestIds.length === 0) return
+    const selectedSnapshots = requests
+      .filter((request) => selectedRequestIds.includes(request.id))
+      .map((request) => ({
+        id: request.id,
+        status: request.status,
+        reviewers: request.reviewers,
+        feedback_thread: request.feedback_thread,
+      }))
+    setUndoRestorePayload(selectedSnapshots)
     setIsBulkSubmitting(true)
-    const updated = await approvalService.escalateBulkWorkflow({
+    const result = await approvalService.escalateBulkWorkflow({
       requestIds: selectedRequestIds,
       reviewerId: currentReviewerId,
       reason: `Bulk escalation by ${currentReviewerId}`,
     })
     setIsBulkSubmitting(false)
-    setBulkStatusMessage(`Bulk escalation applied to ${updated.length} requests.`)
+    setBulkStatusMessage(
+      `Bulk escalation: ${result.updatedCount} succeeded, ${result.failedCount} failed${result.failedIds.length ? ` (${result.failedIds.join(', ')})` : ''}.`,
+    )
+    setUndoExpiresAt(Date.now() + 30_000)
+    setUndoSecondsRemaining(30)
     setSelectedRequestIds([])
     await refresh()
     await refreshAudit()
   }
+
+  const handleUndoBulkAction = async () => {
+    if (!undoExpiresAt || Date.now() > undoExpiresAt || undoRestorePayload.length === 0) return
+    await approvalService.restoreBulkWorkflowState(undoRestorePayload)
+    setUndoRestorePayload([])
+    setUndoExpiresAt(null)
+    setUndoSecondsRemaining(0)
+    setBulkStatusMessage('Last bulk action was reverted.')
+    await refresh()
+    await refreshAudit()
+  }
+
+  useEffect(() => {
+    if (!undoExpiresAt) return
+    const timer = window.setInterval(() => {
+      const remainingMs = undoExpiresAt - Date.now()
+      if (remainingMs <= 0) {
+        setUndoExpiresAt(null)
+        setUndoSecondsRemaining(0)
+        setUndoRestorePayload([])
+        window.clearInterval(timer)
+        return
+      }
+      setUndoSecondsRemaining(Math.ceil(remainingMs / 1000))
+    }, 250)
+    return () => window.clearInterval(timer)
+  }, [undoExpiresAt])
 
   const explanationExpanded = selectedRequest
     ? Boolean(explanationExpandedByRequest[selectedRequest.id])
@@ -230,19 +330,32 @@ export function ApprovalRequestPage({ initialFilter = 'waiting_me' }: ApprovalRe
             }}
             onBulkApprove={() => void handleBulkDecision('approve')}
             onBulkReject={() => void handleBulkDecision('reject')}
+            onBulkRequestChanges={() => void handleBulkRequestChanges()}
             onBulkEscalate={() => void handleBulkEscalate()}
             isBulkSubmitting={isBulkSubmitting}
             bulkStatusMessage={bulkStatusMessage}
+            undoSecondsRemaining={undoSecondsRemaining}
+            onUndoBulkAction={() => void handleUndoBulkAction()}
             requestorQuery={requestorQuery}
             policyQuery={policyQuery}
             commentQuery={commentQuery}
             outcomeFilter={queueOutcomeFilter}
+            statusFilter={statusFilter}
+            assigneeQuery={assigneeQuery}
+            requestIdQuery={requestIdQuery}
+            slaFilter={slaFilter}
+            templateFilter={templateFilter}
             dateFrom={dateFrom}
             dateTo={dateTo}
             onRequestorQueryChange={setRequestorQuery}
             onPolicyQueryChange={setPolicyQuery}
             onCommentQueryChange={setCommentQuery}
             onOutcomeFilterChange={setQueueOutcomeFilter}
+            onStatusFilterChange={setStatusFilter}
+            onAssigneeQueryChange={setAssigneeQuery}
+            onRequestIdQueryChange={setRequestIdQuery}
+            onSlaFilterChange={setSlaFilter}
+            onTemplateFilterChange={setTemplateFilter}
             onDateFromChange={setDateFrom}
             onDateToChange={setDateTo}
             presets={presets}
@@ -293,6 +406,7 @@ export function ApprovalRequestPage({ initialFilter = 'waiting_me' }: ApprovalRe
             agentFilter={agentFilter}
             policyFilter={policyFilter}
             outcomeFilter={auditOutcomeFilter}
+            eventTypeFilter={eventTypeFilter}
             agentOptions={agentOptions}
             policyOptions={policyOptions}
             startDate={startDate}
@@ -301,6 +415,7 @@ export function ApprovalRequestPage({ initialFilter = 'waiting_me' }: ApprovalRe
             onAgentFilterChange={setAgentFilter}
             onPolicyFilterChange={setPolicyFilter}
             onOutcomeFilterChange={setAuditOutcomeFilter}
+            onEventTypeFilterChange={setEventTypeFilter}
             onStartDateChange={setStartDate}
             onEndDateChange={setEndDate}
             onExportCsv={exportAuditCsv}

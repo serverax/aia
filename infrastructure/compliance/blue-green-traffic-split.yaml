@@ -1,0 +1,192 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: compliance-service-blue
+  namespace: ordinox-ai
+  labels:
+    app: compliance-service
+    color: blue
+    traffic-role: stable
+spec:
+  selector:
+    app: compliance-service
+    color: blue
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: compliance-service-green
+  namespace: ordinox-ai
+  labels:
+    app: compliance-service
+    color: green
+    traffic-role: canary
+spec:
+  selector:
+    app: compliance-service
+    color: green
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: compliance-service-blue
+  namespace: ordinox-ai
+  labels:
+    app: compliance-service
+    color: blue
+    traffic-role: stable
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: ordinoxai.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: compliance-service-blue
+                port:
+                  number: 8000
+    - host: dev.ordinoxai.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: compliance-service-blue
+                port:
+                  number: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: compliance-service-green-canary
+  namespace: ordinox-ai
+  labels:
+    app: compliance-service
+    color: green
+    traffic-role: canary
+  annotations:
+    nginx.ingress.kubernetes.io/canary: "true"
+    nginx.ingress.kubernetes.io/canary-weight: "5"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: ordinoxai.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: compliance-service-green
+                port:
+                  number: 8000
+    - host: dev.ordinoxai.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: compliance-service-green
+                port:
+                  number: 8000
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: compliance-blue-green-plan
+  namespace: ordinox-ai
+  labels:
+    app: compliance-service
+data:
+  traffic-split.json: |
+    {
+      "strategy": "nginx-ingress-canary",
+      "stable_color": "blue",
+      "candidate_color": "green",
+      "stages": [
+        {
+          "name": "smoke",
+          "green_weight": 0,
+          "duration": "5m",
+          "pass_criteria": {
+            "health_http_200": true,
+            "ready_http_200": true,
+            "pod_restarts": 0
+          }
+        },
+        {
+          "name": "canary-5",
+          "green_weight": 5,
+          "duration": "15m",
+          "pass_criteria": {
+            "p95_latency_ms_max": 2000,
+            "error_rate_percent_max": 1,
+            "pod_restarts": 0
+          }
+        },
+        {
+          "name": "canary-25",
+          "green_weight": 25,
+          "duration": "15m",
+          "pass_criteria": {
+            "p95_latency_ms_max": 2000,
+            "error_rate_percent_max": 1,
+            "pod_restarts": 0
+          }
+        },
+        {
+          "name": "canary-50",
+          "green_weight": 50,
+          "duration": "15m",
+          "pass_criteria": {
+            "p95_latency_ms_max": 2000,
+            "error_rate_percent_max": 1,
+            "pod_restarts": 0
+          }
+        },
+        {
+          "name": "promote-green",
+          "green_weight": 100,
+          "duration": "30m",
+          "pass_criteria": {
+            "p95_latency_ms_max": 2000,
+            "error_rate_percent_max": 1,
+            "pod_restarts": 0,
+            "zap_critical_findings": 0,
+            "zap_high_findings": 0
+          }
+        }
+      ],
+      "rollback_triggers": [
+        "green endpoint missing",
+        "green deployment rollout timeout",
+        "p95 latency above 5000ms",
+        "error rate above 10%",
+        "any critical or high ZAP finding",
+        "audit logging failure",
+        "policy evaluation response missing allowed/reason/policy_version"
+      ],
+      "rollback_commands": [
+        "kubectl -n ordinox-ai annotate ingress compliance-service-green-canary nginx.ingress.kubernetes.io/canary-weight='0' --overwrite",
+        "kubectl -n ordinox-ai rollout undo deployment/compliance-service-green",
+        "kubectl -n ordinox-ai get endpoints compliance-service-blue compliance-service-green -o wide"
+      ]
+    }

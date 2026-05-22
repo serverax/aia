@@ -100,14 +100,14 @@ export KUBECONFIG=~/.kube/aia-config.yaml
 
 # Set the API key (one-time)
 kubectl create secret generic llm-api-keys \
-  -n synthetic-enterprise \
+  -n ordinox-ai \
   --from-literal=ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
 
 kubectl apply -f infrastructure/k3s/compliance-agent.yaml
 kubectl apply -f infrastructure/k3s/orchestrator-agent.yaml
 
-kubectl rollout status -n synthetic-enterprise deployment/orchestrator-agent
-kubectl rollout status -n synthetic-enterprise deployment/compliance-agent
+kubectl rollout status -n ordinox-ai deployment/orchestrator-agent
+kubectl rollout status -n ordinox-ai deployment/compliance-agent
 ```
 
 CI does this automatically on push to `main` if you set the `KUBECONFIG_STAGING` secret in the repo's GitHub Actions settings.

@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Sprint 8 ZAP context for the Synthetic Enterprise compliance surface.
+
+  Intended use with ZAP automation or baseline containers:
+    docker run with container cleanup enabled:
+      -v "$PWD/infrastructure/compliance:/zap/context:ro" \
+      -v "$PWD/chatgpt/sprint-8:/zap/wrk:rw" \
+      zaproxy/zap-stable:latest zap-baseline.py \
+      -t "$TARGET_URL" \
+      -n /zap/context/zap-context.xml \
+      -r zap-baseline-report.html \
+      -I
+
+  Authentication is optional for the placeholder runtime. When a protected
+  backend is deployed, provide ZAP_AUTH_HEADER_VALUE="Bearer <test-token>" or
+  use the form authentication block below with test-only credentials.
+-->
+<configuration>
+  <context>
+    <name>Synthetic Enterprise Compliance Context</name>
+    <description>
+      ZAP scanning scope for Sprint 8 compliance-service, analyst, approval,
+      and audit endpoints. Health, metrics, and generated documentation are
+      intentionally excluded to reduce noisy non-security findings.
+    </description>
+
+    <includeRegexes>
+      <includeRegex>http://.*/compliance/.*</includeRegex>
+      <includeRegex>https://.*/compliance/.*</includeRegex>
+      <includeRegex>http://.*/analyst/.*</includeRegex>
+      <includeRegex>https://.*/analyst/.*</includeRegex>
+      <includeRegex>http://.*/approvals.*</includeRegex>
+      <includeRegex>https://.*/approvals.*</includeRegex>
+      <includeRegex>http://.*/audit/.*</includeRegex>
+      <includeRegex>https://.*/audit/.*</includeRegex>
+      <includeRegex>http://.*/decision/.*</includeRegex>
+      <includeRegex>https://.*/decision/.*</includeRegex>
+    </includeRegexes>
+
+    <excludeRegexes>
+      <excludeRegex>http://.*/health(\?.*)?$</excludeRegex>
+      <excludeRegex>https://.*/health(\?.*)?$</excludeRegex>
+      <excludeRegex>http://.*/ready(\?.*)?$</excludeRegex>
+      <excludeRegex>https://.*/ready(\?.*)?$</excludeRegex>
+      <excludeRegex>http://.*/metrics(\?.*)?$</excludeRegex>
+      <excludeRegex>https://.*/metrics(\?.*)?$</excludeRegex>
+      <excludeRegex>http://.*/docs(/.*)?$</excludeRegex>
+      <excludeRegex>https://.*/docs(/.*)?$</excludeRegex>
+      <excludeRegex>http://.*/openapi.json$</excludeRegex>
+      <excludeRegex>https://.*/openapi.json$</excludeRegex>
+    </excludeRegexes>
+
+    <authentication>
+      <method>formBasedAuthentication</method>
+      <loginUrl>http://{{host}}/login</loginUrl>
+      <loginRequestData>username={%username%}&amp;password={%password%}</loginRequestData>
+      <usernameParameter>username</usernameParameter>
+      <passwordParameter>password</passwordParameter>
+      <loggedInIndicator>\Q"authenticated":true\E</loggedInIndicator>
+      <loggedOutIndicator>\Q"authenticated":false\E|\Q401 Unauthorized\E</loggedOutIndicator>
+      <notes>
+        Placeholder runtime does not require login. Keep this block disabled
+        unless the deployed backend exposes /login with test-only credentials.
+      </notes>
+    </authentication>
+
+    <users>
+      <user>
+        <name>sprint8-zap-test-user</name>
+        <enabled>true</enabled>
+        <credentials>
+          <username>zap-sprint8</username>
+          <password>replace-with-test-only-password</password>
+        </credentials>
+      </user>
+    </users>
+
+    <sessionManagement>
+      <method>cookieBasedSessionManagement</method>
+      <cookieNames>
+        <cookieName>session</cookieName>
+        <cookieName>synthetic_enterprise_session</cookieName>
+      </cookieNames>
+    </sessionManagement>
+
+    <forcedUserMode>
+      <enabled>false</enabled>
+      <user>sprint8-zap-test-user</user>
+    </forcedUserMode>
+  </context>
+
+  <replacer>
+    <rules>
+      <rule>
+        <description>Set JSON content type for API probes</description>
+        <enabled>true</enabled>
+        <matchType>REQ_HEADER</matchType>
+        <matchString>Content-Type</matchString>
+        <replacement>application/json</replacement>
+      </rule>
+      <rule>
+        <description>Set JSON accept header for API probes</description>
+        <enabled>true</enabled>
+        <matchType>REQ_HEADER</matchType>
+        <matchString>Accept</matchString>
+        <replacement>application/json</replacement>
+      </rule>
+      <rule>
+        <description>Optional bearer token for protected Sprint 8 endpoints</description>
+        <enabled>false</enabled>
+        <matchType>REQ_HEADER</matchType>
+        <matchString>Authorization</matchString>
+        <replacement>Bearer ${ZAP_AUTH_HEADER_VALUE}</replacement>
+      </rule>
+      <rule>
+        <description>Agent identity header for compliance policy checks</description>
+        <enabled>true</enabled>
+        <matchType>REQ_HEADER</matchType>
+        <matchString>x-agent-id</matchString>
+        <replacement>zap_security_baseline_v1</replacement>
+      </rule>
+      <rule>
+        <description>Project identity header for compliance policy checks</description>
+        <enabled>true</enabled>
+        <matchType>REQ_HEADER</matchType>
+        <matchString>x-project-id</matchString>
+        <replacement>sprint-8-security-baseline</replacement>
+      </rule>
+    </rules>
+  </replacer>
+
+  <technology>
+    <include>
+      <tech>Db</tech>
+      <tech>Linux</tech>
+      <tech>Python</tech>
+      <tech>WebSocket</tech>
+      <tech>JSON</tech>
+      <tech>HTTP Server</tech>
+    </include>
+    <exclude>
+      <tech>ASP</tech>
+      <tech>ASP.NET</tech>
+      <tech>ColdFusion</tech>
+      <tech>JSP/Servlet</tech>
+      <tech>PHP</tech>
+      <tech>Ruby</tech>
+      <tech>Silverlight</tech>
+      <tech>SOAP</tech>
+    </exclude>
+  </technology>
+
+  <spider>
+    <maxDepth>5</maxDepth>
+    <maxChildren>50</maxChildren>
+    <acceptCookies>true</acceptCookies>
+    <handleODataParametersVisited>true</handleODataParametersVisited>
+    <processForm>true</processForm>
+    <postForm>false</postForm>
+  </spider>
+
+  <ajaxSpider>
+    <enabled>false</enabled>
+    <reason>
+      Compliance-service is API-first. AJAX spidering is disabled unless the
+      frontend route is included in a later Sprint 8/9 security pass.
+    </reason>
+  </ajaxSpider>
+</configuration>

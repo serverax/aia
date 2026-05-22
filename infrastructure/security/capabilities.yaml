@@ -11,7 +11,7 @@
 version: 1
 
 # Namespace these policies apply to.
-namespace: synthetic-enterprise
+namespace: ordinox-ai
 
 # In-cluster Services agents may reach. Keys are friendly names used in
 # each agent's `network.egress_allow`. Each entry lists the Service's

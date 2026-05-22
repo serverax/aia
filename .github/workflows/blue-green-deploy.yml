@@ -1,0 +1,60 @@
+name: Blue Green Compliance Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_talos_context:
+        description: "Must be admin@ordinox-talos-ha"
+        required: true
+        type: string
+      run_apply:
+        description: "Apply blue-green config after rollout gate passes"
+        required: true
+        default: false
+        type: boolean
+
+jobs:
+  blue-green:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Refuse wrong context declaration
+        run: |
+          test "${{ inputs.confirm_talos_context }}" = "admin@ordinox-talos-ha"
+
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p "$HOME/.kube"
+          echo "${{ secrets.TALOS_KUBECONFIG }}" | base64 -d > "$HOME/.kube/config"
+          chmod 600 "$HOME/.kube/config"
+
+      - name: Verify context
+        run: |
+          kubectl config current-context
+          test "$(kubectl config current-context)" = "admin@ordinox-talos-ha"
+
+      - name: Wait for Flux reconciliation
+        run: |
+          kubectl -n flux-system get deploy
+          kubectl -n flux-system rollout status deployment/source-controller --timeout=120s
+          kubectl -n flux-system rollout status deployment/kustomize-controller --timeout=120s
+
+      - name: Run rollout gate
+        run: |
+          chmod +x scripts/compliance/rollout-gate.sh
+          scripts/compliance/rollout-gate.sh
+
+      - name: Apply blue-green split
+        if: ${{ inputs.run_apply }}
+        run: |
+          chmod +x scripts/compliance/apply-blue-green.sh
+          scripts/compliance/apply-blue-green.sh
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: blue-green-evidence
+          path: reports/blue-green/

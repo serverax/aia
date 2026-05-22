@@ -1,0 +1,39 @@
+{
+  "backup_id": "sample-dr-backup-20260521-100000z",
+  "timestamp": "2026-05-21T10:00:00Z",
+  "cluster": "ordinox-talos-ha",
+  "cluster_version": "v1.36.0",
+  "talos_version": "v1.13.2",
+  "namespace": "ordinox-ai",
+  "resources": 15,
+  "resource_count": {
+    "pods": 2,
+    "pvcs": 2,
+    "secrets": 2,
+    "configmaps": 1,
+    "services": 1,
+    "deployments": 2,
+    "networkpolicies": 2,
+    "ingresses": 1,
+    "serviceaccounts": 1,
+    "limitranges": 1
+  },
+  "contents": [
+    "audit-backup.sql.gz",
+    "secrets-backup.json",
+    "pvc/redis/appendonly.aof",
+    "pvc/qdrant/collections.json",
+    "checksums.sha256"
+  ],
+  "database": {
+    "dump_file": "audit-backup.sql.gz",
+    "audit_event_count": 100,
+    "chronological_order": true,
+    "hash_chain_algorithm": "sha256(event_id|occurred_at|namespace|agent_id|project_id|action|decision|policy_version|reason|previous_hash)",
+    "first_event_id": "audit-0001",
+    "last_event_id": "audit-0100",
+    "initial_previous_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "final_event_hash": "996dc1b094777b6be6f0601a969b7fe90d4da9384a9cbfa3bc33449fedbe4ffb"
+  },
+  "checksum_file": "checksums.sha256"
+}

@@ -82,7 +82,7 @@ def kubectl_apply():
 
     Returns the CompletedProcess so tests can inspect returncode + stderr.
     """
-    def _apply(yaml_doc: str, *, namespace: str = "synthetic-enterprise"):
+    def _apply(yaml_doc: str, *, namespace: str = "ordinox-ai"):
         return subprocess.run(
             ["kubectl", "apply", "-n", namespace, "-f", "-"],
             input=yaml_doc,
@@ -98,7 +98,7 @@ def kubectl_delete():
     """Best-effort cleanup helper for tests that create resources."""
     created: list[tuple[str, str, str]] = []   # (kind, name, namespace)
 
-    def _track(kind: str, name: str, namespace: str = "synthetic-enterprise"):
+    def _track(kind: str, name: str, namespace: str = "ordinox-ai"):
         created.append((kind, name, namespace))
 
     yield _track
@@ -112,4 +112,4 @@ def kubectl_delete():
 
 
 # Test namespace used for E2E manifests. Must already exist (created by Sprint 1).
-TEST_NAMESPACE = os.environ.get("AIA_TEST_NAMESPACE", "synthetic-enterprise")
+TEST_NAMESPACE = os.environ.get("AIA_TEST_NAMESPACE", "ordinox-ai")

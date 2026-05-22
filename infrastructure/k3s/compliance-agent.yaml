@@ -5,13 +5,13 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: compliance-agent-config
-  namespace: synthetic-enterprise
+  namespace: ordinox-ai
 data:
-  REDIS_HOST: redis.synthetic-enterprise.svc.cluster.local
+  REDIS_HOST: redis.ordinox-ai.svc.cluster.local
   REDIS_PORT: "6379"
-  POSTGRES_HOST: postgres.synthetic-enterprise.svc.cluster.local
+  POSTGRES_HOST: postgres.ordinox-ai.svc.cluster.local
   POSTGRES_PORT: "5432"
-  OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger.synthetic-enterprise.svc.cluster.local:4317
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger.ordinox-ai.svc.cluster.local:4317
   OTEL_SERVICE_NAME: compliance-officer
   COMPLIANCE_INPUT_STREAM: agent:compliance_officer:tasks
   COMPLIANCE_RESULT_STREAM: orchestrator:replies
@@ -21,7 +21,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: compliance-agent
-  namespace: synthetic-enterprise
+  namespace: ordinox-ai
 spec:
   selector:
     app: compliance-agent
@@ -34,7 +34,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: compliance-agent
-  namespace: synthetic-enterprise
+  namespace: ordinox-ai
 spec:
   replicas: 2
   selector:

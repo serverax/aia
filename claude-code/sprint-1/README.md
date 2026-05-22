@@ -34,7 +34,7 @@ F:\aia\
 ├── infrastructure/
 │   ├── docker-compose.dev.yml # postgres + redis + jaeger + echo-agent
 │   └── k3s/
-│       ├── namespace.yaml     # synthetic-enterprise + quota + NetPol
+│       ├── namespace.yaml     # ordinox-ai + quota + NetPol
 │       ├── postgres.yaml      # StatefulSet + init ConfigMap + Secret
 │       ├── postgres-init.sql  # audit_log schema (used by compose + k3s)
 │       ├── redis.yaml         # StatefulSet
@@ -96,8 +96,8 @@ docker push ghcr.io/serverax/aia/echo-agent:latest
 kubectl apply -f infrastructure/k3s/echo-agent.yaml
 
 # 4. Watch the rollout
-kubectl rollout status -n synthetic-enterprise deployment/echo-agent
-kubectl logs -n synthetic-enterprise -l app=echo-agent --tail=50
+kubectl rollout status -n ordinox-ai deployment/echo-agent
+kubectl logs -n ordinox-ai -l app=echo-agent --tail=50
 ```
 
 ## Acceptance checklist

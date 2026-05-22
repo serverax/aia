@@ -17,6 +17,7 @@ type ApprovalTemplatePreset = {
   title: string
   description: string
   deadlineHours: number
+  requiredFields: string[]
 }
 
 const approvalTemplatePresets: ApprovalTemplatePreset[] = [
@@ -30,6 +31,7 @@ const approvalTemplatePresets: ApprovalTemplatePreset[] = [
     title: 'Policy Change Review',
     description: 'Review policy deltas, verify compliance mapping, and approve rollout readiness.',
     deadlineHours: 36,
+    requiredFields: ['title', 'description', 'deadline', 'reviewers'],
   },
   {
     id: 'exception-fastlane',
@@ -41,6 +43,7 @@ const approvalTemplatePresets: ApprovalTemplatePreset[] = [
     title: 'Security Exception Request',
     description: 'Validate exception scope, compensating controls, and rollback criteria.',
     deadlineHours: 12,
+    requiredFields: ['title', 'description', 'deadline', 'related_document_id', 'reviewers'],
   },
   {
     id: 'document-release',
@@ -52,6 +55,7 @@ const approvalTemplatePresets: ApprovalTemplatePreset[] = [
     title: 'Document Release Approval',
     description: 'Confirm classification and approve release to external audience.',
     deadlineHours: 24,
+    requiredFields: ['title', 'description', 'deadline', 'reviewers'],
   },
 ]
 
@@ -85,10 +89,14 @@ export function ApprovalRequestForm({ onCreate, isSubmitting }: ApprovalRequestF
     setReviewerInput('')
   }
 
-  const applyTemplate = (templateId: string) => {
-    setSelectedTemplateId(templateId)
-    if (templateId === 'custom') return
-    const template = approvalTemplatePresets.find((item) => item.id === templateId)
+  const selectedTemplate = useMemo(
+    () => approvalTemplatePresets.find((template) => template.id === selectedTemplateId),
+    [selectedTemplateId],
+  )
+
+  const applyTemplate = () => {
+    if (selectedTemplateId === 'custom') return
+    const template = approvalTemplatePresets.find((item) => item.id === selectedTemplateId)
     if (!template) return
     const deadlineDate = new Date(new Date(createdAtBaseline).getTime() + template.deadlineHours * 60 * 60 * 1000)
     const deadlineValue = deadlineDate.toISOString().slice(0, 16)
@@ -130,6 +138,7 @@ export function ApprovalRequestForm({ onCreate, isSubmitting }: ApprovalRequestF
       metadata: {
         related_document_id: relatedDocumentId || undefined,
         risk_score: Number(riskScore),
+        template_id: selectedTemplateId !== 'custom' ? selectedTemplateId : undefined,
       },
     })
     if (!created) {
@@ -151,7 +160,7 @@ export function ApprovalRequestForm({ onCreate, isSubmitting }: ApprovalRequestF
       <h2>Create Approval Request</h2>
       <div className="approval-form-block">
         <label>Request Template</label>
-        <select value={selectedTemplateId} onChange={(event) => applyTemplate(event.target.value)}>
+        <select value={selectedTemplateId} onChange={(event) => setSelectedTemplateId(event.target.value)}>
           <option value="custom">Custom</option>
           {approvalTemplatePresets.map((template) => (
             <option key={template.id} value={template.id}>
@@ -159,6 +168,21 @@ export function ApprovalRequestForm({ onCreate, isSubmitting }: ApprovalRequestF
             </option>
           ))}
         </select>
+        {selectedTemplate ? (
+          <div className="template-preview">
+            <p>
+              <strong>Template preview:</strong> {selectedTemplate.label}
+            </p>
+            <p>Type: {selectedTemplate.requestType}</p>
+            <p>Strategy: {selectedTemplate.strategy}</p>
+            <p>Default reviewers: {selectedTemplate.reviewers.join(', ')}</p>
+            <p>SLA offset: +{selectedTemplate.deadlineHours}h</p>
+            <p>Required fields: {selectedTemplate.requiredFields.join(', ')}</p>
+            <button type="button" onClick={applyTemplate}>
+              Apply Template
+            </button>
+          </div>
+        ) : null}
       </div>
       <div className="approval-form-block">
         <label>Request Type</label>

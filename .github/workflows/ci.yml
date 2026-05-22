@@ -153,13 +153,13 @@ jobs:
           kubectl apply -f infrastructure/k3s/jaeger.yaml
           # Update image tags to the just-built SHA.
           for svc in echo-agent orchestrator-agent compliance-agent; do
-            kubectl -n synthetic-enterprise set image \
+            kubectl -n ordinox-ai set image \
               "deployment/$svc" \
               "$svc=${{ env.REGISTRY }}/${{ github.repository }}/$svc:${{ github.sha }}" \
               || kubectl apply -f infrastructure/k3s/$svc.yaml
           done
       - name: Wait for rollout
         run: |
-          kubectl -n synthetic-enterprise rollout status deployment/echo-agent --timeout=5m
-          kubectl -n synthetic-enterprise rollout status deployment/compliance-agent --timeout=5m
-          kubectl -n synthetic-enterprise rollout status deployment/orchestrator-agent --timeout=5m
+          kubectl -n ordinox-ai rollout status deployment/echo-agent --timeout=5m
+          kubectl -n ordinox-ai rollout status deployment/compliance-agent --timeout=5m
+          kubectl -n ordinox-ai rollout status deployment/orchestrator-agent --timeout=5m

@@ -7,7 +7,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: analyst-agent-egress
-  namespace: synthetic-enterprise
+  namespace: ordinox-ai
 spec:
   podSelector:
     matchLabels:
@@ -78,7 +78,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: compliance-agent-egress
-  namespace: synthetic-enterprise
+  namespace: ordinox-ai
 spec:
   podSelector:
     matchLabels:
@@ -132,7 +132,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: echo-agent-egress
-  namespace: synthetic-enterprise
+  namespace: ordinox-ai
 spec:
   podSelector:
     matchLabels:
@@ -177,7 +177,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: orchestrator-agent-egress
-  namespace: synthetic-enterprise
+  namespace: ordinox-ai
 spec:
   podSelector:
     matchLabels:

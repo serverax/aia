@@ -4,6 +4,8 @@ import type { ApprovalWorkflowRequest } from '../types/api'
 
 export type ApprovalQueueFilter = 'waiting_me' | 'waiting_others' | 'completed'
 export type QueueOutcomeFilter = 'all' | 'approved' | 'rejected' | 'escalated' | 'pending'
+export type QueueStatusFilter = 'all' | 'pending' | 'in_progress' | 'approved' | 'rejected'
+export type QueueSlaFilter = 'all' | 'healthy' | 'at_risk' | 'breached'
 
 const currentReviewerId = 'you@synthetic.io'
 const presetStorageKey = 'approval-queue-presets'
@@ -15,6 +17,11 @@ interface QueuePreset {
   policyQuery: string
   commentQuery: string
   outcomeFilter: QueueOutcomeFilter
+  statusFilter: QueueStatusFilter
+  assigneeQuery: string
+  requestIdQuery: string
+  slaFilter: QueueSlaFilter
+  templateFilter: string
   dateFrom: string
   dateTo: string
   custom: boolean
@@ -28,6 +35,11 @@ const builtinPresets: QueuePreset[] = [
     policyQuery: '',
     commentQuery: '',
     outcomeFilter: 'pending',
+    statusFilter: 'all',
+    assigneeQuery: '',
+    requestIdQuery: '',
+    slaFilter: 'all',
+    templateFilter: 'all',
     dateFrom: '',
     dateTo: '',
     custom: false,
@@ -39,6 +51,11 @@ const builtinPresets: QueuePreset[] = [
     policyQuery: '',
     commentQuery: 'Escalated',
     outcomeFilter: 'escalated',
+    statusFilter: 'all',
+    assigneeQuery: '',
+    requestIdQuery: '',
+    slaFilter: 'all',
+    templateFilter: 'all',
     dateFrom: '',
     dateTo: '',
     custom: false,
@@ -50,6 +67,11 @@ const builtinPresets: QueuePreset[] = [
     policyQuery: '',
     commentQuery: '',
     outcomeFilter: 'all',
+    statusFilter: 'all',
+    assigneeQuery: '',
+    requestIdQuery: '',
+    slaFilter: 'all',
+    templateFilter: 'all',
     dateFrom: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
     dateTo: new Date().toISOString().slice(0, 10),
     custom: false,
@@ -61,6 +83,11 @@ const builtinPresets: QueuePreset[] = [
     policyQuery: '',
     commentQuery: 'positive',
     outcomeFilter: 'all',
+    statusFilter: 'all',
+    assigneeQuery: '',
+    requestIdQuery: '',
+    slaFilter: 'all',
+    templateFilter: 'all',
     dateFrom: '',
     dateTo: '',
     custom: false,
@@ -87,6 +114,13 @@ function inDateRange(request: ApprovalWorkflowRequest, dateFrom: string, dateTo:
   return allTimes.some((value) => value >= fromMs && value <= toMs)
 }
 
+function slaUrgency(request: ApprovalWorkflowRequest): QueueSlaFilter {
+  const delta = new Date(request.deadline).getTime() - Date.now()
+  if (delta <= 0) return 'breached'
+  if (delta <= 2 * 60 * 60 * 1000) return 'at_risk'
+  return 'healthy'
+}
+
 export function useApprovalQueue(initialFilter: ApprovalQueueFilter = 'waiting_me') {
   const [requests, setRequests] = useState<ApprovalWorkflowRequest[]>([])
   const [filter, setFilter] = useState<ApprovalQueueFilter>(initialFilter)
@@ -96,6 +130,11 @@ export function useApprovalQueue(initialFilter: ApprovalQueueFilter = 'waiting_m
   const [policyQuery, setPolicyQuery] = useState('')
   const [commentQuery, setCommentQuery] = useState('')
   const [outcomeFilter, setOutcomeFilter] = useState<QueueOutcomeFilter>('all')
+  const [statusFilter, setStatusFilter] = useState<QueueStatusFilter>('all')
+  const [assigneeQuery, setAssigneeQuery] = useState('')
+  const [requestIdQuery, setRequestIdQuery] = useState('')
+  const [slaFilter, setSlaFilter] = useState<QueueSlaFilter>('all')
+  const [templateFilter, setTemplateFilter] = useState('all')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [customPresets, setCustomPresets] = useState<QueuePreset[]>(() => {
@@ -176,6 +215,28 @@ export function useApprovalQueue(initialFilter: ApprovalQueueFilter = 'waiting_m
         if (outcomeFilter === 'escalated') return isEscalated(request)
         return request.status === outcomeFilter
       })
+      .filter((request) => (statusFilter === 'all' ? true : request.status === statusFilter))
+      .filter((request) =>
+        assigneeQuery
+          ? request.reviewers.some((reviewer) =>
+              reviewer.user_id.toLowerCase().includes(assigneeQuery.toLowerCase()),
+            )
+          : true,
+      )
+      .filter((request) => {
+        if (!requestIdQuery) return true
+        const needle = requestIdQuery.toLowerCase()
+        return (
+          request.id.toLowerCase().includes(needle) ||
+          request.title.toLowerCase().includes(needle) ||
+          request.description.toLowerCase().includes(needle) ||
+          (request.metadata.related_document_id ?? '').toLowerCase().includes(needle)
+        )
+      })
+      .filter((request) => (slaFilter === 'all' ? true : slaUrgency(request) === slaFilter))
+      .filter((request) =>
+        templateFilter === 'all' ? true : (request.metadata.template_id ?? 'custom') === templateFilter,
+      )
       .filter((request) => inDateRange(request, dateFrom, dateTo))
 
     return [...searched].sort((a, b) => {
@@ -183,7 +244,22 @@ export function useApprovalQueue(initialFilter: ApprovalQueueFilter = 'waiting_m
       if (sortBy === 'risk') return (b.metadata.risk_score ?? 0) - (a.metadata.risk_score ?? 0)
       return new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
     })
-  }, [commentQuery, dateFrom, dateTo, filter, outcomeFilter, policyQuery, requestorQuery, requests, sortBy])
+  }, [
+    assigneeQuery,
+    commentQuery,
+    dateFrom,
+    dateTo,
+    filter,
+    outcomeFilter,
+    policyQuery,
+    requestIdQuery,
+    requestorQuery,
+    requests,
+    slaFilter,
+    sortBy,
+    statusFilter,
+    templateFilter,
+  ])
 
   const presets = useMemo(() => [...builtinPresets, ...customPresets], [customPresets])
 
@@ -194,6 +270,11 @@ export function useApprovalQueue(initialFilter: ApprovalQueueFilter = 'waiting_m
     setPolicyQuery(preset.policyQuery)
     setCommentQuery(preset.commentQuery)
     setOutcomeFilter(preset.outcomeFilter)
+    setStatusFilter(preset.statusFilter)
+    setAssigneeQuery(preset.assigneeQuery)
+    setRequestIdQuery(preset.requestIdQuery)
+    setSlaFilter(preset.slaFilter)
+    setTemplateFilter(preset.templateFilter)
     setDateFrom(preset.dateFrom)
     setDateTo(preset.dateTo)
   }
@@ -208,6 +289,11 @@ export function useApprovalQueue(initialFilter: ApprovalQueueFilter = 'waiting_m
       policyQuery,
       commentQuery,
       outcomeFilter,
+      statusFilter,
+      assigneeQuery,
+      requestIdQuery,
+      slaFilter,
+      templateFilter,
       dateFrom,
       dateTo,
       custom: true,
@@ -237,6 +323,16 @@ export function useApprovalQueue(initialFilter: ApprovalQueueFilter = 'waiting_m
     setCommentQuery,
     outcomeFilter,
     setOutcomeFilter,
+    statusFilter,
+    setStatusFilter,
+    assigneeQuery,
+    setAssigneeQuery,
+    requestIdQuery,
+    setRequestIdQuery,
+    slaFilter,
+    setSlaFilter,
+    templateFilter,
+    setTemplateFilter,
     dateFrom,
     setDateFrom,
     dateTo,

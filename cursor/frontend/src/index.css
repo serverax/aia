@@ -458,3 +458,135 @@ button.danger {
     padding: 0.75rem;
   }
 }
+
+.approval-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.approval-left,
+.approval-right {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.approval-card h2 {
+  margin-top: 0;
+}
+
+.approval-form-block,
+.approval-form-grid,
+.approval-queue-controls,
+.approval-search-grid,
+.approval-bulk-actions,
+.audit-filters,
+.audit-date-range,
+.audit-export-row {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.approval-form-grid,
+.approval-queue-controls,
+.approval-search-grid,
+.audit-filters,
+.audit-date-range {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.approval-card select,
+.approval-card input,
+.approval-card textarea {
+  width: 100%;
+  border: 1px solid #2f3a54;
+  background: #16233d;
+  color: #dbe6ff;
+  border-radius: 0.5rem;
+  padding: 0.45rem 0.55rem;
+}
+
+.approval-queue-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.approval-bulk-bar,
+.bulk-undo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.bulk-undo {
+  padding: 0.5rem;
+  border: 1px solid #2f3a54;
+  border-radius: 0.5rem;
+}
+
+.approval-presets {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.preset-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.preset-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.approval-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.approval-detail-grid {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.decision-explanation {
+  border: 1px solid #2f3a54;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.pill.confidence-low {
+  background: #5e1f25;
+}
+
+.pill.confidence-medium {
+  background: #674100;
+}
+
+.pill.confidence-high {
+  background: #104b35;
+}
+
+.audit-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+@media (max-width: 900px) {
+  .approval-layout {
+    grid-template-columns: 1fr;
+  }
+}

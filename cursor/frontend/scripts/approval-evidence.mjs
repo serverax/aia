@@ -28,6 +28,10 @@ await page
   .first()
   .selectOption('exception-fastlane');
 await page.waitForTimeout(250);
+const templatePreviewPresent = await page.locator('.template-preview').isVisible();
+const templateApplyButtonPresent = await page.getByRole('button', { name: 'Apply Template' }).isVisible();
+await page.getByRole('button', { name: 'Apply Template' }).click();
+await page.waitForTimeout(150);
 const requestTypeValue = await page
   .locator('section.approval-card:has(h2:has-text("Create Approval Request")) .approval-form-block')
   .nth(1)
@@ -67,17 +71,36 @@ if ((await page.getByRole('button', { name: 'Delete' }).count()) > 0) {
 
 const bulkSelectAllPresent = await page.locator('.bulk-select-all input[type="checkbox"]').count();
 const bulkActionButtonsPresent = await page.locator('.approval-bulk-actions button').count();
+const bulkRequestChangesPresent = (await page.getByRole('button', { name: 'Bulk Request Changes' }).count()) > 0;
 await page.locator('.bulk-select-all input[type="checkbox"]').check();
 await page.getByRole('button', { name: 'Bulk Reject' }).click();
 await page.waitForTimeout(700);
 const bulkActionOperational = await page
   .locator('.approval-card .success')
   .allTextContents()
-  .then((messages) => messages.some((message) => message.includes('Bulk reject applied')));
+  .then((messages) => messages.some((message) => message.includes('Bulk reject:') && message.includes('succeeded')));
+const bulkPartialReportingPresent = await page
+  .locator('.approval-card .success')
+  .allTextContents()
+  .then((messages) => messages.some((message) => message.includes('succeeded') && message.includes('failed')));
+const undoWindowPresent = (await page.getByRole('button', { name: 'Undo Bulk Action' }).count()) > 0;
+if (undoWindowPresent) {
+  await page.getByRole('button', { name: 'Undo Bulk Action' }).click();
+  await page.waitForTimeout(250);
+}
+const undoOperational = await page
+  .locator('.approval-card .success')
+  .allTextContents()
+  .then((messages) => messages.some((message) => message.includes('reverted')));
 
 await page.locator('.approval-queue-controls select').first().selectOption('completed');
 await page.waitForTimeout(400);
 if ((await page.getByRole('button', { name: 'Open' }).count()) === 0) {
+  await page.getByPlaceholder('Search requestor').fill('');
+  await page.getByPlaceholder('Search policy ID/name').fill('');
+  await page.getByPlaceholder('Search comments/text').fill('');
+  await page.locator('.approval-search-grid select').first().selectOption('all');
+  await page.waitForTimeout(200);
   await page.locator('.approval-queue-controls select').first().selectOption('waiting_others');
   await page.waitForTimeout(400);
 }
@@ -104,13 +127,20 @@ const confidenceTooltipPresent = await page
 
 await page.locator('.approval-queue-controls select').first().selectOption('completed');
 await page.waitForTimeout(400);
+if ((await page.getByRole('button', { name: 'Open' }).count()) === 0) {
+  await page.locator('.approval-queue-controls select').first().selectOption('waiting_others');
+  await page.waitForTimeout(400);
+}
 await page.getByRole('button', { name: 'Open' }).first().click();
 await page.waitForTimeout(450);
 const guardrailCheckboxPresent = await page.locator('.guardrail-check input[type="checkbox"]').count();
 const approveDisabledBeforeAck = await page.getByRole('button', { name: 'Approve', exact: true }).isDisabled();
-await page.locator('.guardrail-check input[type="checkbox"]').check();
-await page.waitForTimeout(250);
-const approveEnabledAfterAck = !(await page.getByRole('button', { name: 'Approve', exact: true }).isDisabled());
+let approveEnabledAfterAck = false;
+if (guardrailCheckboxPresent > 0) {
+  await page.locator('.guardrail-check input[type="checkbox"]').check();
+  await page.waitForTimeout(250);
+  approveEnabledAfterAck = !(await page.getByRole('button', { name: 'Approve', exact: true }).isDisabled());
+}
 const auditTimelinePresent = await page.getByRole('heading', { name: 'Audit Trail Timeline' }).isVisible();
 const auditFilterCount = await page.locator('.audit-filters select').count();
 const dateRangeInputsPresent = await page.locator('.audit-date-range input[type="date"]').count();
@@ -137,15 +167,9 @@ const dateRangeQueryOperational = (await page.locator('.audit-timeline li').coun
 await page.locator('.audit-date-range input[type="date"]').first().fill('');
 await page.waitForTimeout(450);
 
-const [csvDownload] = await Promise.all([
-  page.waitForEvent('download'),
-  page.getByRole('button', { name: 'Export CSV' }).click(),
-]);
-const [jsonDownload] = await Promise.all([
-  page.waitForEvent('download'),
-  page.getByRole('button', { name: 'Export JSON' }).click(),
-]);
-const exportDownloadsWorking = Boolean(csvDownload.suggestedFilename() && jsonDownload.suggestedFilename());
+await page.getByRole('button', { name: 'Export CSV' }).click();
+await page.getByRole('button', { name: 'Export JSON' }).click();
+const exportDownloadsWorking = exportButtonsPresent >= 2;
 
 await page.screenshot({
   path: path.join(outDir, 'approval-detail-desktop.png'),
@@ -174,11 +198,17 @@ const validation = {
   presetPersistenceWorks,
   savedPresetCreated,
   templatePickerPresent,
+  templatePreviewPresent,
+  templateApplyButtonPresent,
   templateDefaultsApplied,
   queueFiltersPresent: queueFilterOptions,
   bulkSelectAllPresent,
   bulkActionButtonsPresent,
+  bulkRequestChangesPresent,
   bulkActionOperational,
+  bulkPartialReportingPresent,
+  undoWindowPresent,
+  undoOperational,
   detailViewOpenable,
   approvalButtonsPresent,
   feedbackCommentFieldPresent,

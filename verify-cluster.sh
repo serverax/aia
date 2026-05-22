@@ -18,8 +18,8 @@ echo "════════════════════════�
 echo ""; echo "── Nodes ──"
 kubectl get nodes -o wide
 
-echo ""; echo "── synthetic-enterprise namespace ──"
-kubectl get all -n synthetic-enterprise
+echo ""; echo "── ordinox-ai namespace ──"
+kubectl get all -n ordinox-ai
 
 echo ""; echo "── Not-running pods (cluster-wide) ──"
 kubectl get pods -A --no-headers | awk '$4!="Running" && $4!="Completed"' || echo "(all running)"

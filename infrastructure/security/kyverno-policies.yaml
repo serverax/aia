@@ -1,5 +1,5 @@
 # Kyverno cluster policies — pod hardening invariants for the
-# synthetic-enterprise namespace. Applied after Kyverno install (see
+# ordinox-ai namespace. Applied after Kyverno install (see
 # infrastructure/security/INSTALL.md step 4).
 #
 # Each rule sets validationFailureAction: Enforce, which means matching
@@ -13,7 +13,7 @@ metadata:
   name: aia-readonly-root-fs
   annotations:
     policies.kyverno.io/title: "Read-only root filesystem"
-    policies.kyverno.io/description: "All containers in synthetic-enterprise must mount root FS read-only."
+    policies.kyverno.io/description: "All containers in ordinox-ai must mount root FS read-only."
 spec:
   validationFailureAction: Enforce
   background: true
@@ -23,7 +23,7 @@ spec:
         any:
           - resources:
               kinds: [Pod]
-              namespaces: [synthetic-enterprise]
+              namespaces: [ordinox-ai]
       validate:
         message: "spec.containers[*].securityContext.readOnlyRootFilesystem must be true"
         pattern:
@@ -45,7 +45,7 @@ spec:
         any:
           - resources:
               kinds: [Pod]
-              namespaces: [synthetic-enterprise]
+              namespaces: [ordinox-ai]
       validate:
         message: "containers must set allowPrivilegeEscalation: false and runAsNonRoot: true"
         pattern:
@@ -68,7 +68,7 @@ spec:
         any:
           - resources:
               kinds: [Pod]
-              namespaces: [synthetic-enterprise]
+              namespaces: [ordinox-ai]
       validate:
         message: "containers must drop ALL Linux capabilities"
         pattern:
@@ -92,9 +92,9 @@ spec:
         any:
           - resources:
               kinds: [Pod]
-              namespaces: [synthetic-enterprise]
+              namespaces: [ordinox-ai]
       validate:
-        message: "hostPath volumes are forbidden in synthetic-enterprise"
+        message: "hostPath volumes are forbidden in ordinox-ai"
         pattern:
           spec:
             =(volumes):
@@ -119,7 +119,7 @@ spec:
         any:
           - resources:
               kinds: [Pod]
-              namespaces: [synthetic-enterprise]
+              namespaces: [ordinox-ai]
       validate:
         message: "images must use a digest (@sha256:...) or a non-:latest tag from ghcr.io/serverax/aia/**"
         pattern:

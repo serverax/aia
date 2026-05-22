@@ -6,8 +6,10 @@ from .recommendation_generator import RecommendationGenerator
 
 from .event_hub import notify_agent_step
 
+from libs.communication.config import Config
+
 class DomainAnalystAgent:
-    def __init__(self, qdrant_host="localhost", qdrant_port=6333):
+    def __init__(self, qdrant_host=Config.QDRANT_HOST, qdrant_port=Config.QDRANT_PORT):
         self.rag = RAGSystem(qdrant_host=qdrant_host, qdrant_port=qdrant_port)
         self.risk_analyzer = RiskAnalyzer()
         self.recommendation_generator = RecommendationGenerator()

@@ -1,0 +1,13 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: compliance-service
+  namespace: synthetic-enterprise
+spec:
+  selector:
+    matchLabels:
+      app: compliance-service
+  endpoints:
+  - port: http
+    interval: 30s
+    path: /metrics

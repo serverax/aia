@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: compliance-service-dashboard
+  namespace: synthetic-enterprise
+data:
+  dashboard.json: |
+    {
+      "dashboard": {
+        "title": "Compliance-Service Blue-Green Monitoring",
+        "panels": [
+          {
+            "title": "Canary Weight (%)",
+            "targets": [
+              {
+                "expr": "nginx_ingress_controller_requests{ingress=\"synthetic-enterprise-ingress\",canary=\"true\"}"
+              }
+            ],
+            "type": "gauge"
+          },
+          {
+            "title": "Request Rate (req/s)",
+            "targets": [
+              {
+                "expr": "rate(http_requests_total{job=\"compliance-service\"}[1m])"
+              }
+            ],
+            "type": "graph"
+          },
+          {
+            "title": "Error Rate (%)",
+            "targets": [
+              {
+                "expr": "rate(http_requests_total{job=\"compliance-service\",status=~\"5..\"}[1m]) * 100"
+              }
+            ],
+            "type": "graph"
+          },
+          {
+            "title": "P99 Latency (ms)",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.99, rate(http_request_duration_seconds_bucket{job=\"compliance-service\"}[5m])) * 1000"
+              }
+            ],
+            "type": "graph"
+          },
+          {
+            "title": "Healthy Replicas",
+            "targets": [
+              {
+                "expr": "kube_deployment_status_replicas_available{deployment=\"compliance-service\",namespace=\"synthetic-enterprise\"}"
+              }
+            ],
+            "type": "stat"
+          },
+          {
+            "title": "CPU Usage (%)",
+            "targets": [
+              {
+                "expr": "rate(container_cpu_usage_seconds_total{pod=~\"compliance-service.*\"}[1m]) * 100"
+              }
+            ],
+            "type": "graph"
+          },
+          {
+            "title": "Memory Usage (MB)",
+            "targets": [
+              {
+                "expr": "container_memory_usage_bytes{pod=~\"compliance-service.*\"} / 1024 / 1024"
+              }
+            ],
+            "type": "graph"
+          }
+        ]
+      }
+    }

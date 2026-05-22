@@ -1,0 +1,45 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: compliance-service-alerts
+  namespace: synthetic-enterprise
+spec:
+  groups:
+  - name: compliance-service
+    interval: 30s
+    rules:
+    - alert: ComplianceServiceHighErrorRate
+      expr: rate(http_requests_total{job="compliance-service",status=~"5.."}[5m]) > 0.05
+      for: 2m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Compliance-service error rate > 5%"
+        description: "{{ $value | humanizePercentage }} of requests failing"
+    
+    - alert: ComplianceServiceHighLatency
+      expr: histogram_quantile(0.99, rate(http_request_duration_seconds_bucket{job="compliance-service"}[5m])) > 1
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Compliance-service P99 latency > 1s"
+        description: "P99 latency: {{ $value | humanizeDuration }}"
+    
+    - alert: ComplianceServiceCanaryWeightStuck
+      expr: changes(nginx_ingress_controller_requests{ingress="synthetic-enterprise-ingress",canary="true"}[5m]) == 0
+      for: 3m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Canary traffic not changing"
+        description: "Canary weight may be stuck"
+    
+    - alert: ComplianceServiceReplicasDown
+      expr: kube_deployment_status_replicas_available{deployment="compliance-service",namespace="synthetic-enterprise"} < 1
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Compliance-service has no healthy replicas"
+        description: "Available replicas: {{ $value }}"

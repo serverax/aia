@@ -1,7 +1,7 @@
 #!/bin/bash
 
 NAMESPACE="synthetic-enterprise"
-INGRESS="compliance-service-ingress"
+INGRESS="synthetic-enterprise-ingress"
 DEPLOYMENT="compliance-service"
 DRY_RUN=${1:-false}
 

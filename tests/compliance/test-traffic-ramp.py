@@ -9,7 +9,7 @@ class TrafficRampTester:
         self.results = []
     
     def set_weight(self, weight):
-        cmd = f"kubectl -n {self.namespace} annotate ingress compliance-service-ingress nginx.ingress.kubernetes.io/canary-weight='{weight}' --overwrite"
+        cmd = f"kubectl -n {self.namespace} annotate ingress synthetic-enterprise-ingress nginx.ingress.kubernetes.io/canary-weight='{weight}' --overwrite"
         try:
             subprocess.run(cmd, shell=True, check=True, capture_output=True)
             time.sleep(2)
@@ -20,7 +20,7 @@ class TrafficRampTester:
     def get_weight(self):
         try:
             result = subprocess.run(
-                f"kubectl -n {self.namespace} get ingress compliance-service-ingress -o jsonpath='{{.metadata.annotations.nginx\\.ingress\\.kubernetes\\.io/canary-weight}}'",
+                f"kubectl -n {self.namespace} get ingress synthetic-enterprise-ingress -o jsonpath='{{.metadata.annotations.nginx\\.ingress\\.kubernetes\\.io/canary-weight}}'",
                 shell=True, check=True, capture_output=True, text=True
             )
             return int(result.stdout.strip()) if result.stdout else 0

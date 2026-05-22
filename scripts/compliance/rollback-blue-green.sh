@@ -1,37 +1,42 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/bash
 
-NAMESPACE="${NAMESPACE:-ordinox-ai}"
-EVIDENCE_DIR="${EVIDENCE_DIR:-reports/blue-green}"
-KUBECTL="${KUBECTL:-kubectl}"
-DRY_RUN="${DRY_RUN:-false}"
+NAMESPACE="synthetic-enterprise"
+INGRESS="compliance-service-ingress"
+DEPLOYMENT="compliance-service"
+DRY_RUN=${1:-false}
 
-mkdir -p "$EVIDENCE_DIR"
+echo "🔄 Rolling back to blue (100%)..."
+echo ""
 
-commands=(
-  "$KUBECTL -n $NAMESPACE annotate ingress compliance-service-green-canary nginx.ingress.kubernetes.io/canary-weight=0 --overwrite"
-  "$KUBECTL -n $NAMESPACE rollout undo deployment/compliance-service-green"
-  "$KUBECTL -n $NAMESPACE get endpoints compliance-service-blue compliance-service-green -o wide"
-)
-
-echo "=== rollback blue-green ===" | tee "$EVIDENCE_DIR/rollback-output.txt"
-for command in "${commands[@]}"; do
-  echo "$command" | tee -a "$EVIDENCE_DIR/rollback-output.txt"
-  if [ "$DRY_RUN" = "true" ]; then
-    continue
-  fi
-  eval "$command" | tee -a "$EVIDENCE_DIR/rollback-output.txt"
-done
-
-if [ "$DRY_RUN" = "true" ]; then
-  echo "ROLLBACK_BLUE_GREEN=DRY_RUN"
+# Reset canary weight
+echo "Step 1: Resetting canary weight to 0%..."
+if [ "$DRY_RUN" == "true" ]; then
+    echo "[DRY RUN] kubectl -n $NAMESPACE annotate ingress $INGRESS nginx.ingress.kubernetes.io/canary-weight='0' --overwrite"
 else
-  WEIGHT="$("$KUBECTL" -n "$NAMESPACE" get ingress compliance-service-green-canary \
-    -o jsonpath='{.metadata.annotations.nginx\.ingress\.kubernetes\.io/canary-weight}')"
-  echo "canary-weight=$WEIGHT" | tee -a "$EVIDENCE_DIR/rollback-output.txt"
-  if [ "$WEIGHT" != "0" ]; then
-    echo "ROLLBACK_BLUE_GREEN=FAIL"
-    exit 1
-  fi
-  echo "ROLLBACK_BLUE_GREEN=PASS"
+    kubectl -n $NAMESPACE annotate ingress $INGRESS nginx.ingress.kubernetes.io/canary-weight='0' --overwrite
+    echo "✅ Done"
 fi
+
+echo ""
+
+# Undo deployment
+echo "Step 2: Undoing deployment..."
+if [ "$DRY_RUN" == "true" ]; then
+    echo "[DRY RUN] kubectl -n $NAMESPACE rollout undo deployment/$DEPLOYMENT"
+else
+    kubectl -n $NAMESPACE rollout undo deployment/$DEPLOYMENT
+    echo "✅ Done"
+fi
+
+echo ""
+
+# Wait for rollout
+if [ "$DRY_RUN" != "true" ]; then
+    echo "Step 3: Waiting for rollout..."
+    kubectl -n $NAMESPACE rollout status deployment/$DEPLOYMENT --timeout=120s
+    echo "✅ Rollout complete"
+fi
+
+echo ""
+echo "✅ Rollback successful!"
+

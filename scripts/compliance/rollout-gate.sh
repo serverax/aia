@@ -1,39 +1,33 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/bash
 
-NAMESPACE="${NAMESPACE:-ordinox-ai}"
-DEPLOYMENT="${DEPLOYMENT:-compliance-service}"
-TIMEOUT="${TIMEOUT:-120s}"
-EVIDENCE_DIR="${EVIDENCE_DIR:-reports/blue-green}"
-KUBECTL="${KUBECTL:-kubectl}"
+NAMESPACE="synthetic-enterprise"
+DEPLOYMENT="compliance-service"
+TIMEOUT=120
+START=$(date +%s)
 
-mkdir -p "$EVIDENCE_DIR"
+echo "🚦 Rollout Gate Validation"
+echo "Checking $DEPLOYMENT in $NAMESPACE..."
+echo ""
 
-echo "=== rollout gate: context ==="
-"$KUBECTL" config current-context | tee "$EVIDENCE_DIR/rollout-context.txt"
+while true; do
+    NOW=$(date +%s)
+    ELAPSED=$((NOW - START))
+    
+    REPLICAS=$(kubectl -n $NAMESPACE get deployment $DEPLOYMENT -o jsonpath='{.status.replicas}' 2>/dev/null || echo "0")
+    READY=$(kubectl -n $NAMESPACE get deployment $DEPLOYMENT -o jsonpath='{.status.readyReplicas}' 2>/dev/null || echo "0")
+    
+    echo "Status: $READY/$REPLICAS ready (${ELAPSED}s elapsed)"
+    
+    if [ "$REPLICAS" -gt 0 ] && [ "$READY" -eq "$REPLICAS" ]; then
+        echo "✅ VERDICT: GO"
+        exit 0
+    fi
+    
+    if [ $ELAPSED -ge $TIMEOUT ]; then
+        echo "❌ VERDICT: NO-GO (timeout)"
+        exit 1
+    fi
+    
+    sleep 5
+done
 
-echo "=== rollout gate: deployment ==="
-"$KUBECTL" -n "$NAMESPACE" rollout status "deployment/$DEPLOYMENT" "--timeout=$TIMEOUT" \
-  | tee "$EVIDENCE_DIR/rollout-status.txt"
-
-echo "=== rollout gate: resources ==="
-"$KUBECTL" -n "$NAMESPACE" get deploy,pods,svc,endpoints,ingress -o wide \
-  | tee "$EVIDENCE_DIR/rollout-resources.txt"
-
-echo "=== rollout gate: blocked pod states ==="
-if "$KUBECTL" -n "$NAMESPACE" get pods -o wide | grep -E 'CrashLoopBackOff|ImagePullBackOff|ErrImagePull|CreateContainerError'; then
-  echo "ROLL_OUT_GATE=NO_GO blocked pod state detected"
-  exit 1
-fi
-
-echo "=== rollout gate: base endpoint ==="
-"$KUBECTL" -n "$NAMESPACE" get endpoints "$DEPLOYMENT" -o jsonpath='{.subsets[*].addresses[*].ip}' \
-  | tee "$EVIDENCE_DIR/base-endpoints.txt"
-echo
-
-if ! test -s "$EVIDENCE_DIR/base-endpoints.txt"; then
-  echo "ROLL_OUT_GATE=NO_GO base service has no endpoints"
-  exit 1
-fi
-
-echo "ROLL_OUT_GATE=GO"

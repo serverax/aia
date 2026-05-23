@@ -14,7 +14,8 @@ import uuid
 from contextlib import asynccontextmanager
 from typing import Any
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, Security, status
+from fastapi.security import OAuth2PasswordRequestForm
 from opentelemetry.instrumentation.asyncpg import AsyncPGInstrumentor
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.redis import RedisInstrumentor
@@ -24,8 +25,16 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from libs.communication.postgres_client import build_pool
 from libs.communication.redis_client import build_client, consume, ack
 from libs.communication.telemetry import init_telemetry
-from libs.llm import LLMClient, build_default_client
+from libs.llm import LLMClient, agent_loop, build_default_client
+from libs.auth import (
+    Token,
+    User,
+    authenticate_user,
+    create_access_token,
+    get_current_active_user,
+)
 from services.orchestrator_agent.graph import build_graph
+
 from services.orchestrator_agent.state import OrchestratorState
 
 
@@ -223,8 +232,29 @@ async def ready() -> dict[str, Any]:
     return {"status": "ready"}
 
 
+@app.post("/token", response_model=Token)
+async def login_for_access_token(
+    form_data: OAuth2PasswordRequestForm = Depends()
+) -> dict[str, str]:
+    from fastapi import HTTPException
+    user = await authenticate_user(form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token = create_access_token(
+        data={"sub": user.username, "scopes": user.scopes}
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
 @app.post("/requests")
-async def submit_request(payload: RequestPayload) -> dict[str, Any]:
+async def submit_request(
+    payload: RequestPayload,
+    current_user: User = Security(get_current_active_user, scopes=["items"])
+) -> dict[str, Any]:
     """HTTP entry point — handy for curl / dashboard."""
     service: OrchestratorService = app.state.service
     final_state = await service.handle_request(payload)

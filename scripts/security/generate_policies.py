@@ -17,6 +17,7 @@ without source changes produces a byte-identical file. CI gate:
 after running the generator catches drift between capabilities.yaml and
 the committed manifests.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -54,39 +55,45 @@ def build_network_policy(agent_name: str, agent: dict, spec: dict) -> dict:
 
     for service_name in network.get("egress_allow", []):
         if service_name not in services:
-            raise ValueError(
-                f"agent {agent_name!r} references unknown service {service_name!r}"
-            )
+            raise ValueError(f"agent {agent_name!r} references unknown service {service_name!r}")
         svc = services[service_name]
-        egress.append({
-            "to": [{"podSelector": {"matchLabels": dict(svc["selector"])}}],
-            "ports": [dict(p) for p in svc["ports"]],
-        })
+        egress.append(
+            {
+                "to": [{"podSelector": {"matchLabels": dict(svc["selector"])}}],
+                "ports": [dict(p) for p in svc["ports"]],
+            }
+        )
 
     for external_name in network.get("external_allow", []):
         if external_name not in external:
-            raise ValueError(
-                f"agent {agent_name!r} references unknown external {external_name!r}"
-            )
+            raise ValueError(f"agent {agent_name!r} references unknown external {external_name!r}")
         ext = external[external_name]
-        egress.append({
-            "to": [{"ipBlock": {"cidr": "0.0.0.0/0", "except": list(RFC1918_CIDRS)}}],
-            "ports": [dict(p) for p in ext["ports"]],
-        })
+        egress.append(
+            {
+                "to": [{"ipBlock": {"cidr": "0.0.0.0/0", "except": list(RFC1918_CIDRS)}}],
+                "ports": [dict(p) for p in ext["ports"]],
+            }
+        )
 
     # DNS to kube-system is always allowed — no agent works without it.
     # `kubernetes.io/metadata.name` is auto-applied by the apiserver since
     # k8s 1.22; the older convention `name: <namespace>` requires a manual
     # `kubectl label`, which silently broke DNS egress on fresh clusters.
-    egress.append({
-        "to": [{"namespaceSelector": {
-            "matchLabels": {"kubernetes.io/metadata.name": "kube-system"}
-        }}],
-        "ports": [
-            {"port": 53, "protocol": "UDP"},
-            {"port": 53, "protocol": "TCP"},
-        ],
-    })
+    egress.append(
+        {
+            "to": [
+                {
+                    "namespaceSelector": {
+                        "matchLabels": {"kubernetes.io/metadata.name": "kube-system"}
+                    }
+                }
+            ],
+            "ports": [
+                {"port": 53, "protocol": "UDP"},
+                {"port": 53, "protocol": "TCP"},
+            ],
+        }
+    )
 
     return {
         "apiVersion": "networking.k8s.io/v1",
@@ -111,48 +118,58 @@ def build_rbac(agent_name: str, agent: dict, spec: dict) -> list[dict]:
     role_name = f"{agent_name}-agent-role"
     binding_name = f"{agent_name}-agent-rolebinding"
 
-    docs: list[dict] = [{
-        "apiVersion": "v1",
-        "kind": "ServiceAccount",
-        "metadata": {"name": sa_name, "namespace": namespace},
-    }]
+    docs: list[dict] = [
+        {
+            "apiVersion": "v1",
+            "kind": "ServiceAccount",
+            "metadata": {"name": sa_name, "namespace": namespace},
+        }
+    ]
 
     rules: list[dict] = []
     secrets = sorted(rbac.get("secrets", []))
     if secrets:
-        rules.append({
-            "apiGroups": [""],
-            "resources": ["secrets"],
-            "resourceNames": secrets,
-            "verbs": ["get", "list"],
-        })
+        rules.append(
+            {
+                "apiGroups": [""],
+                "resources": ["secrets"],
+                "resourceNames": secrets,
+                "verbs": ["get", "list"],
+            }
+        )
     configmaps = sorted(rbac.get("configmaps", []))
     if configmaps:
-        rules.append({
-            "apiGroups": [""],
-            "resources": ["configmaps"],
-            "resourceNames": configmaps,
-            "verbs": ["get", "list"],
-        })
+        rules.append(
+            {
+                "apiGroups": [""],
+                "resources": ["configmaps"],
+                "resourceNames": configmaps,
+                "verbs": ["get", "list"],
+            }
+        )
 
-    docs.append({
-        "apiVersion": "rbac.authorization.k8s.io/v1",
-        "kind": "Role",
-        "metadata": {"name": role_name, "namespace": namespace},
-        "rules": rules,
-    })
-
-    docs.append({
-        "apiVersion": "rbac.authorization.k8s.io/v1",
-        "kind": "RoleBinding",
-        "metadata": {"name": binding_name, "namespace": namespace},
-        "subjects": [{"kind": "ServiceAccount", "name": sa_name, "namespace": namespace}],
-        "roleRef": {
-            "apiGroup": "rbac.authorization.k8s.io",
+    docs.append(
+        {
+            "apiVersion": "rbac.authorization.k8s.io/v1",
             "kind": "Role",
-            "name": role_name,
-        },
-    })
+            "metadata": {"name": role_name, "namespace": namespace},
+            "rules": rules,
+        }
+    )
+
+    docs.append(
+        {
+            "apiVersion": "rbac.authorization.k8s.io/v1",
+            "kind": "RoleBinding",
+            "metadata": {"name": binding_name, "namespace": namespace},
+            "subjects": [{"kind": "ServiceAccount", "name": sa_name, "namespace": namespace}],
+            "roleRef": {
+                "apiGroup": "rbac.authorization.k8s.io",
+                "kind": "Role",
+                "name": role_name,
+            },
+        }
+    )
 
     return docs
 
@@ -203,12 +220,13 @@ def generate(
 
 def _cli() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--in", dest="capabilities",
-                        default="infrastructure/security/capabilities.yaml")
-    parser.add_argument("--network-out",
-                        default="infrastructure/k3s/network-policies-per-agent.yaml")
-    parser.add_argument("--rbac-out",
-                        default="infrastructure/k3s/rbac-per-agent.yaml")
+    parser.add_argument(
+        "--in", dest="capabilities", default="infrastructure/security/capabilities.yaml"
+    )
+    parser.add_argument(
+        "--network-out", default="infrastructure/k3s/network-policies-per-agent.yaml"
+    )
+    parser.add_argument("--rbac-out", default="infrastructure/k3s/rbac-per-agent.yaml")
     args = parser.parse_args()
 
     n_net, n_rbac = generate(

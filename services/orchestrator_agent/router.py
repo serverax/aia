@@ -4,6 +4,7 @@ The router walks the decomposed task list, respects `depends_on`, and
 dispatches ready tasks to the per-agent input stream. A semaphore caps
 concurrent XADDs so a runaway decomposition can't flood the broker.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -63,7 +64,9 @@ def make_router(
                 data=assignment.model_dump(),
                 metadata={"project_id": project_id},
             )
-            await publish(redis_client, _stream_for(task["assigned_to"]), envelope.to_stream_fields())
+            await publish(
+                redis_client, _stream_for(task["assigned_to"]), envelope.to_stream_fields()
+            )
             logger.info(
                 "Dispatched task %s to %s (project %s)",
                 task["id"],
@@ -81,9 +84,7 @@ def make_router(
         if not dispatchable:
             return {"current_phase": "monitoring"}
 
-        new_ids = await asyncio.gather(
-            *[_dispatch_one(t, project_id) for t in dispatchable]
-        )
+        new_ids = await asyncio.gather(*[_dispatch_one(t, project_id) for t in dispatchable])
         return {
             "dispatched_task_ids": list(completed.union(new_ids)),
             "current_phase": "monitoring",

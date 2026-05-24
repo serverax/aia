@@ -1,0 +1,115 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rag-system
+  namespace: ordinox-ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rag-system
+  template:
+    metadata:
+      labels:
+        app: rag-system
+    spec:
+      containers:
+      - name: rag-system
+        image: ghcr.io/serverax/aia/rag-system:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: QDRANT_HOST
+          value: "qdrant.data-layer"
+        - name: QDRANT_PORT
+          value: "6333"
+        - name: ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: llm-api-keys
+              key: anthropic-api-key
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rag-system
+  namespace: ordinox-ai
+spec:
+  selector:
+    app: rag-system
+  ports:
+  - port: 8000
+    targetPort: 8000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: analyst-agent
+  namespace: ordinox-ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: analyst-agent
+  template:
+    metadata:
+      labels:
+        app: analyst-agent
+    spec:
+      containers:
+      - name: analyst-agent
+        image: ghcr.io/serverax/aia/analyst-agent:latest
+        ports:
+        - containerPort: 8001
+        env:
+        - name: QDRANT_HOST
+          value: "qdrant.data-layer"
+        - name: QDRANT_PORT
+          value: "6333"
+        - name: RAG_SERVICE_URL
+          value: "http://rag-system.ordinox-ai:8000"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: analyst-agent
+  namespace: ordinox-ai
+spec:
+  selector:
+    app: analyst-agent
+  ports:
+  - port: 8001
+    targetPort: 8001
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: semantic-search
+  namespace: ordinox-ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: semantic-search
+  template:
+    metadata:
+      labels:
+        app: semantic-search
+    spec:
+      containers:
+      - name: semantic-search
+        image: ghcr.io/serverax/aia/semantic-search:latest
+        ports:
+        - containerPort: 8002
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: semantic-search
+  namespace: ordinox-ai
+spec:
+  selector:
+    app: semantic-search
+  ports:
+  - port: 8002
+    targetPort: 8002

@@ -5,6 +5,7 @@ from ..vector_store.faiss_store import FAISSStore
 from ..vector_store.schemas import VectorItem
 from ..embedding.embedder import Embedder
 
+
 class KnowledgeBaseManager:
     def __init__(self, vector_store: FAISSStore, embedder: Embedder):
         self.vector_store = vector_store
@@ -33,16 +34,12 @@ class KnowledgeBaseManager:
         vector_items = []
         for chunk, embedding in zip(all_chunks, embeddings):
             metadata = chunk.model_dump()
-            del metadata["content"] # Content is already in metadata? 
-            # Actually, spec says schema has 'content'. 
+            del metadata["content"]  # Content is already in metadata?
+            # Actually, spec says schema has 'content'.
             # I'll keep content in metadata for easy retrieval from FAISS store.
-            metadata["content"] = chunk.content 
-            
-            vector_items.append(VectorItem(
-                id=chunk.id,
-                vector=embedding,
-                metadata=metadata
-            ))
+            metadata["content"] = chunk.content
+
+            vector_items.append(VectorItem(id=chunk.id, vector=embedding, metadata=metadata))
 
         self.vector_store.add(vector_items)
 

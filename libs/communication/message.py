@@ -5,6 +5,7 @@
 models that validate and parse those dicts at agent boundaries so
 services don't pass raw strings around.
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timezone

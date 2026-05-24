@@ -8,6 +8,7 @@ Coverage focus: the generator's three pure functions (`load_capabilities`,
 `build_network_policy`, `build_rbac`) + the deterministic emit path, plus
 a regression test for the Day 8 DNS selector bug.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -23,8 +24,7 @@ pytestmark = [pytest.mark.unit]
 
 
 _GENERATOR_PATH = (
-    Path(__file__).resolve().parents[2]
-    / "scripts" / "security" / "generate_policies.py"
+    Path(__file__).resolve().parents[2] / "scripts" / "security" / "generate_policies.py"
 )
 
 
@@ -80,6 +80,7 @@ MINIMAL_SPEC = {
 
 # --- load_capabilities ---------------------------------------------------
 
+
 def test_load_capabilities_accepts_well_formed_input(gen, tmp_path):
     path = tmp_path / "cap.yaml"
     path.write_text(yaml.safe_dump(MINIMAL_SPEC))
@@ -107,6 +108,7 @@ def test_load_capabilities_rejects_unsupported_version(gen, tmp_path):
 
 # --- build_network_policy -------------------------------------------------
 
+
 def test_network_policy_basic_shape(gen):
     np = gen.build_network_policy("echo", MINIMAL_SPEC["agents"]["echo"], MINIMAL_SPEC)
     assert np["apiVersion"] == "networking.k8s.io/v1"
@@ -119,8 +121,12 @@ def test_network_policy_basic_shape(gen):
 
 def test_network_policy_in_cluster_egress_has_correct_pod_selector_and_ports(gen):
     np = gen.build_network_policy("echo", MINIMAL_SPEC["agents"]["echo"], MINIMAL_SPEC)
-    redis_rule = next(r for r in np["spec"]["egress"]
-                      if r["to"] and r["to"][0].get("podSelector", {}).get("matchLabels", {}).get("app") == "redis")
+    redis_rule = next(
+        r
+        for r in np["spec"]["egress"]
+        if r["to"]
+        and r["to"][0].get("podSelector", {}).get("matchLabels", {}).get("app") == "redis"
+    )
     assert redis_rule["ports"] == [{"port": 6379, "protocol": "TCP"}]
 
 
@@ -128,8 +134,7 @@ def test_network_policy_external_egress_uses_ipblock_with_rfc1918_exception(gen)
     np = gen.build_network_policy(
         "orchestrator", MINIMAL_SPEC["agents"]["orchestrator"], MINIMAL_SPEC
     )
-    external = next(r for r in np["spec"]["egress"]
-                    if r["to"] and "ipBlock" in r["to"][0])
+    external = next(r for r in np["spec"]["egress"] if r["to"] and "ipBlock" in r["to"][0])
     block = external["to"][0]["ipBlock"]
     assert block["cidr"] == "0.0.0.0/0"
     # All three RFC 1918 ranges must be excluded so "external" doesn't
@@ -148,8 +153,7 @@ def test_network_policy_dns_rule_uses_canonical_namespace_label_REGRESSION(gen):
     """
     np = gen.build_network_policy("echo", MINIMAL_SPEC["agents"]["echo"], MINIMAL_SPEC)
     dns_rules = [
-        r for r in np["spec"]["egress"]
-        if any(p.get("port") == 53 for p in r.get("ports", []))
+        r for r in np["spec"]["egress"] if any(p.get("port") == 53 for p in r.get("ports", []))
     ]
     assert dns_rules, "no DNS rule emitted; agents cannot resolve service names"
     dns = dns_rules[0]
@@ -164,8 +168,7 @@ def test_network_policy_dns_rule_covers_both_tcp_and_udp(gen):
     """DNS needs UDP for normal lookups + TCP for responses >512 bytes."""
     np = gen.build_network_policy("echo", MINIMAL_SPEC["agents"]["echo"], MINIMAL_SPEC)
     dns_rule = next(
-        r for r in np["spec"]["egress"]
-        if any(p.get("port") == 53 for p in r.get("ports", []))
+        r for r in np["spec"]["egress"] if any(p.get("port") == 53 for p in r.get("ports", []))
     )
     protocols = {p["protocol"] for p in dns_rule["ports"]}
     assert protocols == {"TCP", "UDP"}
@@ -211,6 +214,7 @@ def test_network_policy_agent_with_no_egress_still_gets_dns(gen):
 
 # --- build_rbac ----------------------------------------------------------
 
+
 def test_rbac_emits_sa_role_rolebinding_triple(gen):
     docs = gen.build_rbac("echo", MINIMAL_SPEC["agents"]["echo"], MINIMAL_SPEC)
     kinds = [d["kind"] for d in docs]
@@ -229,19 +233,16 @@ def test_rbac_role_only_grants_get_list_on_named_resources(gen):
     docs = gen.build_rbac("echo", MINIMAL_SPEC["agents"]["echo"], MINIMAL_SPEC)
     _, role, _ = docs
     for rule in role["rules"]:
-        assert set(rule["verbs"]) <= {"get", "list"}, (
-            f"role grants verbs beyond get/list: {rule['verbs']}"
-        )
-        assert "resourceNames" in rule, (
-            f"rule has no resourceNames (cluster-wide grant): {rule}"
-        )
+        assert set(rule["verbs"]) <= {
+            "get",
+            "list",
+        }, f"role grants verbs beyond get/list: {rule['verbs']}"
+        assert "resourceNames" in rule, f"rule has no resourceNames (cluster-wide grant): {rule}"
 
 
 def test_rbac_secret_resource_names_are_sorted_for_determinism(gen):
     """Sorted ordering makes regenerated outputs byte-stable across runs."""
-    docs = gen.build_rbac(
-        "orchestrator", MINIMAL_SPEC["agents"]["orchestrator"], MINIMAL_SPEC
-    )
+    docs = gen.build_rbac("orchestrator", MINIMAL_SPEC["agents"]["orchestrator"], MINIMAL_SPEC)
     _, role, _ = docs
     secrets_rule = next(r for r in role["rules"] if r["resources"] == ["secrets"])
     assert secrets_rule["resourceNames"] == sorted(secrets_rule["resourceNames"])
@@ -276,6 +277,7 @@ def test_rbac_binding_subject_matches_sa(gen):
 
 
 # --- emit_yaml + generate -------------------------------------------------
+
 
 def test_emit_yaml_is_deterministic(gen, tmp_path):
     """Same docs in -> identical bytes out across runs."""
@@ -312,8 +314,8 @@ def test_generate_end_to_end(gen, tmp_path):
 
     n_net, n_rbac = gen.generate(cap_path, np_out, rbac_out)
 
-    assert n_net == 2                  # echo + orchestrator
-    assert n_rbac == 2 * 3             # SA + Role + RoleBinding per agent
+    assert n_net == 2  # echo + orchestrator
+    assert n_rbac == 2 * 3  # SA + Role + RoleBinding per agent
 
     # Outputs parse as valid multi-doc YAML.
     np_docs = [d for d in yaml.safe_load_all(np_out.read_text()) if d is not None]
@@ -353,6 +355,7 @@ def test_generate_orders_agents_alphabetically(gen, tmp_path):
 
 
 # --- live repo capabilities.yaml smoke ------------------------------------
+
 
 def test_repo_capabilities_yaml_generates_without_error(gen):
     """The real infrastructure/security/capabilities.yaml must round-trip

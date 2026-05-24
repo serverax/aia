@@ -4,6 +4,7 @@ Loop-level behavior (Redis Streams + Postgres + OTLP) is covered by the
 integration tests in `tests/integration/`. Here we only assert the pure
 transformation: incoming message -> echoed reply.
 """
+
 from __future__ import annotations
 
 import pytest

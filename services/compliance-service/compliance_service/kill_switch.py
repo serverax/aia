@@ -1,4 +1,5 @@
 """Kill-switch policy model and deterministic evaluator."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -60,9 +61,15 @@ class KillSwitchState:
         if self._policy.global_enabled:
             return KillSwitchDecision(False, self._policy.reason, self._policy.source, self.version)
         if agent_id and agent_id in self._policy.disabled_agents:
-            return KillSwitchDecision(False, f"agent disabled: {agent_id}", self._policy.source, self.version)
+            return KillSwitchDecision(
+                False, f"agent disabled: {agent_id}", self._policy.source, self.version
+            )
         if project_id and project_id in self._policy.disabled_projects:
-            return KillSwitchDecision(False, f"project disabled: {project_id}", self._policy.source, self.version)
+            return KillSwitchDecision(
+                False, f"project disabled: {project_id}", self._policy.source, self.version
+            )
         if capability and capability in self._policy.disabled_capabilities:
-            return KillSwitchDecision(False, f"capability disabled: {capability}", self._policy.source, self.version)
+            return KillSwitchDecision(
+                False, f"capability disabled: {capability}", self._policy.source, self.version
+            )
         return KillSwitchDecision(True, "allowed", self._policy.source, self.version)

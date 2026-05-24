@@ -14,6 +14,7 @@ We exercise these via `StubLLMClient`. The real `AnthropicClient`
 path uses the same `_maybe_validate` helper, so coverage of one
 covers the other for validation semantics.
 """
+
 from __future__ import annotations
 
 import pytest
@@ -42,9 +43,12 @@ class IntentReply(BaseModel):
 # Backward compatibility — no schema = same shape as before
 # ---------------------------------------------------------------- #
 
+
 async def test_chat_json_without_schema_returns_dict_unchanged():
     """Sprint 2 nodes don't pass response_schema; behavior must not change."""
-    stub = StubLLMClient(responses=[{"objective": "draft a settlement", "domain": "employment_law"}])
+    stub = StubLLMClient(
+        responses=[{"objective": "draft a settlement", "domain": "employment_law"}]
+    )
     result = await stub.chat_json("any prompt")
     assert isinstance(result, dict)
     assert result == {"objective": "draft a settlement", "domain": "employment_law"}
@@ -61,13 +65,18 @@ async def test_chat_json_without_schema_does_not_raise_on_extra_fields():
 # Schema path — validation succeeds
 # ---------------------------------------------------------------- #
 
+
 async def test_chat_json_with_schema_returns_validated_model_instance():
-    stub = StubLLMClient(responses=[{
-        "objective": "draft a settlement",
-        "domain": "employment_law",
-        "requires_clarification": False,
-        "constraints": ["UK jurisdiction"],
-    }])
+    stub = StubLLMClient(
+        responses=[
+            {
+                "objective": "draft a settlement",
+                "domain": "employment_law",
+                "requires_clarification": False,
+                "constraints": ["UK jurisdiction"],
+            }
+        ]
+    )
     result = await stub.chat_json("any", response_schema=IntentReply)
 
     assert isinstance(result, IntentReply)
@@ -77,11 +86,15 @@ async def test_chat_json_with_schema_returns_validated_model_instance():
 
 async def test_chat_json_with_schema_fills_default_fields():
     """Schema defaults apply when the LLM omits optional fields."""
-    stub = StubLLMClient(responses=[{
-        "objective": "x",
-        "domain": "general",
-        # requires_clarification + constraints omitted
-    }])
+    stub = StubLLMClient(
+        responses=[
+            {
+                "objective": "x",
+                "domain": "general",
+                # requires_clarification + constraints omitted
+            }
+        ]
+    )
     result = await stub.chat_json("any", response_schema=IntentReply)
     assert result.requires_clarification is False
     assert result.constraints == []
@@ -91,10 +104,16 @@ async def test_chat_json_with_nested_schema():
     class Reply(BaseModel):
         ranges: list[DateRange]
 
-    stub = StubLLMClient(responses=[{"ranges": [
-        {"start": "2026-01-01", "end": "2026-03-31"},
-        {"start": "2026-04-01", "end": "2026-06-30"},
-    ]}])
+    stub = StubLLMClient(
+        responses=[
+            {
+                "ranges": [
+                    {"start": "2026-01-01", "end": "2026-03-31"},
+                    {"start": "2026-04-01", "end": "2026-06-30"},
+                ]
+            }
+        ]
+    )
     result = await stub.chat_json("any", response_schema=Reply)
     assert len(result.ranges) == 2
     assert isinstance(result.ranges[0], DateRange)
@@ -105,26 +124,31 @@ async def test_chat_json_with_nested_schema():
 # Schema path — validation fails
 # ---------------------------------------------------------------- #
 
+
 async def test_chat_json_with_schema_raises_when_required_field_missing():
-    stub = StubLLMClient(responses=[{"domain": "employment_law"}])   # missing `objective`
+    stub = StubLLMClient(responses=[{"domain": "employment_law"}])  # missing `objective`
     with pytest.raises(LLMOutputValidationError) as excinfo:
         await stub.chat_json("any", response_schema=IntentReply)
     assert "IntentReply" in str(excinfo.value)
 
 
 async def test_chat_json_with_schema_raises_when_field_wrong_type():
-    stub = StubLLMClient(responses=[{
-        "objective": "x",
-        "domain": "general",
-        "requires_clarification": "not-a-bool",
-    }])
+    stub = StubLLMClient(
+        responses=[
+            {
+                "objective": "x",
+                "domain": "general",
+                "requires_clarification": "not-a-bool",
+            }
+        ]
+    )
     with pytest.raises(LLMOutputValidationError):
         await stub.chat_json("any", response_schema=IntentReply)
 
 
 async def test_validation_error_exposes_raw_output_and_pydantic_error():
     """Callers can introspect what went wrong."""
-    bad_payload = {"domain": "employment_law"}   # missing objective
+    bad_payload = {"domain": "employment_law"}  # missing objective
     stub = StubLLMClient(responses=[bad_payload])
     with pytest.raises(LLMOutputValidationError) as excinfo:
         await stub.chat_json("any", response_schema=IntentReply)
@@ -140,7 +164,7 @@ async def test_validation_error_exposes_raw_output_and_pydantic_error():
 async def test_validation_error_is_a_value_error_for_backward_compat():
     """Sprint 2 nodes catch ValueError from _parse_json — they should
     also catch validation failures via the same handler if they opt in."""
-    stub = StubLLMClient(responses=[{"objective": "x"}])   # missing domain
+    stub = StubLLMClient(responses=[{"objective": "x"}])  # missing domain
     with pytest.raises(ValueError):
         await stub.chat_json("any", response_schema=IntentReply)
 
@@ -148,6 +172,7 @@ async def test_validation_error_is_a_value_error_for_backward_compat():
 # ---------------------------------------------------------------- #
 # Stub's other plumbing still works after the schema kwarg
 # ---------------------------------------------------------------- #
+
 
 async def test_stub_records_prompt_for_assertion_even_with_schema():
     stub = StubLLMClient(responses=[{"objective": "x", "domain": "general"}])

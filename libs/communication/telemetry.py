@@ -5,6 +5,7 @@ rather than the deprecated Jaeger Thrift exporter. Call `init_telemetry`
 once at service startup; afterwards use `tracer = trace.get_tracer(...)`
 from the OpenTelemetry API anywhere in the codebase.
 """
+
 from __future__ import annotations
 
 import logging
@@ -50,9 +51,7 @@ def init_telemetry(
     if _initialized:
         return trace.get_tracer(name)
 
-    resource = Resource.create(
-        {SERVICE_NAME: name, SERVICE_VERSION: service_version}
-    )
+    resource = Resource.create({SERVICE_NAME: name, SERVICE_VERSION: service_version})
     provider = TracerProvider(resource=resource)
 
     if endpoint:

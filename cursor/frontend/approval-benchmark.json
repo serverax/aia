@@ -1,14 +1,20 @@
 {
   "page": "ApprovalRequestPage",
-  "load_ms": 802.24,
+  "load_ms": 388.02,
   "under_2s": true,
   "bulk_items_target": 50,
-  "bulk_action_ms": 750.29,
+  "bulk_action_ms": 247.88,
   "bulk_50_under_2s": true,
-  "search_action_ms": 266.74,
+  "search_action_ms": 161.6,
   "search_under_500ms": true,
-  "filter_action_ms": 228.09,
+  "filter_action_ms": 169.93,
   "filter_under_500ms": true,
-  "template_apply_ms": 25.2,
-  "template_apply_under_500ms": true
+  "filter_baseline_rows": 60,
+  "filter_result_rows": 10,
+  "filter_50_query_ms": 173.87,
+  "filter_50_under_500ms": true,
+  "template_apply_ms": 23.1,
+  "template_apply_under_500ms": true,
+  "audit_write_latency_ms": 68,
+  "audit_write_under_100ms": true
 }

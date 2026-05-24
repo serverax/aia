@@ -13,10 +13,13 @@ WS_URL = "ws://localhost:8001/ws/hitl"
 CONCURRENT_USERS = 50
 TOTAL_REQUESTS = 500
 
+
 async def test_rest_load():
-    print(f"\n[1/2] REST Load Test: {TOTAL_REQUESTS} requests across {CONCURRENT_USERS} concurrent users...")
+    print(
+        f"\n[1/2] REST Load Test: {TOTAL_REQUESTS} requests across {CONCURRENT_USERS} concurrent users..."
+    )
     latencies = []
-    
+
     async def make_request(client):
         payload = {"query": "Analyze data privacy risk", "context": "Mock context"}
         start = time.time()
@@ -32,61 +35,65 @@ async def test_rest_load():
         for i in range(0, TOTAL_REQUESTS, CONCURRENT_USERS):
             batch = [make_request(client) for _ in range(CONCURRENT_USERS)]
             await asyncio.gather(*batch)
-            
+
     latencies_ms = [l * 1000 for l in latencies]
     return {
         "p50": statistics.median(latencies_ms),
         "p95": statistics.quantiles(latencies_ms, n=20)[18],
         "p99": statistics.quantiles(latencies_ms, n=100)[98],
-        "total_requests": len(latencies)
+        "total_requests": len(latencies),
     }
+
 
 async def test_websocket_broadcast_load():
     print(f"\n[2/2] WebSocket Load Test: 100 concurrent listeners...")
     NUM_LISTENERS = 100
     received_messages = []
-    
+
     async def listen(id):
         try:
             async with websockets.connect(WS_URL) as ws:
                 while True:
                     msg = await ws.recv()
                     received_messages.append(json.loads(msg))
-                    if len(received_messages) >= NUM_LISTENERS: # Stop after one broadcast is received by all
+                    if (
+                        len(received_messages) >= NUM_LISTENERS
+                    ):  # Stop after one broadcast is received by all
                         break
         except Exception as e:
             pass
 
     # Start listeners
     listeners = [asyncio.create_task(listen(i)) for i in range(NUM_LISTENERS)]
-    await asyncio.sleep(2) # Allow connections to stabilize
-    
+    await asyncio.sleep(2)  # Allow connections to stabilize
+
     # Trigger a broadcast via REST API
     async with httpx.AsyncClient() as client:
         start_broadcast = time.time()
         await client.post(f"{API_URL}/analyst/analyze", json={"query": "broadcast test"})
         end_broadcast = time.time()
-        
+
     broadcast_trigger_latency = (end_broadcast - start_broadcast) * 1000
-    
+
     # Wait for listeners to finish
     await asyncio.wait(listeners, timeout=5)
-    
+
     return {
         "listeners": NUM_LISTENERS,
         "messages_received": len(received_messages),
-        "broadcast_trigger_latency_ms": broadcast_trigger_latency
+        "broadcast_trigger_latency_ms": broadcast_trigger_latency,
     }
+
 
 async def run_full_load_suite():
     print("=== GEMINI LOAD TESTING SUITE ===")
-    
+
     # Ensure service is running (manual check or start it here)
     # For automation, assume it's running on 8001
-    
+
     rest_stats = await test_rest_load()
     ws_stats = await test_websocket_broadcast_load()
-    
+
     report = f"""# GEMINI BASELINE PERFORMANCE REPORT
 
 ## Hardware Context
@@ -110,12 +117,13 @@ async def run_full_load_suite():
 ## Memory Stability
 - Peak RSS during load: {psutil.Process(os.getpid()).memory_info().rss / (1024*1024):.2f} MB
 """
-    
+
     with open("F:/aia/GEMINI_BASELINE_PERFORMANCE.md", "w") as f:
         f.write(report)
-    
+
     print("\n✅ Load Testing Complete. Report saved to GEMINI_BASELINE_PERFORMANCE.md")
     print(report)
+
 
 if __name__ == "__main__":
     asyncio.run(run_full_load_suite())

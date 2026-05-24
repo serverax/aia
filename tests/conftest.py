@@ -10,6 +10,7 @@ The echo-agent service itself can be running there too, OR you can run it
 locally with `uvicorn services.echo_agent.main:app` against the same
 Postgres/Redis. Tests don't care which.
 """
+
 from __future__ import annotations
 
 import os
@@ -46,6 +47,7 @@ def require_dev_stack(redis_host: str, postgres_host: str) -> None:
         missing.append(f"postgres @ {postgres_host}:5432")
     if missing:
         pytest.skip(
-            "dev stack not reachable: " + ", ".join(missing)
+            "dev stack not reachable: "
+            + ", ".join(missing)
             + " (run `docker compose -f infrastructure/docker-compose.dev.yml up -d`)"
         )

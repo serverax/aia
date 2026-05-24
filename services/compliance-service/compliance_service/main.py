@@ -3,6 +3,7 @@
 Provides the kill-switch API and policy evaluation surface. Production
 validation is intentionally gated on the real Week 14-15 cluster.
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -65,7 +66,9 @@ async def get_kill_switch() -> dict[str, object]:
 @app.put("/compliance/kill-switch")
 async def put_kill_switch(request: KillSwitchRequest) -> dict[str, object]:
     if request.global_enabled and not request.reason.strip():
-        raise HTTPException(status_code=400, detail="reason is required when enabling global kill switch")
+        raise HTTPException(
+            status_code=400, detail="reason is required when enabling global kill switch"
+        )
     policy = KillSwitchPolicy(
         global_enabled=request.global_enabled,
         disabled_agents=frozenset(request.disabled_agents),

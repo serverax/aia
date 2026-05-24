@@ -1,4 +1,5 @@
 """Unit tests for the router using fakeredis (no real Redis required)."""
+
 from __future__ import annotations
 
 import json

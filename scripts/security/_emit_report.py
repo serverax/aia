@@ -7,6 +7,7 @@ report doc, writes it to the configured path.
 Kept separate from the bash script because heredoc + Python on Windows
 Git Bash is fragile. This file is testable in isolation.
 """
+
 from __future__ import annotations
 
 import datetime
@@ -34,8 +35,7 @@ def build_report(
                 if line:
                     findings.append(json.loads(line))
     return {
-        "timestamp": datetime.datetime.now(datetime.timezone.utc)
-                              .isoformat(timespec="seconds"),
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
         "mode": mode,
         "verdict": verdict,
         "exit_code": exit_code,

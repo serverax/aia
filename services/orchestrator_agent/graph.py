@@ -4,6 +4,7 @@
 tests can inject a StubLLMClient and a fakeredis client without monkey-patching
 imports.
 """
+
 from __future__ import annotations
 
 from typing import Any

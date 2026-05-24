@@ -2,7 +2,6 @@ from fastapi.testclient import TestClient
 
 from services.editor_agent.api.main import app
 
-
 client = TestClient(app)
 
 
@@ -17,4 +16,3 @@ def test_templates_route():
     assert response.status_code == 200
     assert isinstance(response.json(), list)
     assert len(response.json()) >= 5
-

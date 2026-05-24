@@ -13,21 +13,26 @@ WS_URL = "ws://localhost:8001/ws/hitl"
 CONCURRENT_USERS = 20
 TOTAL_REQUESTS = 100
 
+
 async def test_rest_load():
-    print(f"\n[1/2] REST Load Test: {TOTAL_REQUESTS} requests across {CONCURRENT_USERS} concurrent users...")
+    print(
+        f"\n[1/2] REST Load Test: {TOTAL_REQUESTS} requests across {CONCURRENT_USERS} concurrent users..."
+    )
     latencies = []
-    
+
     async def make_request(client):
         payload = {
-            "request_type": "policy_change", 
-            "title": "Load Test", 
-            "description": "testing", 
-            "requestor": "tester", 
-            "deadline": "2026-01-01"
+            "request_type": "policy_change",
+            "title": "Load Test",
+            "description": "testing",
+            "requestor": "tester",
+            "deadline": "2026-01-01",
         }
         start = time.time()
         try:
-            resp = await client.post(f"{API_URL}/analyst/approval/evaluate", json=payload, timeout=30)
+            resp = await client.post(
+                f"{API_URL}/analyst/approval/evaluate", json=payload, timeout=30
+            )
             if resp.status_code == 200:
                 latencies.append(time.time() - start)
             else:
@@ -39,20 +44,29 @@ async def test_rest_load():
         for i in range(0, TOTAL_REQUESTS, CONCURRENT_USERS):
             batch = [make_request(client) for _ in range(CONCURRENT_USERS)]
             await asyncio.gather(*batch)
-            
+
     latencies_ms = [l * 1000 for l in latencies]
     return {
         "p50": statistics.median(latencies_ms) if latencies_ms else 0,
-        "p95": statistics.quantiles(latencies_ms, n=20)[18] if len(latencies_ms) >= 20 else max(latencies_ms or [0]),
-        "p99": statistics.quantiles(latencies_ms, n=100)[98] if len(latencies_ms) >= 100 else max(latencies_ms or [0]),
-        "total_requests": len(latencies)
+        "p95": (
+            statistics.quantiles(latencies_ms, n=20)[18]
+            if len(latencies_ms) >= 20
+            else max(latencies_ms or [0])
+        ),
+        "p99": (
+            statistics.quantiles(latencies_ms, n=100)[98]
+            if len(latencies_ms) >= 100
+            else max(latencies_ms or [0])
+        ),
+        "total_requests": len(latencies),
     }
+
 
 async def test_websocket_broadcast_load():
     print(f"\n[2/2] WebSocket Load Test: 50 concurrent listeners...")
     NUM_LISTENERS = 50
     results = [False] * NUM_LISTENERS
-    
+
     async def listen(idx):
         try:
             async with websockets.connect(WS_URL) as ws:
@@ -66,40 +80,41 @@ async def test_websocket_broadcast_load():
 
     # Start listeners
     tasks = [asyncio.create_task(listen(i)) for i in range(NUM_LISTENERS)]
-    await asyncio.sleep(3) # Increased stabilization time
-    
+    await asyncio.sleep(3)  # Increased stabilization time
+
     # Trigger a broadcast via analyze endpoint
     print("Triggering broadcast...")
     async with httpx.AsyncClient() as client:
-        await client.post(f"{API_URL}/analyst/analyze", json={"query": "broadcast test"}, timeout=30)
-    
+        await client.post(
+            f"{API_URL}/analyst/analyze", json={"query": "broadcast test"}, timeout=30
+        )
+
     # Wait for all listeners to finish or timeout
     await asyncio.gather(*tasks, return_exceptions=True)
-    
+
     received_count = sum(results)
-    return {
-        "listeners": NUM_LISTENERS,
-        "messages_received": received_count
-    }
+    return {"listeners": NUM_LISTENERS, "messages_received": received_count}
+
 
 def get_server_memory():
     total_rss = 0
-    for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+    for proc in psutil.process_iter(["pid", "name", "cmdline"]):
         try:
-            cmdline = " ".join(proc.info['cmdline'] or [])
+            cmdline = " ".join(proc.info["cmdline"] or [])
             if "analyst_service" in cmdline or "semantic_search.api.main" in cmdline:
                 total_rss += proc.memory_info().rss
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             continue
     return total_rss / (1024 * 1024)
 
+
 async def run_full_load_suite():
     print("=== GEMINI LOAD TESTING SUITE (FINAL) ===")
-    
+
     rest_stats = await test_rest_load()
     ws_stats = await test_websocket_broadcast_load()
     server_mem = get_server_memory()
-    
+
     report = f"""# GEMINI BASELINE PERFORMANCE REPORT
 
 ## Hardware Context
@@ -123,12 +138,13 @@ async def run_full_load_suite():
 ## Memory Stability
 - Total Server Stack RSS (Analyst + Search): {server_mem:.2f} MB
 """
-    
+
     with open("F:/aia/GEMINI_BASELINE_PERFORMANCE.md", "w") as f:
         f.write(report)
-    
+
     print("\n✅ Load Testing Complete. Report saved to GEMINI_BASELINE_PERFORMANCE.md")
     print(report)
+
 
 if __name__ == "__main__":
     asyncio.run(run_full_load_suite())

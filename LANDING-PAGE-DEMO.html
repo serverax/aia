@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AiA Landing Page Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #64c8ff;
+            padding-bottom: 10px;
+        }
+        .feature {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #64c8ff;
+            border-radius: 5px;
+        }
+        .feature strong {
+            color: #64c8ff;
+        }
+        iframe {
+            width: 100%;
+            height: 800px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .preview-link {
+            background: #64c8ff;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            display: inline-block;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .preview-link:hover {
+            background: #0099ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 AiA Landing Page - Live Demo</h1>
+        
+        <h2>Preview</h2>
+        <iframe src="/landing-page/index.html"></iframe>
+        
+        <h2>Features</h2>
+        
+        <div class="feature">
+            <strong>✨ Animated Factory</strong>
+            <p>Four floating machines (⚙️ 🤖 🔧 📊) orbiting a pulsing central sphere. The orbital ring rotates continuously.</p>
+        </div>
+        
+        <div class="feature">
+            <strong>📋 Waitlist Form</strong>
+            <p>Beautiful form collecting: Name, Email, Profession (dropdown), Company. Real-time validation and error messages.</p>
+        </div>
+        
+        <div class="feature">
+            <strong>🎯 Live Signup Count</strong>
+            <p>Shows current position on waitlist (e.g., "#1,542 people ahead"). Updates every 30 seconds from API.</p>
+        </div>
+        
+        <div class="feature">
+            <strong>📊 Stats Section</strong>
+            <p>Display key metrics: 99.9% Uptime SLA, 1000+ Metrics/sec, 50ms Alert Latency, 100% Kubernetes Native</p>
+        </div>
+        
+        <div class="feature">
+            <strong>🎨 Feature Cards</strong>
+            <p>6 feature cards showing: Real-Time Monitoring, Predictive Analytics, Autonomous Control, Cloud Native, Enterprise Security, Scalable Infrastructure</p>
+        </div>
+        
+        <div class="feature">
+            <strong>🎭 Smooth Animations</strong>
+            <p>All elements animate smoothly on load: text fades in, cards slide up, factory machines float, orb pulses.</p>
+        </div>
+        
+        <div class="feature">
+            <strong>📱 Responsive Design</strong>
+            <p>Works perfectly on desktop, tablet, and mobile. All animations optimized for performance.</p>
+        </div>
+        
+        <h2>Color Scheme</h2>
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr style="background: #f0f0f0;">
+                <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Element</th>
+                <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Color</th>
+                <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Hex</th>
+                <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Preview</th>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border: 1px solid #ddd;">Background</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">Dark Navy Gradient</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">#0f0f1e → #1a1a2e</td>
+                <td style="padding: 10px; border: 1px solid #ddd; background: linear-gradient(135deg, #0f0f1e, #1a1a2e);"></td>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border: 1px solid #ddd;">Primary (Text/Buttons)</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">Bright Cyan</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">#64c8ff</td>
+                <td style="padding: 10px; border: 1px solid #ddd; background: #64c8ff;"></td>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border: 1px solid #ddd;">Secondary (Body Text)</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">Light Gray</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">#a0a0a0</td>
+                <td style="padding: 10px; border: 1px solid #ddd; background: #a0a0a0;"></td>
+            </tr>
+        </table>
+        
+        <h2>Access Options</h2>
+        
+        <h3>Local Development</h3>
+        <pre style="background: #f0f0f0; padding: 15px; border-radius: 5px; overflow-x: auto;">
+cd /mnt/f/aia/landing-page
+python -m http.server 8000
+
+# Open: http://localhost:8000
+        </pre>
+        
+        <h3>Docker</h3>
+        <pre style="background: #f0f0f0; padding: 15px; border-radius: 5px; overflow-x: auto;">
+cd /mnt/f/aia/backend/waitlist
+docker-compose up
+
+# Open: http://localhost
+        </pre>
+        
+        <h3>Kubernetes</h3>
+        <pre style="background: #f0f0f0; padding: 15px; border-radius: 5px; overflow-x: auto;">
+kubectl apply -f backend/waitlist/k8s.yaml
+
+# Access: https://aia.ordinoxai.com
+        </pre>
+        
+        <h2>Next Steps</h2>
+        <ol>
+            <li>Configure domain: aia.ordinoxai.com → Landing page IP</li>
+            <li>Configure domain: api.aia.ordinoxai.com → API IP</li>
+            <li>Deploy to Kubernetes: kubectl apply -f backend/waitlist/k8s.yaml</li>
+            <li>Setup email notifications (configure .env)</li>
+            <li>Start collecting signups!</li>
+        </ol>
+    </div>
+</body>
+</html>

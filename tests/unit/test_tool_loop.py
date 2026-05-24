@@ -3,6 +3,7 @@
 Uses StubLLMClient with canned AssistantResponse sequences; a hand-rolled
 async tool_executor stands in for `ToolRegistry.execute`.
 """
+
 from __future__ import annotations
 
 import json
@@ -57,12 +58,14 @@ def test_to_anthropic_spec_round_trip():
 
 
 async def test_agent_loop_terminates_when_no_tool_use():
-    stub = StubLLMClient(tool_responses=[
-        AssistantResponse(
-            blocks=[TextBlock(text="Just text, no tools.")],
-            stop_reason="end_turn",
-        )
-    ])
+    stub = StubLLMClient(
+        tool_responses=[
+            AssistantResponse(
+                blocks=[TextBlock(text="Just text, no tools.")],
+                stop_reason="end_turn",
+            )
+        ]
+    )
     executor, log = _executor_factory()
     response = await agent_loop(
         llm=stub,
@@ -82,16 +85,20 @@ async def test_agent_loop_runs_one_tool_then_completes():
         description="extract dates",
         input_schema={"type": "object"},
     )
-    stub = StubLLMClient(tool_responses=[
-        AssistantResponse(
-            blocks=[ToolUseBlock(id="u1", name="parse_dates_v3", input={"text": "due 2026-05-21"})],
-            stop_reason="tool_use",
-        ),
-        AssistantResponse(
-            blocks=[TextBlock(text="Found one date.")],
-            stop_reason="end_turn",
-        ),
-    ])
+    stub = StubLLMClient(
+        tool_responses=[
+            AssistantResponse(
+                blocks=[
+                    ToolUseBlock(id="u1", name="parse_dates_v3", input={"text": "due 2026-05-21"})
+                ],
+                stop_reason="tool_use",
+            ),
+            AssistantResponse(
+                blocks=[TextBlock(text="Found one date.")],
+                stop_reason="end_turn",
+            ),
+        ]
+    )
     executor, log = _executor_factory()
     response = await agent_loop(
         llm=stub,
@@ -120,19 +127,21 @@ async def test_agent_loop_runs_multiple_tools_in_one_turn():
     """Claude can emit several tool_use blocks per response; loop must run all."""
     desc1 = _FakeDescriptor(name="tool_a", description="a", input_schema={"type": "object"})
     desc2 = _FakeDescriptor(name="tool_b", description="b", input_schema={"type": "object"})
-    stub = StubLLMClient(tool_responses=[
-        AssistantResponse(
-            blocks=[
-                ToolUseBlock(id="u1", name="tool_a", input={"x": 1}),
-                ToolUseBlock(id="u2", name="tool_b", input={"y": 2}),
-            ],
-            stop_reason="tool_use",
-        ),
-        AssistantResponse(
-            blocks=[TextBlock(text="Combined.")],
-            stop_reason="end_turn",
-        ),
-    ])
+    stub = StubLLMClient(
+        tool_responses=[
+            AssistantResponse(
+                blocks=[
+                    ToolUseBlock(id="u1", name="tool_a", input={"x": 1}),
+                    ToolUseBlock(id="u2", name="tool_b", input={"y": 2}),
+                ],
+                stop_reason="tool_use",
+            ),
+            AssistantResponse(
+                blocks=[TextBlock(text="Combined.")],
+                stop_reason="end_turn",
+            ),
+        ]
+    )
     executor, log = _executor_factory()
     response = await agent_loop(
         llm=stub,
@@ -151,16 +160,18 @@ async def test_agent_loop_captures_tool_errors_as_tool_result_is_error():
     async def failing_executor(agent_id, tool_name, input_payload):
         raise PermissionError(f"agent {agent_id} cannot call {tool_name}")
 
-    stub = StubLLMClient(tool_responses=[
-        AssistantResponse(
-            blocks=[ToolUseBlock(id="u1", name="brittle", input={})],
-            stop_reason="tool_use",
-        ),
-        AssistantResponse(
-            blocks=[TextBlock(text="Recovered.")],
-            stop_reason="end_turn",
-        ),
-    ])
+    stub = StubLLMClient(
+        tool_responses=[
+            AssistantResponse(
+                blocks=[ToolUseBlock(id="u1", name="brittle", input={})],
+                stop_reason="tool_use",
+            ),
+            AssistantResponse(
+                blocks=[TextBlock(text="Recovered.")],
+                stop_reason="end_turn",
+            ),
+        ]
+    )
     response = await agent_loop(
         llm=stub,
         agent_id="analyst",
@@ -181,13 +192,15 @@ async def test_agent_loop_respects_max_iterations():
     desc = _FakeDescriptor(name="t", description="", input_schema={"type": "object"})
 
     # Build N+1 responses, all asking for the tool again.
-    stub = StubLLMClient(tool_responses=[
-        AssistantResponse(
-            blocks=[ToolUseBlock(id=f"u{i}", name="t", input={})],
-            stop_reason="tool_use",
-        )
-        for i in range(5)
-    ])
+    stub = StubLLMClient(
+        tool_responses=[
+            AssistantResponse(
+                blocks=[ToolUseBlock(id=f"u{i}", name="t", input={})],
+                stop_reason="tool_use",
+            )
+            for i in range(5)
+        ]
+    )
     executor, log = _executor_factory()
     response = await agent_loop(
         llm=stub,

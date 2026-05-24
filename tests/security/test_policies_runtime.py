@@ -13,6 +13,7 @@ Three test classes:
                               and asserts each agent reaches what capabilities.yaml
                               says it should reach (and nothing else)
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -38,6 +39,7 @@ pytestmark = [pytest.mark.unit]
 # 1. Low-level selector + helper tests
 # ============================================================
 
+
 class TestSelectors:
     def test_empty_selector_matches_anything(self):
         assert _matches_selector({"app": "redis"}, {})
@@ -57,9 +59,7 @@ class TestSelectors:
         assert not _matches_selector({"tier": "data"}, {"matchLabels": {"app": "redis"}})
 
     def test_match_labels_wrong_value_rejects(self):
-        assert not _matches_selector(
-            {"app": "postgres"}, {"matchLabels": {"app": "redis"}}
-        )
+        assert not _matches_selector({"app": "postgres"}, {"matchLabels": {"app": "redis"}})
 
     def test_match_expressions_in_operator(self):
         sel = {"matchExpressions": [{"key": "tier", "operator": "In", "values": ["data", "cache"]}]}
@@ -105,6 +105,7 @@ class TestSelectors:
 # 2. Port + IP block helpers
 # ============================================================
 
+
 class TestPortAndIP:
     def test_port_match_tcp_exact(self):
         assert _port_matches([{"port": 6379, "protocol": "TCP"}], 6379, "TCP")
@@ -138,9 +139,9 @@ class TestPortAndIP:
             "cidr": "0.0.0.0/0",
             "except": ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"],
         }
-        assert _ip_matches_block("1.1.1.1", block)          # public — allowed
-        assert _ip_matches_block("104.16.0.1", block)       # anthropic-ish CDN range
-        assert not _ip_matches_block("10.5.4.3", block)     # RFC1918 — excluded
+        assert _ip_matches_block("1.1.1.1", block)  # public — allowed
+        assert _ip_matches_block("104.16.0.1", block)  # anthropic-ish CDN range
+        assert not _ip_matches_block("10.5.4.3", block)  # RFC1918 — excluded
         assert not _ip_matches_block("192.168.0.42", block)
         assert not _ip_matches_block("172.20.0.1", block)
 
@@ -164,16 +165,16 @@ def _basic_cluster() -> Cluster:
             Namespace.canonical(NS_KUBE_SYSTEM),
         ],
         pods=[
-            Pod("echo-1",         NS_ORDINOX, {"app": "echo-agent"}),
-            Pod("orch-1",         NS_ORDINOX, {"app": "orchestrator-agent"}),
-            Pod("compliance-1",   NS_ORDINOX, {"app": "compliance-agent"}),
-            Pod("analyst-1",      NS_ORDINOX, {"app": "analyst-agent"}),
-            Pod("redis-0",        NS_ORDINOX, {"app": "redis"}),
-            Pod("postgres-0",     NS_ORDINOX, {"app": "postgres"}),
-            Pod("jaeger-1",       NS_ORDINOX, {"app": "jaeger"}),
-            Pod("milvus-0",       NS_ORDINOX, {"app": "milvus"}),
-            Pod("qdrant-0",       NS_ORDINOX, {"app": "qdrant"}),
-            Pod("coredns-1",      NS_KUBE_SYSTEM, {"k8s-app": "kube-dns"}),
+            Pod("echo-1", NS_ORDINOX, {"app": "echo-agent"}),
+            Pod("orch-1", NS_ORDINOX, {"app": "orchestrator-agent"}),
+            Pod("compliance-1", NS_ORDINOX, {"app": "compliance-agent"}),
+            Pod("analyst-1", NS_ORDINOX, {"app": "analyst-agent"}),
+            Pod("redis-0", NS_ORDINOX, {"app": "redis"}),
+            Pod("postgres-0", NS_ORDINOX, {"app": "postgres"}),
+            Pod("jaeger-1", NS_ORDINOX, {"app": "jaeger"}),
+            Pod("milvus-0", NS_ORDINOX, {"app": "milvus"}),
+            Pod("qdrant-0", NS_ORDINOX, {"app": "qdrant"}),
+            Pod("coredns-1", NS_KUBE_SYSTEM, {"k8s-app": "kube-dns"}),
         ],
     )
 
@@ -188,14 +189,16 @@ class TestPolicyEvaluation:
 
     def test_default_deny_egress_blocks_everything(self):
         c = _basic_cluster()
-        c.policies = [{
-            "metadata": {"name": "deny-all-egress", "namespace": NS_ORDINOX},
-            "spec": {
-                "podSelector": {},        # selects every pod in the namespace
-                "policyTypes": ["Egress"],
-                # no egress rules -> default-deny for selected pods
-            },
-        }]
+        c.policies = [
+            {
+                "metadata": {"name": "deny-all-egress", "namespace": NS_ORDINOX},
+                "spec": {
+                    "podSelector": {},  # selects every pod in the namespace
+                    "policyTypes": ["Egress"],
+                    # no egress rules -> default-deny for selected pods
+                },
+            }
+        ]
         echo, redis = c.pods[0], c.pods[4]
         assert c.can_egress(echo, dst_pod=redis, port=6379) is Decision.DENIED
 
@@ -211,10 +214,12 @@ class TestPolicyEvaluation:
                 "spec": {
                     "podSelector": {"matchLabels": {"app": "echo-agent"}},
                     "policyTypes": ["Egress"],
-                    "egress": [{
-                        "to": [{"podSelector": {"matchLabels": {"app": "redis"}}}],
-                        "ports": [{"port": 6379, "protocol": "TCP"}],
-                    }],
+                    "egress": [
+                        {
+                            "to": [{"podSelector": {"matchLabels": {"app": "redis"}}}],
+                            "ports": [{"port": 6379, "protocol": "TCP"}],
+                        }
+                    ],
                 },
             },
         ]
@@ -235,8 +240,12 @@ class TestPolicyEvaluation:
                 "spec": {
                     "podSelector": {"matchLabels": {"app": "echo-agent"}},
                     "policyTypes": ["Egress"],
-                    "egress": [{"to": [{"podSelector": {"matchLabels": {"app": "redis"}}}],
-                                "ports": [{"port": 6379, "protocol": "TCP"}]}],
+                    "egress": [
+                        {
+                            "to": [{"podSelector": {"matchLabels": {"app": "redis"}}}],
+                            "ports": [{"port": 6379, "protocol": "TCP"}],
+                        }
+                    ],
                 },
             },
             {
@@ -244,8 +253,12 @@ class TestPolicyEvaluation:
                 "spec": {
                     "podSelector": {"matchLabels": {"app": "echo-agent"}},
                     "policyTypes": ["Egress"],
-                    "egress": [{"to": [{"podSelector": {"matchLabels": {"app": "postgres"}}}],
-                                "ports": [{"port": 5432, "protocol": "TCP"}]}],
+                    "egress": [
+                        {
+                            "to": [{"podSelector": {"matchLabels": {"app": "postgres"}}}],
+                            "ports": [{"port": 5432, "protocol": "TCP"}],
+                        }
+                    ],
                 },
             },
         ]
@@ -256,30 +269,36 @@ class TestPolicyEvaluation:
     def test_only_ingress_policy_does_not_affect_egress(self):
         """A policy with only `policyTypes: [Ingress]` leaves egress default-allow."""
         c = _basic_cluster()
-        c.policies = [{
-            "metadata": {"name": "echo-deny-ingress", "namespace": NS_ORDINOX},
-            "spec": {
-                "podSelector": {"matchLabels": {"app": "echo-agent"}},
-                "policyTypes": ["Ingress"],
-            },
-        }]
+        c.policies = [
+            {
+                "metadata": {"name": "echo-deny-ingress", "namespace": NS_ORDINOX},
+                "spec": {
+                    "podSelector": {"matchLabels": {"app": "echo-agent"}},
+                    "policyTypes": ["Ingress"],
+                },
+            }
+        ]
         echo = c.pods[0]
         # Egress unchanged from default-allow:
         assert c.can_egress(echo, dst_pod=c.pods[4], port=6379) is Decision.ALLOWED
 
     def test_port_mismatch_denies(self):
         c = _basic_cluster()
-        c.policies = [{
-            "metadata": {"name": "allow-redis-port", "namespace": NS_ORDINOX},
-            "spec": {
-                "podSelector": {"matchLabels": {"app": "echo-agent"}},
-                "policyTypes": ["Egress"],
-                "egress": [{
-                    "to": [{"podSelector": {"matchLabels": {"app": "redis"}}}],
-                    "ports": [{"port": 6379, "protocol": "TCP"}],
-                }],
-            },
-        }]
+        c.policies = [
+            {
+                "metadata": {"name": "allow-redis-port", "namespace": NS_ORDINOX},
+                "spec": {
+                    "podSelector": {"matchLabels": {"app": "echo-agent"}},
+                    "policyTypes": ["Egress"],
+                    "egress": [
+                        {
+                            "to": [{"podSelector": {"matchLabels": {"app": "redis"}}}],
+                            "ports": [{"port": 6379, "protocol": "TCP"}],
+                        }
+                    ],
+                },
+            }
+        ]
         echo, redis = c.pods[0], c.pods[4]
         assert c.can_egress(echo, dst_pod=redis, port=6379) is Decision.ALLOWED
         # Right pod, wrong port — denied.
@@ -289,20 +308,32 @@ class TestPolicyEvaluation:
         """The Day 8 regression in the simulator. With the canonical label,
         DNS egress is allowed; with the legacy `name` label, it isn't."""
         c = _basic_cluster()
-        c.policies = [{
-            "metadata": {"name": "echo-allow-dns", "namespace": NS_ORDINOX},
-            "spec": {
-                "podSelector": {"matchLabels": {"app": "echo-agent"}},
-                "policyTypes": ["Egress"],
-                "egress": [{
-                    "to": [{"namespaceSelector": {
-                        "matchLabels": {"kubernetes.io/metadata.name": "kube-system"},
-                    }}],
-                    "ports": [{"port": 53, "protocol": "UDP"},
-                              {"port": 53, "protocol": "TCP"}],
-                }],
-            },
-        }]
+        c.policies = [
+            {
+                "metadata": {"name": "echo-allow-dns", "namespace": NS_ORDINOX},
+                "spec": {
+                    "podSelector": {"matchLabels": {"app": "echo-agent"}},
+                    "policyTypes": ["Egress"],
+                    "egress": [
+                        {
+                            "to": [
+                                {
+                                    "namespaceSelector": {
+                                        "matchLabels": {
+                                            "kubernetes.io/metadata.name": "kube-system"
+                                        },
+                                    }
+                                }
+                            ],
+                            "ports": [
+                                {"port": 53, "protocol": "UDP"},
+                                {"port": 53, "protocol": "TCP"},
+                            ],
+                        }
+                    ],
+                },
+            }
+        ]
         echo, coredns = c.pods[0], c.pods[9]
         assert c.can_egress(echo, dst_pod=coredns, port=53, protocol="UDP") is Decision.ALLOWED
         assert c.can_egress(echo, dst_pod=coredns, port=53, protocol="TCP") is Decision.ALLOWED
@@ -310,17 +341,21 @@ class TestPolicyEvaluation:
     def test_dns_to_kube_system_with_legacy_label_denies_REGRESSION(self):
         """Same setup but with the broken legacy selector. Demonstrates the bug."""
         c = _basic_cluster()
-        c.policies = [{
-            "metadata": {"name": "echo-broken-dns", "namespace": NS_ORDINOX},
-            "spec": {
-                "podSelector": {"matchLabels": {"app": "echo-agent"}},
-                "policyTypes": ["Egress"],
-                "egress": [{
-                    "to": [{"namespaceSelector": {"matchLabels": {"name": "kube-system"}}}],
-                    "ports": [{"port": 53, "protocol": "UDP"}],
-                }],
-            },
-        }]
+        c.policies = [
+            {
+                "metadata": {"name": "echo-broken-dns", "namespace": NS_ORDINOX},
+                "spec": {
+                    "podSelector": {"matchLabels": {"app": "echo-agent"}},
+                    "policyTypes": ["Egress"],
+                    "egress": [
+                        {
+                            "to": [{"namespaceSelector": {"matchLabels": {"name": "kube-system"}}}],
+                            "ports": [{"port": 53, "protocol": "UDP"}],
+                        }
+                    ],
+                },
+            }
+        ]
         echo, coredns = c.pods[0], c.pods[9]
         # kube-system doesn't carry the legacy `name` label by default
         # -> namespaceSelector misses -> rule doesn't allow -> default-deny fires.
@@ -329,20 +364,28 @@ class TestPolicyEvaluation:
     def test_ipblock_egress_to_external_ip(self):
         """Anthropic-style external egress: allow 0.0.0.0/0 except RFC1918."""
         c = _basic_cluster()
-        c.policies = [{
-            "metadata": {"name": "orch-external", "namespace": NS_ORDINOX},
-            "spec": {
-                "podSelector": {"matchLabels": {"app": "orchestrator-agent"}},
-                "policyTypes": ["Egress"],
-                "egress": [{
-                    "to": [{"ipBlock": {
-                        "cidr": "0.0.0.0/0",
-                        "except": ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"],
-                    }}],
-                    "ports": [{"port": 443, "protocol": "TCP"}],
-                }],
-            },
-        }]
+        c.policies = [
+            {
+                "metadata": {"name": "orch-external", "namespace": NS_ORDINOX},
+                "spec": {
+                    "podSelector": {"matchLabels": {"app": "orchestrator-agent"}},
+                    "policyTypes": ["Egress"],
+                    "egress": [
+                        {
+                            "to": [
+                                {
+                                    "ipBlock": {
+                                        "cidr": "0.0.0.0/0",
+                                        "except": ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"],
+                                    }
+                                }
+                            ],
+                            "ports": [{"port": 443, "protocol": "TCP"}],
+                        }
+                    ],
+                },
+            }
+        ]
         orch = c.pods[1]
         # Public IP — allowed.
         assert c.can_egress(orch, dst_ip="1.1.1.1", port=443) is Decision.ALLOWED
@@ -354,14 +397,16 @@ class TestPolicyEvaluation:
     def test_empty_to_in_rule_means_any_peer(self):
         """A rule with no `to:` peers but a port = wide-open egress on that port."""
         c = _basic_cluster()
-        c.policies = [{
-            "metadata": {"name": "echo-allow-any", "namespace": NS_ORDINOX},
-            "spec": {
-                "podSelector": {"matchLabels": {"app": "echo-agent"}},
-                "policyTypes": ["Egress"],
-                "egress": [{"ports": [{"port": 443, "protocol": "TCP"}]}],
-            },
-        }]
+        c.policies = [
+            {
+                "metadata": {"name": "echo-allow-any", "namespace": NS_ORDINOX},
+                "spec": {
+                    "podSelector": {"matchLabels": {"app": "echo-agent"}},
+                    "policyTypes": ["Egress"],
+                    "egress": [{"ports": [{"port": 443, "protocol": "TCP"}]}],
+                },
+            }
+        ]
         echo = c.pods[0]
         assert c.can_egress(echo, dst_ip="anything", port=443) is Decision.ALLOWED
         assert c.can_egress(echo, dst_pod=c.pods[5], port=443) is Decision.ALLOWED
@@ -369,17 +414,21 @@ class TestPolicyEvaluation:
     def test_can_ingress_basic(self):
         """Ingress evaluation mirrors egress. Verify the entry point works."""
         c = _basic_cluster()
-        c.policies = [{
-            "metadata": {"name": "redis-allow-ingress-from-echo", "namespace": NS_ORDINOX},
-            "spec": {
-                "podSelector": {"matchLabels": {"app": "redis"}},
-                "policyTypes": ["Ingress"],
-                "ingress": [{
-                    "from": [{"podSelector": {"matchLabels": {"app": "echo-agent"}}}],
-                    "ports": [{"port": 6379, "protocol": "TCP"}],
-                }],
-            },
-        }]
+        c.policies = [
+            {
+                "metadata": {"name": "redis-allow-ingress-from-echo", "namespace": NS_ORDINOX},
+                "spec": {
+                    "podSelector": {"matchLabels": {"app": "redis"}},
+                    "policyTypes": ["Ingress"],
+                    "ingress": [
+                        {
+                            "from": [{"podSelector": {"matchLabels": {"app": "echo-agent"}}}],
+                            "ports": [{"port": 6379, "protocol": "TCP"}],
+                        }
+                    ],
+                },
+            }
+        ]
         echo, redis, postgres = c.pods[0], c.pods[4], c.pods[5]
         # Echo → Redis: allowed (rule says from echo).
         assert c.can_ingress(redis, src_pod=echo, port=6379) is Decision.ALLOWED
@@ -396,18 +445,29 @@ class TestPolicyEvaluation:
         c = _basic_cluster()
         # Remove kube-system so the namespace lookup misses.
         c.namespaces = [n for n in c.namespaces if n.name != NS_KUBE_SYSTEM]
-        c.policies = [{
-            "metadata": {"name": "echo-allow-kube-system", "namespace": NS_ORDINOX},
-            "spec": {
-                "podSelector": {"matchLabels": {"app": "echo-agent"}},
-                "policyTypes": ["Egress"],
-                "egress": [{
-                    "to": [{"namespaceSelector": {
-                        "matchLabels": {"kubernetes.io/metadata.name": "kube-system"}}}],
-                    "ports": [{"port": 53, "protocol": "UDP"}],
-                }],
-            },
-        }]
+        c.policies = [
+            {
+                "metadata": {"name": "echo-allow-kube-system", "namespace": NS_ORDINOX},
+                "spec": {
+                    "podSelector": {"matchLabels": {"app": "echo-agent"}},
+                    "policyTypes": ["Egress"],
+                    "egress": [
+                        {
+                            "to": [
+                                {
+                                    "namespaceSelector": {
+                                        "matchLabels": {
+                                            "kubernetes.io/metadata.name": "kube-system"
+                                        }
+                                    }
+                                }
+                            ],
+                            "ports": [{"port": 53, "protocol": "UDP"}],
+                        }
+                    ],
+                },
+            }
+        ]
         echo, coredns = c.pods[0], c.pods[9]
         assert c.can_egress(echo, dst_pod=coredns, port=53, protocol="UDP") is Decision.DENIED
 
@@ -436,32 +496,42 @@ class TestSelectorEdgeCases:
     def test_peer_with_ipblock_but_no_dst_ip_denies(self):
         """ipBlock rule against a pod (not an IP) doesn't match."""
         c = _basic_cluster()
-        c.policies = [{
-            "metadata": {"name": "echo-external-only", "namespace": NS_ORDINOX},
-            "spec": {
-                "podSelector": {"matchLabels": {"app": "echo-agent"}},
-                "policyTypes": ["Egress"],
-                "egress": [{"to": [{"ipBlock": {"cidr": "0.0.0.0/0"}}],
-                            "ports": [{"port": 443, "protocol": "TCP"}]}],
-            },
-        }]
+        c.policies = [
+            {
+                "metadata": {"name": "echo-external-only", "namespace": NS_ORDINOX},
+                "spec": {
+                    "podSelector": {"matchLabels": {"app": "echo-agent"}},
+                    "policyTypes": ["Egress"],
+                    "egress": [
+                        {
+                            "to": [{"ipBlock": {"cidr": "0.0.0.0/0"}}],
+                            "ports": [{"port": 443, "protocol": "TCP"}],
+                        }
+                    ],
+                },
+            }
+        ]
         echo, redis = c.pods[0], c.pods[4]
         # Asking about pod-to-pod traffic with only an ipBlock rule -> denied.
         assert c.can_egress(echo, dst_pod=redis, port=443) is Decision.DENIED
 
     def test_peer_with_pod_selector_but_no_dst_pod_denies(self):
         c = _basic_cluster()
-        c.policies = [{
-            "metadata": {"name": "echo-pod-only", "namespace": NS_ORDINOX},
-            "spec": {
-                "podSelector": {"matchLabels": {"app": "echo-agent"}},
-                "policyTypes": ["Egress"],
-                "egress": [{
-                    "to": [{"podSelector": {"matchLabels": {"app": "redis"}}}],
-                    "ports": [{"port": 6379, "protocol": "TCP"}],
-                }],
-            },
-        }]
+        c.policies = [
+            {
+                "metadata": {"name": "echo-pod-only", "namespace": NS_ORDINOX},
+                "spec": {
+                    "podSelector": {"matchLabels": {"app": "echo-agent"}},
+                    "policyTypes": ["Egress"],
+                    "egress": [
+                        {
+                            "to": [{"podSelector": {"matchLabels": {"app": "redis"}}}],
+                            "ports": [{"port": 6379, "protocol": "TCP"}],
+                        }
+                    ],
+                },
+            }
+        ]
         echo = c.pods[0]
         # Asking about pod-to-ip traffic with only a podSelector rule -> denied.
         assert c.can_egress(echo, dst_ip="1.1.1.1", port=6379) is Decision.DENIED
@@ -480,10 +550,15 @@ class TestSelectorEdgeCases:
 # 4. Real generated policies — end-to-end
 # ============================================================
 
+
 @pytest.fixture(scope="module")
 def real_policies() -> list[dict[str, Any]]:
-    path = Path(__file__).resolve().parents[2] / "infrastructure" / "k3s" \
-           / "network-policies-per-agent.yaml"
+    path = (
+        Path(__file__).resolve().parents[2]
+        / "infrastructure"
+        / "k3s"
+        / "network-policies-per-agent.yaml"
+    )
     if not path.is_file():
         pytest.skip(f"{path} missing — run scripts/security/generate_policies.py")
     docs = [d for d in yaml.safe_load_all(path.read_text(encoding="utf-8")) if d is not None]
@@ -517,9 +592,18 @@ class TestGeneratedPolicies:
 
     def test_echo_agent_can_reach_redis_postgres_jaeger(self, real_cluster):
         echo = real_cluster.pods[0]
-        assert real_cluster.can_egress(echo, dst_pod=real_cluster.pods[4], port=6379) is Decision.ALLOWED
-        assert real_cluster.can_egress(echo, dst_pod=real_cluster.pods[5], port=5432) is Decision.ALLOWED
-        assert real_cluster.can_egress(echo, dst_pod=real_cluster.pods[6], port=4317) is Decision.ALLOWED
+        assert (
+            real_cluster.can_egress(echo, dst_pod=real_cluster.pods[4], port=6379)
+            is Decision.ALLOWED
+        )
+        assert (
+            real_cluster.can_egress(echo, dst_pod=real_cluster.pods[5], port=5432)
+            is Decision.ALLOWED
+        )
+        assert (
+            real_cluster.can_egress(echo, dst_pod=real_cluster.pods[6], port=4317)
+            is Decision.ALLOWED
+        )
 
     def test_echo_agent_cannot_reach_anthropic(self, real_cluster):
         """Echo doesn't talk to LLMs — must be denied external egress."""
@@ -529,7 +613,10 @@ class TestGeneratedPolicies:
     def test_echo_agent_cannot_reach_milvus(self, real_cluster):
         """Echo isn't in compliance/analyst — must not reach vector DBs."""
         echo = real_cluster.pods[0]
-        assert real_cluster.can_egress(echo, dst_pod=real_cluster.pods[7], port=19530) is Decision.DENIED
+        assert (
+            real_cluster.can_egress(echo, dst_pod=real_cluster.pods[7], port=19530)
+            is Decision.DENIED
+        )
 
     def test_orchestrator_can_reach_anthropic(self, real_cluster):
         orch = real_cluster.pods[1]
@@ -546,7 +633,10 @@ class TestGeneratedPolicies:
 
     def test_compliance_agent_can_reach_qdrant(self, real_cluster):
         comp = real_cluster.pods[2]
-        assert real_cluster.can_egress(comp, dst_pod=real_cluster.pods[8], port=6333) is Decision.ALLOWED
+        assert (
+            real_cluster.can_egress(comp, dst_pod=real_cluster.pods[8], port=6333)
+            is Decision.ALLOWED
+        )
 
     def test_compliance_agent_cannot_reach_anthropic(self, real_cluster):
         """Compliance isn't in external_allow — no Anthropic egress."""
@@ -555,7 +645,10 @@ class TestGeneratedPolicies:
 
     def test_analyst_can_reach_milvus_and_anthropic(self, real_cluster):
         analyst = real_cluster.pods[3]
-        assert real_cluster.can_egress(analyst, dst_pod=real_cluster.pods[7], port=19530) is Decision.ALLOWED
+        assert (
+            real_cluster.can_egress(analyst, dst_pod=real_cluster.pods[7], port=19530)
+            is Decision.ALLOWED
+        )
         assert real_cluster.can_egress(analyst, dst_ip="1.1.1.1", port=443) is Decision.ALLOWED
 
     def test_every_agent_can_dns_to_kube_system_REGRESSION(self, real_cluster):
@@ -573,9 +666,10 @@ class TestGeneratedPolicies:
     def test_every_agent_can_reach_redis_for_streams(self, real_cluster):
         """All four agents need Redis Streams — it's the bus."""
         for agent in real_cluster.pods[:4]:
-            assert real_cluster.can_egress(
-                agent, dst_pod=real_cluster.pods[4], port=6379
-            ) is Decision.ALLOWED, f"{agent.name} cannot reach redis"
+            assert (
+                real_cluster.can_egress(agent, dst_pod=real_cluster.pods[4], port=6379)
+                is Decision.ALLOWED
+            ), f"{agent.name} cannot reach redis"
 
     def test_no_agent_can_egress_random_external(self, real_cluster):
         """Random non-Anthropic external (e.g., 8.8.8.8:53) — should be denied

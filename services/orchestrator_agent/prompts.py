@@ -3,6 +3,7 @@
 Kept in a dedicated module so prompt edits don't touch graph logic and so
 the templates can be unit-tested for required placeholders.
 """
+
 from __future__ import annotations
 
 INTENT_PROMPT = """\

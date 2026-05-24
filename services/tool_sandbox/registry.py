@@ -13,6 +13,7 @@ Each tool lives in `tools/<name>/` with a `tool.yaml` describing it.
 Built artifacts live in `tools/<name>/dist/` (produced by the build
 script in scripts/security/build-and-sign-tools.sh).
 """
+
 from __future__ import annotations
 
 import logging
@@ -34,9 +35,15 @@ logger = logging.getLogger(__name__)
 
 # Capability classes -> resource budgets. Tools opt in via tool.yaml.
 CAPABILITY_CLASSES: dict[str, ExecutionLimits] = {
-    "small":  ExecutionLimits(fuel=100_000_000,   memory_bytes=64 * 1024 * 1024,  wall_timeout_seconds=2.0),
-    "medium": ExecutionLimits(fuel=500_000_000,   memory_bytes=128 * 1024 * 1024, wall_timeout_seconds=5.0),
-    "large":  ExecutionLimits(fuel=2_000_000_000, memory_bytes=256 * 1024 * 1024, wall_timeout_seconds=15.0),
+    "small": ExecutionLimits(
+        fuel=100_000_000, memory_bytes=64 * 1024 * 1024, wall_timeout_seconds=2.0
+    ),
+    "medium": ExecutionLimits(
+        fuel=500_000_000, memory_bytes=128 * 1024 * 1024, wall_timeout_seconds=5.0
+    ),
+    "large": ExecutionLimits(
+        fuel=2_000_000_000, memory_bytes=256 * 1024 * 1024, wall_timeout_seconds=15.0
+    ),
 }
 
 
@@ -69,8 +76,7 @@ class AuditSink(Protocol):
         input_payload: Mapping[str, Any],
         output_payload: Mapping[str, Any],
         error: str | None,
-    ) -> None:
-        ...
+    ) -> None: ...
 
 
 @dataclass(frozen=True)
@@ -144,6 +150,7 @@ class ToolRegistry:
         if not schema_file.is_file():
             raise ValueError(f"schema file missing: {schema_file}")
         import json
+
         schema = json.loads(schema_file.read_text(encoding="utf-8"))
         input_schema = schema.get("input")
         output_schema = schema.get("output")
@@ -198,8 +205,9 @@ class ToolRegistry:
         descriptor = self.get(tool_name)
 
         if not self.is_allowed(agent_id, tool_name):
-            await self._audit_failure(agent_id, descriptor, dict(input_payload),
-                                      "agent_not_allowed")
+            await self._audit_failure(
+                agent_id, descriptor, dict(input_payload), "agent_not_allowed"
+            )
             raise ToolNotAllowedError(
                 f"agent {agent_id!r} may not call tool {tool_name!r}; "
                 f"allowed: {list(descriptor.allowed_agents)}"
@@ -209,8 +217,9 @@ class ToolRegistry:
         try:
             Draft202012Validator(descriptor.input_schema).validate(dict(input_payload))
         except ValidationError as exc:
-            await self._audit_failure(agent_id, descriptor, dict(input_payload),
-                                      f"input_schema: {exc.message}")
+            await self._audit_failure(
+                agent_id, descriptor, dict(input_payload), f"input_schema: {exc.message}"
+            )
             raise SchemaValidationError(f"input schema violation: {exc.message}") from exc
 
         # Verify signature on the on-disk wasm before instantiating.
@@ -222,16 +231,18 @@ class ToolRegistry:
             try:
                 self.verifier.verify(wasm_bytes, sig_b64)
             except SignatureVerificationError as exc:
-                await self._audit_failure(agent_id, descriptor, dict(input_payload),
-                                          f"signature: {exc}")
+                await self._audit_failure(
+                    agent_id, descriptor, dict(input_payload), f"signature: {exc}"
+                )
                 raise
         else:
             # Strict mode would refuse here. Sprint 6 Day 3 keeps a soft
             # check so the integration test can use AllowAllVerifier
             # alongside missing sig files; production swaps to strict by
             # setting `require_signature=True` (Day 5 hardening).
-            logger.warning("no signature file for tool %s at %s",
-                           descriptor.name, descriptor.signature_path)
+            logger.warning(
+                "no signature file for tool %s at %s", descriptor.name, descriptor.signature_path
+            )
 
         result = await self.executor.execute(
             wasm_bytes,
@@ -244,8 +255,9 @@ class ToolRegistry:
         try:
             Draft202012Validator(descriptor.output_schema).validate(result.output)
         except ValidationError as exc:
-            await self._audit_failure(agent_id, descriptor, dict(input_payload),
-                                      f"output_schema: {exc.message}")
+            await self._audit_failure(
+                agent_id, descriptor, dict(input_payload), f"output_schema: {exc.message}"
+            )
             raise SchemaValidationError(
                 f"tool {descriptor.name!r} returned output that does not match its "
                 f"declared schema: {exc.message}"

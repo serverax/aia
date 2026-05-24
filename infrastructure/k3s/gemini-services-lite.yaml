@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rag-system
+  namespace: ordinox-ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rag-system
+  template:
+    metadata:
+      labels:
+        app: rag-system
+    spec:
+      containers:
+      - name: rag-system
+        image: python:3.11-slim
+        command: ["sh", "-c"]
+        args:
+        - |
+          apt-get update && apt-get install -y curl && \
+          pip install fastapi uvicorn pydantic pydantic-settings httpx qdrant-client anthropic sentence-transformers websockets && \
+          # Code will be copied here via kubectl cp or mounted if available
+          # For this 'hot' rollout, we sleep to allow code injection
+          sleep 3600
+        ports:
+        - containerPort: 8000
+        env:
+        - name: QDRANT_HOST
+          value: "qdrant.data-layer"
+        - name: QDRANT_PORT
+          value: "6333"
+        - name: ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: llm-api-keys
+              key: anthropic-api-key
+        resources:
+          requests:
+            memory: "1Gi"
+          limits:
+            memory: "2Gi"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: semantic-search
+  namespace: ordinox-ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: semantic-search
+  template:
+    metadata:
+      labels:
+        app: semantic-search
+    spec:
+      containers:
+      - name: semantic-search
+        image: python:3.11-slim
+        command: ["sh", "-c"]
+        args:
+        - |
+          apt-get update && apt-get install -y curl && \
+          pip install fastapi uvicorn pydantic pydantic-settings httpx qdrant-client faiss-cpu sentence-transformers && \
+          sleep 3600
+        ports:
+        - containerPort: 8002
+        resources:
+          requests:
+            memory: "1Gi"
+          limits:
+            memory: "2Gi"

@@ -34,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Trivy filesystem scan
-        uses: aquasecurity/trivy-action@v0.31.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: .
@@ -62,7 +62,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Trivy image scan
-        uses: aquasecurity/trivy-action@v0.31.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.image }}:${{ github.sha }}
           format: table

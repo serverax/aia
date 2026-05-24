@@ -6,6 +6,7 @@ executor injected by overriding `tool_registry`. No Redis, no Postgres,
 no real WASM — just verifies the wiring between the agent loop and the
 tool registry surface.
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -56,6 +57,7 @@ def _build_agent(stub_llm: StubLLMClient, tool_calls: list) -> AnalystAgent:
     agent.llm = stub_llm
     agent.tool_registry = _FakeRegistry(tool_calls)
     import asyncio
+
     agent._stop = asyncio.Event()
     return agent
 
@@ -63,21 +65,30 @@ def _build_agent(stub_llm: StubLLMClient, tool_calls: list) -> AnalystAgent:
 @pytest.fixture
 def patch_tracer(monkeypatch):
     """The real `init_telemetry` returns an OTel tracer. For these tests we
-    swap in a no-op context manager so `_handle` doesn't error on `agent.tracer.start_as_current_span`."""
+    swap in a no-op context manager so `_handle` doesn't error on `agent.tracer.start_as_current_span`.
+    """
     from contextlib import nullcontext
 
     class _Span:
-        def set_attribute(self, *_a, **_k): pass
-        def record_exception(self, *_a, **_k): pass
-        def set_status(self, *_a, **_k): pass
+        def set_attribute(self, *_a, **_k):
+            pass
+
+        def record_exception(self, *_a, **_k):
+            pass
+
+        def set_status(self, *_a, **_k):
+            pass
 
     class _Tracer:
         def start_as_current_span(self, *_a, **_k):
             return _ContextSpan()
 
     class _ContextSpan:
-        def __enter__(self): return _Span()
-        def __exit__(self, *_): return False
+        def __enter__(self):
+            return _Span()
+
+        def __exit__(self, *_):
+            return False
 
     return _Tracer()
 
@@ -106,19 +117,24 @@ async def test_handle_invokes_agent_loop_and_publishes_reply(monkeypatch, patch_
         acked.append(message_id)
 
     import services.analyst_agent.main as mod
+
     monkeypatch.setattr(mod, "publish", fake_publish)
     monkeypatch.setattr(mod, "ack", fake_ack)
 
-    stub = StubLLMClient(tool_responses=[
-        AssistantResponse(
-            blocks=[ToolUseBlock(id="u1", name="parse_dates_v3", input={"text": "due 2026-05-21"})],
-            stop_reason="tool_use",
-        ),
-        AssistantResponse(
-            blocks=[TextBlock(text="The date is 2026-05-21 per parse_dates_v3.")],
-            stop_reason="end_turn",
-        ),
-    ])
+    stub = StubLLMClient(
+        tool_responses=[
+            AssistantResponse(
+                blocks=[
+                    ToolUseBlock(id="u1", name="parse_dates_v3", input={"text": "due 2026-05-21"})
+                ],
+                stop_reason="tool_use",
+            ),
+            AssistantResponse(
+                blocks=[TextBlock(text="The date is 2026-05-21 per parse_dates_v3.")],
+                stop_reason="end_turn",
+            ),
+        ]
+    )
     tool_call_log: list = []
     agent = _build_agent(stub, tool_calls=tool_call_log)
     agent.tracer = patch_tracer
@@ -133,9 +149,7 @@ async def test_handle_invokes_agent_loop_and_publishes_reply(monkeypatch, patch_
     )
     await agent._handle("redis-id-1", incoming.to_stream_fields())
 
-    assert tool_call_log == [
-        ("analyst-test", "parse_dates_v3", {"text": "due 2026-05-21"})
-    ]
+    assert tool_call_log == [("analyst-test", "parse_dates_v3", {"text": "due 2026-05-21"})]
     assert len(published) == 1
     stream, fields = published[0]
     assert stream == agent.settings.reply_stream

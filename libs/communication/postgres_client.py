@@ -5,6 +5,7 @@ by `infrastructure/k3s/postgres-init.sql` and reused here. This module
 intentionally exposes a small surface: a pool factory and an `audit()`
 writer. Richer queries should live in service-specific modules.
 """
+
 from __future__ import annotations
 
 import json

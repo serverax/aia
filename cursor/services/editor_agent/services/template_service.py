@@ -28,4 +28,3 @@ class TemplateService:
         for section in template.sections:
             if section.required and section.field not in content:
                 raise ValueError(f"Missing required field: {section.field}")
-

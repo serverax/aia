@@ -22,4 +22,3 @@ def test_docx_generator_returns_bytes():
     output = generator.generate(payload)
     assert isinstance(output, bytes)
     assert len(output) > 100
-

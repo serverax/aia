@@ -1,4 +1,5 @@
 """Verify Kyverno's pod hardening policies block bad pod specs."""
+
 from __future__ import annotations
 
 import pytest
@@ -83,12 +84,12 @@ def _assert_denied(result, expected_policy: str):
         f"stdout={result.stdout!r} stderr={result.stderr!r}"
     )
     combined = (result.stdout + result.stderr).lower()
-    assert "policy" in combined or "validation" in combined, (
-        f"Rejection happened but not from a policy: {combined}"
-    )
-    assert expected_policy.lower() in combined, (
-        f"Expected policy `{expected_policy}` to fire; got: {combined}"
-    )
+    assert (
+        "policy" in combined or "validation" in combined
+    ), f"Rejection happened but not from a policy: {combined}"
+    assert (
+        expected_policy.lower() in combined
+    ), f"Expected policy `{expected_policy}` to fire; got: {combined}"
 
 
 def test_writable_root_filesystem_rejected(require_kyverno_policies, kubectl_apply, kubectl_delete):

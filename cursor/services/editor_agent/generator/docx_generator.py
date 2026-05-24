@@ -54,4 +54,3 @@ class DocxGenerator:
             title = policy.get("title", "Untitled policy")
             jurisdiction = policy.get("jurisdiction", "N/A")
             self.doc.add_paragraph(f"{title} ({jurisdiction})", style="List Bullet")
-

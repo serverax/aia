@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: test-dns-ingress
+  namespace: default
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: test.ordinoxai.com
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: test.ordinoxai.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: some-dummy-service
+            port:
+              number: 80

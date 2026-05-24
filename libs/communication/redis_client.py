@@ -5,6 +5,7 @@ delivered at-least-once and pods can be horizontally scaled. This module
 hides the consumer-group bookkeeping (create-if-missing, XACK on success)
 and exposes a simple `consume()` async iterator.
 """
+
 from __future__ import annotations
 
 import logging

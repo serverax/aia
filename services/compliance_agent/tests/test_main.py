@@ -1,4 +1,5 @@
 """Unit tests for compliance officer evaluation rules."""
+
 from __future__ import annotations
 
 import pytest

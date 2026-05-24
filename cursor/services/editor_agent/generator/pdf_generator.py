@@ -41,7 +41,11 @@ class PdfGenerator:
                 story.append(Spacer(1, 0.2 * inch))
 
             elif section.type == "table":
-                story.append(self._build_table(section.columns or [], value if isinstance(value, list) else []))
+                story.append(
+                    self._build_table(
+                        section.columns or [], value if isinstance(value, list) else []
+                    )
+                )
                 story.append(Spacer(1, 0.15 * inch))
 
             elif section.type == "references":
@@ -76,4 +80,3 @@ class PdfGenerator:
             )
         )
         return table
-

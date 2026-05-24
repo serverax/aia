@@ -4,6 +4,7 @@ These don't need the cosign binary — we generate an ECDSA-P256 keypair
 in-process, sign a blob, and verify. The math matches cosign's default
 sign-blob format byte-for-byte.
 """
+
 from __future__ import annotations
 
 import pytest

@@ -13,6 +13,7 @@ Run:
 Tests requiring the fixture will skip if `echo.wasm` is missing (e.g. on
 a fresh checkout before `scripts/security/build-fixtures.sh` has run).
 """
+
 from __future__ import annotations
 
 import json
@@ -58,7 +59,7 @@ async def test_executor_enforces_wall_timeout():
     wasm = _require_echo_fixture()
     executor = WasmExecutor(
         default_limits=ExecutionLimits(
-            fuel=1,                       # Effectively immediate fuel exhaustion
+            fuel=1,  # Effectively immediate fuel exhaustion
             memory_bytes=4 * 1024 * 1024,
             wall_timeout_seconds=2.0,
         )

@@ -9,6 +9,11 @@ on:
 env:
   REGISTRY: ghcr.io
   PY_VERSION: "3.11"
+  # Trivy severity threshold. Anything at this severity or higher fails
+  # the scan job (and therefore blocks build / deploy). MEDIUM and below
+  # are reported as SARIF findings but don't block.
+  TRIVY_SEVERITY: "CRITICAL,HIGH"
+  TRIVY_VERSION: "0.55.2"
 
 jobs:
 
@@ -29,6 +34,42 @@ jobs:
         # Match pyproject's line-length=100. E203/W503 are black-incompatible.
         run: flake8 libs services tests --max-line-length=100 --extend-ignore=E203,W503
 
+  pre-deploy-gate:
+    # Sprint 9 safety gate. Validates capabilities.yaml semantics, checks
+    # generator output isn't stale, runs the policy simulator against the
+    # generated NetworkPolicies, and dry-runs every manifest. NO-GO (exit 1)
+    # blocks build-images. Runs on every PR + every push to main/develop.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PY_VERSION }}
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - name: Install kubectl (for client-side manifest dry-run)
+        uses: azure/setup-kubectl@v4
+        with:
+          version: v1.31.0
+      - name: pytest — gate's own tests (capability validator + integration)
+        run: |
+          pytest tests/security/test_capability_validator.py \
+                 tests/security/test_pre_deploy_check.py \
+                 tests/security/test_policy_generator.py \
+                 tests/security/test_audit_rbac.py \
+                 tests/security/test_policies_runtime.py \
+                 -m unit -v
+      - name: Run the gate against this PR's state
+        env:
+          REPORT_FILE: ${{ runner.temp }}/pre_deploy_check.json
+        run: bash scripts/security/pre_deploy_check.sh
+      - name: Upload gate JSON report
+        if: always()    # upload even on NO-GO so reviewers can see findings
+        uses: actions/upload-artifact@v4
+        with:
+          name: pre-deploy-gate-report
+          path: ${{ runner.temp }}/pre_deploy_check.json
+
   unit-test:
     runs-on: ubuntu-latest
     steps:
@@ -39,6 +80,8 @@ jobs:
           cache: pip
       - run: pip install -r requirements-dev.txt
       - name: pytest unit
+        # tests/security/* is covered by pre-deploy-gate; skip here to avoid
+        # the 4-minute pre_deploy_check integration tests running twice.
         run: |
           pytest tests/unit \
                  services/echo_agent/tests \
@@ -53,6 +96,45 @@ jobs:
         with:
           name: coverage-xml
           path: coverage.xml
+
+  trivy-fs-scan:
+    # Filesystem scan on every PR + push. Catches vulnerable Python deps
+    # (requirements*.txt) and known CVEs in source-level dependencies
+    # BEFORE we spend time building images. Also catches accidentally-
+    # committed secrets via Trivy's secret scanner.
+    #
+    # CRITICAL/HIGH findings fail the job → blocks merge / build.
+    # MEDIUM/LOW findings go into SARIF for GitHub Security tab review.
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write    # required to upload SARIF
+    steps:
+      - uses: actions/checkout@v4
+      - name: Trivy fs scan (deps + secrets)
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: ${{ env.TRIVY_SEVERITY }}
+          exit-code: '1'
+          ignore-unfixed: 'true'   # CVEs without an available fix are noise
+          format: 'sarif'
+          output: 'trivy-fs.sarif'
+          # Also scan for secrets — separate scanner, runs in same pass.
+          scanners: 'vuln,secret'
+      - name: Upload SARIF to GitHub Security tab
+        if: always()             # upload even on FAIL so reviewers see findings
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-fs.sarif
+          category: trivy-fs
+      - name: Upload SARIF as workflow artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-fs-sarif
+          path: trivy-fs.sarif
 
   integration-test:
     needs: unit-test
@@ -92,7 +174,8 @@ jobs:
         run: docker compose -f infrastructure/docker-compose.dev.yml down -v
 
   build-images:
-    needs: integration-test
+    # All three gates must pass before we burn cycles building + signing images.
+    needs: [integration-test, pre-deploy-gate, trivy-fs-scan]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
@@ -131,10 +214,59 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  trivy-image-scan:
+    # Per-image vulnerability scan AFTER build, BEFORE deploy. Catches
+    # vulnerable OS packages baked into python:3.11-slim (or any base
+    # image swap) that the filesystem scan wouldn't see.
+    #
+    # Matches the build-images matrix so each image is scanned in parallel.
+    # CRITICAL/HIGH finding in ANY image blocks deploy-staging.
+    needs: build-images
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read            # to pull images from GHCR
+      security-events: write    # to upload SARIF
+    strategy:
+      fail-fast: false
+      matrix:
+        image: [echo-agent, orchestrator-agent, compliance-agent, analyst-agent]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Trivy image scan ${{ matrix.image }}
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.image }}:${{ github.sha }}
+          severity: ${{ env.TRIVY_SEVERITY }}
+          exit-code: '1'
+          ignore-unfixed: 'true'
+          format: 'sarif'
+          output: 'trivy-image-${{ matrix.image }}.sarif'
+      - name: Upload SARIF to GitHub Security tab
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-image-${{ matrix.image }}.sarif'
+          category: 'trivy-image-${{ matrix.image }}'
+      - name: Upload SARIF as workflow artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: 'trivy-image-${{ matrix.image }}-sarif'
+          path: 'trivy-image-${{ matrix.image }}.sarif'
+
   deploy-staging:
     # Gated by the "staging" environment. Configure it in GitHub repo settings
     # with KUBECONFIG_STAGING secret + manual approval if desired.
-    needs: build-images
+    # Now also waits on trivy-image-scan — vulnerable images can't deploy.
+    needs: trivy-image-scan
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: staging

@@ -1,6 +1,7 @@
 from typing import List, Dict, Any
 from ..vector_store.schemas import SearchResult
 
+
 class Ranker:
     def __init__(self):
         pass
@@ -10,7 +11,7 @@ class Ranker:
         if metric == "cosine":
             # For cosine, score is usually 0-1 already (Inner Product of normalized vectors)
             return max(0.0, min(float(score), 1.0))
-        else: # L2
+        else:  # L2
             # For L2, lower is better. Convert distance to confidence.
             # This is a heuristic.
             return 1.0 / (1.0 + float(score))

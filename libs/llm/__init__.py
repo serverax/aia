@@ -1,4 +1,9 @@
-from libs.llm.client import LLMClient, StubLLMClient, build_default_client
+from libs.llm.client import (
+    LLMClient,
+    LLMOutputValidationError,
+    StubLLMClient,
+    build_default_client,
+)
 from libs.llm.tools import (
     AssistantResponse,
     TextBlock,
@@ -11,6 +16,7 @@ from libs.llm.tools import (
 
 __all__ = [
     "LLMClient",
+    "LLMOutputValidationError",
     "StubLLMClient",
     "build_default_client",
     "agent_loop",

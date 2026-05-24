@@ -1,33 +1,38 @@
-from fastapi import FastAPI, HTTPException, Body
+from fastapi import FastAPI, HTTPException, Body, BackgroundTasks
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
+from uuid import UUID, uuid4
+import asyncio
+import time
+
 from .analyst_agent import DomainAnalystAgent
 from .risk_analyzer import RiskAnalyzer
 from .models.explanation import ExplanationPayload, ExplanationRequest, ClauseRationale
 from .confidence import ConfidenceScore, compute_confidence
-
-from .event_hub import event_hub
-from fastapi import WebSocket, WebSocketDisconnect
+from .editor_agent import EditorAgent
+from .models.finalizer import (
+    FinalizeRequest,
+    FinalizeResponse,
+    DocumentDraft,
+    FinalDocument,
+    BulkExportRequest,
+    BulkExportResponse,
+)
 
 app = FastAPI(title="Synthetic Enterprise Analyst Service")
-
-@app.websocket("/ws/hitl")
-async def websocket_endpoint(websocket: WebSocket):
-    await event_hub.connect(websocket)
-    try:
-        while True:
-            # Keep connection alive
-            data = await websocket.receive_text()
-            # Handle incoming HITL commands if needed
-    except WebSocketDisconnect:
-        event_hub.disconnect(websocket)
-
 analyst_agent = DomainAnalystAgent()
 risk_analyzer = RiskAnalyzer()
+editor_agent = EditorAgent()
 
+# Job status store
+export_jobs: Dict[str, Dict[str, Any]] = {}
+
+
+# --- Previous Models ---
 class AnalysisRequest(BaseModel):
     query: str
     context: Optional[str] = None
+
 
 class AnalysisResponse(BaseModel):
     analysis: str
@@ -37,9 +42,6 @@ class AnalysisResponse(BaseModel):
     confidence: float
     confidence_details: Optional[ConfidenceScore] = None
 
-class RiskRequest(BaseModel):
-    text: str
-    citations: Optional[List[str]] = []
 
 class ApprovalWorkflowPayload(BaseModel):
     request_type: str = Field(..., description="policy_change|document_release|exception")
@@ -50,6 +52,7 @@ class ApprovalWorkflowPayload(BaseModel):
     approval_strategy: str = "all_must_approve"
     metadata: Dict[str, Any] = {}
 
+
 class ApprovalResponse(BaseModel):
     request_id: str
     risk_score: float
@@ -58,95 +61,121 @@ class ApprovalResponse(BaseModel):
     analyst_summary: str
     confidence_details: Optional[ConfidenceScore] = None
 
-@app.post("/analyst/approval/evaluate", response_model=ApprovalResponse)
-async def evaluate_approval_payload(payload: ApprovalWorkflowPayload = Body(...)):
-    """
-    Evaluate an approval request payload and return analyst recommendation context.
-    """
-    valid_types = {"policy_change", "document_release", "exception"}
-    valid_strategies = {"all_must_approve", "any_can_approve", "weighted_voting"}
 
-    if payload.request_type not in valid_types:
-        raise HTTPException(status_code=400, detail=f"Unsupported request_type: {payload.request_type}")
-    if payload.approval_strategy not in valid_strategies:
-        raise HTTPException(status_code=400, detail=f"Unsupported approval_strategy: {payload.approval_strategy}")
+# --- HITL ---
+from .event_hub import event_hub
+from fastapi import WebSocket, WebSocketDisconnect
 
+
+@app.websocket("/ws/hitl")
+async def websocket_endpoint(websocket: WebSocket):
+    await event_hub.connect(websocket)
     try:
-        risk_score = float(payload.metadata.get("risk_score", 5.0))
-        recommended_reviewers = ["you@synthetic.io", "compliance_officer@synthetic.io"]
-        if risk_score >= 8:
-            recommended_reviewers.append("security_lead@synthetic.io")
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        event_hub.disconnect(websocket)
 
-        # Compute confidence score
-        conf_details = compute_confidence(
-            data_completeness=0.95 if payload.description else 0.5,
-            policy_alignment=0.8,
-            evidence_quality=0.85
-        )
 
-        return ApprovalResponse(
-            request_id=f"APR-EVAL-{payload.title[:8].upper()}",
-            risk_score=risk_score,
-            sla_hours_recommended=24 if risk_score >= 7 else 48,
-            recommended_reviewers=recommended_reviewers,
-            analyst_summary=f"Approval '{payload.title}' requires {len(recommended_reviewers)} reviewers based on risk score {risk_score}.",
-            confidence_details=conf_details
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+# --- Endpoints ---
+
 
 @app.post("/analyst/analyze", response_model=AnalysisResponse)
 async def analyze_task(request: AnalysisRequest = Body(...)):
-    """
-    Main analysis endpoint.
-    """
     try:
         result = await analyst_agent.analyze(request.query, request.context)
-        
-        # Inject multi-factor confidence scoring
-        conf_details = compute_confidence(
-            data_completeness=0.9, 
-            policy_alignment=0.85, 
-            evidence_quality=result.get("confidence", 0.8)
-        )
-        
+        conf_details = compute_confidence(0.9, 0.85, result.get("confidence", 0.8))
         result["confidence_details"] = conf_details
+        editor_agent.create_draft(
+            project_id=request.query[:10], agent_id="analyst-v1", content=result["analysis"]
+        )
         return AnalysisResponse(**result)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/analyst/risks-only")
-async def assess_risks(request: RiskRequest = Body(...)):
-    """Risk assessment only (without full analysis)."""
-    try:
-        risk_assessment = risk_analyzer.assess(request.text, request.citations)
-        return {"risk_assessment": risk_assessment}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/analyst/decision/explain", response_model=ExplanationPayload)
-async def explain_decision(request: ExplanationRequest = Body(...)):
-    """
-    Provide deep rationale for a specific decision.
-    """
-    # Mocked logic for MVP
-    return ExplanationPayload(
-        matched_policies=["POL_001", "POL_002"],
-        rejected_policies=["POL_003"],
-        clause_rationale=[
-            ClauseRationale(clause_id="GDPR_Art_32", reasoning="Encryption protocols verified.", impact="Positive"),
-            ClauseRationale(clause_id="AML_KYC_Check", reasoning="Identity verification pending.", impact="Negative")
-        ],
-        decision_path="RAG retrieval -> Semantic policy mapping -> Keyword risk scoring",
-        triggering_evidence=["Cleartext PII detected in log dump"],
-        metadata={"decision_id": request.decision_id}
+@app.post("/analyst/approval/evaluate", response_model=ApprovalResponse)
+async def evaluate_approval_payload(payload: ApprovalWorkflowPayload = Body(...)):
+    risk_score = float(payload.metadata.get("risk_score", 5.0))
+    conf_details = compute_confidence(0.95 if payload.description else 0.5, 0.8, 0.85)
+    return ApprovalResponse(
+        request_id=f"APR-EVAL-{payload.title[:8].upper()}",
+        risk_score=risk_score,
+        sla_hours_recommended=24 if risk_score >= 7 else 48,
+        recommended_reviewers=["you@synthetic.io", "compliance_officer@synthetic.io"],
+        analyst_summary=f"Approval '{payload.title}' evaluated.",
+        confidence_details=conf_details,
     )
+
+
+@app.get("/analyst/document/preview")
+async def preview_document(project_id: str, version: Optional[int] = None):
+    html = editor_agent.get_preview(project_id, version)
+    return {"html": html, "project_id": project_id, "version": version or "latest"}
+
+
+@app.post("/analyst/document/finalize", response_model=FinalizeResponse)
+async def finalize_document(request: FinalizeRequest = Body(...)):
+    start = time.time()
+    try:
+        doc = editor_agent.finalize_document(request.project_id, request.format)
+        elapsed = int((time.time() - start) * 1000)
+        return FinalizeResponse(
+            document_id=doc.document_id, file_url=doc.file_url, generation_time_ms=elapsed
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/analyst/document/audit/{document_id}", response_model=List[DocumentDraft])
+async def get_document_audit(document_id: UUID):
+    history = editor_agent.get_audit_history(document_id)
+    if not history:
+        raise HTTPException(status_code=404, detail="Document audit trail not found.")
+    return history
+
+
+# --- Bulk Export Asynchronous Logic ---
+
+
+async def run_bulk_export(job_id: str, filters: Dict[str, Any]):
+    """Simulate long-running export task."""
+    export_jobs[job_id]["status"] = "processing"
+    # Simulate processing delay
+    await asyncio.sleep(5)
+
+    # Simulate finding matching projects and generating files
+    export_jobs[job_id]["status"] = "completed"
+    export_jobs[job_id]["download_url"] = f"https://storage.ordinoxai.com/exports/{job_id}.zip"
+    export_jobs[job_id]["completed_at"] = time.time()
+
+
+@app.post("/analyst/export/bulk", response_model=BulkExportResponse)
+async def trigger_bulk_export(request: BulkExportRequest, background_tasks: BackgroundTasks):
+    job_id = f"EXPORT-{uuid4().hex[:8].upper()}"
+    export_jobs[job_id] = {
+        "status": "queued",
+        "created_at": time.time(),
+        "filters": request.project_filters,
+    }
+    background_tasks.add_task(run_bulk_export, job_id, request.project_filters)
+    return BulkExportResponse(job_id=job_id, status_url=f"/analyst/export/status/{job_id}")
+
+
+@app.get("/analyst/export/status/{job_id}")
+async def get_export_status(job_id: str):
+    job = export_jobs.get(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Export job not found.")
+    return job
+
 
 @app.get("/analyst/status")
 async def health_check():
-    """Health check endpoint."""
     return {"status": "healthy", "service": "analyst-agent"}
+
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8001)

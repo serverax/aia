@@ -22,4 +22,3 @@ app.include_router(documents_router)
 
 if __name__ == "__main__":
     uvicorn.run("services.editor_agent.api.main:app", host="127.0.0.1", port=8003, reload=False)
-

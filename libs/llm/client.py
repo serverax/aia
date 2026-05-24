@@ -12,26 +12,70 @@ set in the environment, otherwise raises — call sites should handle the
 fallback explicitly so a missing key never silently degrades to stubs in
 production.
 """
+
 from __future__ import annotations
 
 import json
 import logging
 import os
-from typing import Any, Protocol
+from typing import Any, Protocol, TypeVar, overload
+
+from pydantic import BaseModel, ValidationError
 
 logger = logging.getLogger(__name__)
 
 
+T = TypeVar("T", bound=BaseModel)
+
+
+class LLMOutputValidationError(ValueError):
+    """Raised when an LLM's JSON output doesn't match the caller's Pydantic schema.
+
+    Carries the raw parsed JSON dict and the underlying Pydantic
+    `ValidationError` so callers can decide whether to retry the prompt,
+    fall back to a default, or surface the failure to the user.
+
+    Subclasses `ValueError` so existing `except ValueError` handlers
+    (Sprint 2 nodes catch this from `_parse_json`) still work.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        raw_output: dict[str, Any],
+        pydantic_error: ValidationError,
+    ) -> None:
+        super().__init__(message)
+        self.raw_output = raw_output
+        self.pydantic_error = pydantic_error
+
+
 class LLMClient(Protocol):
-    """Minimum surface every node depends on."""
+    """Minimum surface every node depends on.
 
-    async def chat_json(self, prompt: str) -> dict[str, Any]:
-        """Send a prompt that expects a single JSON object back.
+    `chat_json` has two modes:
 
-        Implementations should strip code fences and parse the response.
-        Raise `ValueError` if the response cannot be parsed as JSON.
-        """
-        ...
+      * Without `response_schema`: returns the raw parsed JSON as a `dict`.
+        This is the Sprint 2 behavior — callers do their own validation.
+      * With `response_schema=SomeBaseModel`: validates the response and
+        returns an instance of that model. Validation failures raise
+        `LLMOutputValidationError`.
+
+    The two modes are exposed via `@overload` so static type checkers
+    know which return type to expect.
+    """
+
+    @overload
+    async def chat_json(self, prompt: str) -> dict[str, Any]: ...
+    @overload
+    async def chat_json(self, prompt: str, *, response_schema: type[T]) -> T: ...
+    async def chat_json(
+        self,
+        prompt: str,
+        *,
+        response_schema: type[BaseModel] | None = None,
+    ) -> Any: ...
 
 
 class AnthropicClient:
@@ -53,11 +97,37 @@ class AnthropicClient:
             temperature=temperature,
         )
 
-    async def chat_json(self, prompt: str) -> dict[str, Any]:
+    @overload
+    async def chat_json(self, prompt: str) -> dict[str, Any]: ...
+    @overload
+    async def chat_json(self, prompt: str, *, response_schema: type[T]) -> T: ...
+    async def chat_json(
+        self,
+        prompt: str,
+        *,
+        response_schema: type[BaseModel] | None = None,
+    ) -> Any:
+        """Prompt Claude, parse the JSON reply, optionally validate it.
+
+        Args:
+            prompt: Free-form prompt. Caller is responsible for instructing
+                the model to reply with JSON (the schema's field names are
+                a common addition to the prompt).
+            response_schema: Optional Pydantic model class. When provided,
+                the parsed JSON is validated and returned as an instance
+                of that class. When omitted, the raw `dict` is returned.
+
+        Raises:
+            ValueError: response is not parseable JSON.
+            LLMOutputValidationError: response parses but doesn't match
+                `response_schema`. The exception's `raw_output` attribute
+                holds the parsed dict for debugging.
+        """
         # langchain's `ainvoke` returns an AIMessage; `.content` is a string.
         message = await self._llm.ainvoke(prompt)
         text = message.content if isinstance(message.content, str) else str(message.content)
-        return _parse_json(text)
+        parsed = _parse_json(text)
+        return _maybe_validate(parsed, response_schema)
 
     async def chat_with_tools(
         self,
@@ -131,11 +201,26 @@ class StubLLMClient:
         self.calls: list[str] = []
         self.tool_calls: list[dict[str, Any]] = []
 
-    async def chat_json(self, prompt: str) -> dict[str, Any]:
+    @overload
+    async def chat_json(self, prompt: str) -> dict[str, Any]: ...
+    @overload
+    async def chat_json(self, prompt: str, *, response_schema: type[T]) -> T: ...
+    async def chat_json(
+        self,
+        prompt: str,
+        *,
+        response_schema: type[BaseModel] | None = None,
+    ) -> Any:
+        """Return the next canned response, optionally schema-validated.
+
+        Same contract as `AnthropicClient.chat_json` — useful for tests
+        that exercise validation paths without an API key.
+        """
         self.calls.append(prompt)
         if not self._responses:
             raise RuntimeError("StubLLMClient.chat_json exhausted")
-        return self._responses.pop(0)
+        parsed = self._responses.pop(0)
+        return _maybe_validate(parsed, response_schema)
 
     async def chat_with_tools(
         self,
@@ -150,11 +235,13 @@ class StubLLMClient:
         # Snapshot inputs — agent_loop reuses the same `messages` list across
         # iterations and mutates it in place. Without a deep copy, the stub's
         # tool_calls history all points at the final mutated state.
-        self.tool_calls.append({
-            "messages": copy.deepcopy(messages),
-            "tools": copy.deepcopy(tools),
-            "system": system,
-        })
+        self.tool_calls.append(
+            {
+                "messages": copy.deepcopy(messages),
+                "tools": copy.deepcopy(tools),
+                "system": system,
+            }
+        )
         if not self._tool_responses:
             raise RuntimeError("StubLLMClient.chat_with_tools exhausted")
         return self._tool_responses.pop(0)
@@ -168,6 +255,28 @@ def build_default_client() -> LLMClient:
             "Set it in .env or inject a StubLLMClient for testing."
         )
     return AnthropicClient()
+
+
+def _maybe_validate(
+    parsed: dict[str, Any],
+    response_schema: type[BaseModel] | None,
+) -> Any:
+    """Pass parsed dict through a Pydantic schema if one is supplied.
+
+    Lifted out of both clients so `AnthropicClient` and `StubLLMClient`
+    share identical validation + error-wrapping behavior.
+    """
+    if response_schema is None:
+        return parsed
+    try:
+        return response_schema.model_validate(parsed)
+    except ValidationError as exc:
+        raise LLMOutputValidationError(
+            f"LLM output failed {response_schema.__name__} validation: "
+            f"{exc.error_count()} error(s) — see .raw_output and .pydantic_error",
+            raw_output=parsed,
+            pydantic_error=exc,
+        ) from exc
 
 
 def _parse_json(text: str) -> dict[str, Any]:

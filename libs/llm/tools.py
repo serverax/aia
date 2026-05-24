@@ -9,6 +9,7 @@ until the model returns plain text only.
 This module is the glue between `LLMClient` and `ToolRegistry`. Agents
 that want tool-use call `agent_loop(...)`; nothing else changes for them.
 """
+
 from __future__ import annotations
 
 import logging
@@ -22,6 +23,7 @@ logger = logging.getLogger(__name__)
 # We model just the bits the loop needs. The actual Anthropic SDK types
 # carry more fields; agents that need them can build full messages
 # themselves and call the LLMClient directly.
+
 
 @dataclass
 class TextBlock:
@@ -46,7 +48,7 @@ class ToolUseBlock:
 @dataclass
 class ToolResultBlock:
     tool_use_id: str
-    content: str          # JSON-encoded tool output (or error message)
+    content: str  # JSON-encoded tool output (or error message)
     is_error: bool = False
     type: str = "tool_result"
 
@@ -82,6 +84,7 @@ class AssistantResponse:
 
 # ---- LLMClient extension --------------------------------------------------
 
+
 class ToolCapableLLMClient(Protocol):
     """`LLMClient` extended with the tool-use entry point.
 
@@ -96,8 +99,7 @@ class ToolCapableLLMClient(Protocol):
         *,
         system: str | None = None,
         max_tokens: int = 4096,
-    ) -> AssistantResponse:
-        ...
+    ) -> AssistantResponse: ...
 
 
 # ---- ToolRegistry → Anthropic spec ---------------------------------------
@@ -105,6 +107,7 @@ class ToolCapableLLMClient(Protocol):
 # Anyone with a `ToolDescriptor` (from services.tool_sandbox.registry) can use
 # this. We don't import ToolDescriptor here to keep this module dependency-light;
 # instead we duck-type on the attributes the converter needs.
+
 
 class _DescriptorLike(Protocol):
     name: str
@@ -171,10 +174,12 @@ async def agent_loop(
 
         # Always record the assistant turn — even pure-text — so the next
         # iteration has the right history.
-        messages.append({
-            "role": "assistant",
-            "content": [b.to_dict() for b in response.blocks],
-        })
+        messages.append(
+            {
+                "role": "assistant",
+                "content": [b.to_dict() for b in response.blocks],
+            }
+        )
 
         if response.stop_reason != "tool_use":
             return response
@@ -195,7 +200,9 @@ async def agent_loop(
             except Exception as exc:
                 logger.warning(
                     "Tool %s failed for agent %s: %s",
-                    tool_use.name, agent_id, exc,
+                    tool_use.name,
+                    agent_id,
+                    exc,
                 )
                 result_blocks.append(
                     ToolResultBlock(
@@ -205,13 +212,16 @@ async def agent_loop(
                     )
                 )
 
-        messages.append({
-            "role": "user",
-            "content": [b.to_dict() for b in result_blocks],
-        })
+        messages.append(
+            {
+                "role": "user",
+                "content": [b.to_dict() for b in result_blocks],
+            }
+        )
 
     logger.error(
         "agent_loop exceeded max_iterations=%d for agent %s",
-        max_iterations, agent_id,
+        max_iterations,
+        agent_id,
     )
     return response

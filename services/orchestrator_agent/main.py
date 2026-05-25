@@ -107,11 +107,7 @@ class OrchestratorService:
             # tool_sandbox optional deps installed (e.g. minimal dev images).
             from pathlib import Path
 
-            from services.tool_sandbox import (
-                CosignVerifier,
-                ToolRegistry,
-                WasmExecutor,
-            )
+            from services.tool_sandbox import CosignVerifier, ToolRegistry, WasmExecutor
             from services.tool_sandbox.audit_adapter import PostgresToolAuditSink
 
             verifier = _build_tool_verifier()

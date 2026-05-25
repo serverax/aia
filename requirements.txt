@@ -18,6 +18,9 @@ opentelemetry-instrumentation-asyncpg==0.48b0
 
 structlog==24.4.0
 
+# Vector retrieval clients used by RAG and compliance indexers.
+qdrant-client==2.7.0
+
 # Orchestration (Sprint 2)
 langgraph==0.2.34
 langchain==0.3.1

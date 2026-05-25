@@ -16,11 +16,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from services.tool_sandbox import (
-    SignatureVerificationError,
-    ToolRegistry,
-    WasmExecutor,
-)
+from services.tool_sandbox import SignatureVerificationError, ToolRegistry, WasmExecutor
 from services.tool_sandbox.verifier import (
     CosignVerifier,
     generate_test_keypair,

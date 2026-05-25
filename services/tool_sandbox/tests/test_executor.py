@@ -21,11 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from services.tool_sandbox.executor import (
-    ExecutionError,
-    ExecutionLimits,
-    WasmExecutor,
-)
+from services.tool_sandbox.executor import ExecutionError, ExecutionLimits, WasmExecutor
 
 pytestmark = [pytest.mark.unit]
 

@@ -26,16 +26,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from wasmtime import (
-    Config,
-    Engine,
-    ExitTrap,
-    Linker,
-    Module,
-    Store,
-    Trap,
-    WasiConfig,
-)
+from wasmtime import Config, Engine, ExitTrap, Linker, Module, Store, Trap, WasiConfig
 
 logger = logging.getLogger(__name__)
 

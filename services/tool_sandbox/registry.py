@@ -25,10 +25,7 @@ import yaml
 from jsonschema import Draft202012Validator, ValidationError
 
 from services.tool_sandbox.executor import ExecutionLimits, WasmExecutor
-from services.tool_sandbox.verifier import (
-    SignatureVerificationError,
-    SignatureVerifier,
-)
+from services.tool_sandbox.verifier import SignatureVerificationError, SignatureVerifier
 
 logger = logging.getLogger(__name__)
 

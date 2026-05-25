@@ -27,11 +27,7 @@ from opentelemetry.instrumentation.redis import RedisInstrumentor
 from opentelemetry.trace import SpanKind, Status, StatusCode
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from libs.communication import (
-    AgentMessage,
-    MessageStatus,
-    MessageType,
-)
+from libs.communication import AgentMessage, MessageStatus, MessageType
 from libs.communication.postgres_client import audit, build_pool
 from libs.communication.redis_client import ack, build_client, consume, publish
 from libs.communication.telemetry import init_telemetry

@@ -49,6 +49,9 @@ set -uo pipefail
 # NOT set -e: we want to keep running checks even if one fails, and
 # aggregate all findings before exiting.
 
+# Prefer common Unix tool paths when running under Git Bash/MSYS.
+export PATH="/usr/bin:/bin:/mingw64/bin:${PATH}"
+
 # ---------------------------------------------------------------- #
 # Config
 # ---------------------------------------------------------------- #
@@ -61,6 +64,18 @@ MANIFEST_DIR="${MANIFEST_DIR:-infrastructure/k3s}"
 NETWORK_POLICIES_FILE="${NETWORK_POLICIES_FILE:-infrastructure/k3s/network-policies-per-agent.yaml}"
 RBAC_FILE="${RBAC_FILE:-infrastructure/k3s/rbac-per-agent.yaml}"
 REPORT_FILE="${REPORT_FILE:-/tmp/pre_deploy_check.json}"
+
+require_cmd() {
+    local cmd
+    for cmd in "$@"; do
+        if ! command -v "${cmd}" >/dev/null 2>&1; then
+            echo "ERROR: required command not found: ${cmd}" >&2
+            exit 2
+        fi
+    done
+}
+
+require_cmd mktemp sed grep head tail tee find diff rm
 
 # Find a real Python. On Windows the bare `python` command often resolves
 # to the Microsoft Store shim (which prints "Python was not found" and
@@ -174,7 +189,7 @@ check_capability_validator() {
     if [[ "${n_crit}" -gt 0 ]]; then
         # Dump the full text report for the operator's benefit.
         ${PYTHON} -m scripts.security.capability_validator "${CAPABILITIES}" 2>&1 \
-            | sed 's/^/  /' | tee -a /dev/stderr >/dev/null || true
+            | sed 's/^/  /' >&2 || true
         record "capability_validator" "FAIL" "critical" \
             "${n_crit} critical findings (see report)"
         say "  FAIL: ${n_crit} critical, ${n_warn} warning, ${n_info} info"
@@ -255,7 +270,7 @@ check_policy_runtime() {
         record "policy_runtime_tests" "FAIL" "critical" \
             "${n_fail} in policy simulator — generated policies do NOT match capabilities.yaml intent"
         say "  FAIL: ${n_fail}"
-        tail -20 "${out}" | sed 's/^/    /' | tee -a /dev/stderr >/dev/null
+        tail -20 "${out}" | sed 's/^/    /' >&2
     fi
     rm -f "${out}"
 }
@@ -266,6 +281,16 @@ check_policy_runtime() {
 
 check_manifest_dry_run() {
     heading "4/5 manifest dry-run (client-side)"
+    # Git Bash on Windows has shown non-deterministic hangs on repeated
+    # `kubectl apply --dry-run=client` loops. Keep the gate deterministic by
+    # skipping this sub-check in that environment; Linux CI still runs it.
+    if [[ "${OS:-}" == "Windows_NT" ]]; then
+        record "manifest_dry_run" "SKIP" "warning" \
+            "skipped on Windows shell; run on Linux CI runner"
+        say "  SKIP: Windows shell detected (validated in Linux CI)"
+        return 0
+    fi
+
     if ! command -v kubectl >/dev/null 2>&1; then
         record "manifest_dry_run" "SKIP" "warning" "kubectl not on PATH"
         say "  SKIP: kubectl not installed"
@@ -344,11 +369,11 @@ check_rbac_audit() {
                 "${n_warn} warning finding(s) — EXTRA RBAC objects not in capabilities.yaml"
             say "  WARN: ${n_warn} extra resource(s)"
         fi
-        echo "${out}" | sed 's/^/    /' | tee -a /dev/stderr >/dev/null
+        echo "${out}" | sed 's/^/    /' >&2
     else
         record "rbac_audit" "FAIL" "critical" "audit script crashed (exit ${rc})"
         say "  FAIL: audit script exit ${rc}"
-        echo "${out}" | sed 's/^/    /' | tee -a /dev/stderr >/dev/null
+        echo "${out}" | sed 's/^/    /' >&2
     fi
 }
 

@@ -17,7 +17,8 @@ known_first_party = ["libs", "services"]
 testpaths = ["tests", "services"]
 python_files = ["test_*.py"]
 asyncio_mode = "auto"
-addopts = "-ra --strict-markers"
+addopts = "-ra --strict-markers --basetemp=.tmp/pytest_tmp"
+cache_dir = ".tmp/pytest_cache"
 markers = [
     "integration: requires docker-compose dev stack (slow)",
     "unit: fast in-process tests with no external dependencies",

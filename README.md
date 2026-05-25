@@ -257,6 +257,7 @@ Every inter-agent message follows this immutable structure:
 - **Deployment Readiness**: See `docs/DEPLOYMENT_READINESS_PASS_2026-05-25.md`, `docs/RELEASE_SIGNOFF_2026-05-25.md`, and `docs/ROLLBACK_CHECKLIST.md`
 - **Handover Package**: See `docs/HANDOVER_2026-05-25.md` and `docs/PROJECT_CLOSURE_REPORT_2026-05-25.md`
 - **Post-Deployment Support**: See `docs/POST_DEPLOYMENT_MONITORING_PLAN_2026-05-25.md`
+- **Execution Checklist**: Use `docs/DEPLOYMENT_EXEC_CHECKLIST.md` for run-command deployment flow
 
 ---
 

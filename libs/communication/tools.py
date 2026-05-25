@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 import httpx
 
@@ -23,7 +23,7 @@ async def web_search(query: str, num_results: int = 10) -> list[dict]:
                         "title": topic.get("Text")[:50] + "...",
                         "url": topic.get("FirstURL"),
                         "snippet": topic.get("Text"),
-                        "retrieved_at": datetime.utcnow().isoformat(),
+                        "retrieved_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
                     }
                 )
         return results

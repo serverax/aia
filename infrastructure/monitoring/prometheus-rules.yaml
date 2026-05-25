@@ -2,7 +2,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
   name: compliance-service-alerts
-  namespace: synthetic-enterprise
+  namespace: ordinox-ai
 spec:
   groups:
   - name: compliance-service
@@ -27,7 +27,7 @@ spec:
         description: "P99 latency: {{ $value | humanizeDuration }}"
     
     - alert: ComplianceServiceCanaryWeightStuck
-      expr: changes(nginx_ingress_controller_requests{ingress="synthetic-enterprise-ingress",canary="true"}[5m]) == 0
+      expr: changes(nginx_ingress_controller_requests{ingress="compliance-service-green-canary",canary="true"}[5m]) == 0
       for: 3m
       labels:
         severity: warning
@@ -36,7 +36,7 @@ spec:
         description: "Canary weight may be stuck"
     
     - alert: ComplianceServiceReplicasDown
-      expr: kube_deployment_status_replicas_available{deployment="compliance-service",namespace="synthetic-enterprise"} < 1
+      expr: kube_deployment_status_replicas_available{deployment="compliance-service",namespace="ordinox-ai"} < 1
       for: 1m
       labels:
         severity: critical

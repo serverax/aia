@@ -1,16 +1,19 @@
 import json
 import subprocess
 import time
-from datetime import datetime
+from datetime import UTC, datetime
 
 
 class TrafficRampTester:
-    def __init__(self, namespace="synthetic-enterprise"):
+    def __init__(self, namespace="ordinox-ai"):
         self.namespace = namespace
         self.results = []
 
     def set_weight(self, weight):
-        cmd = f"kubectl -n {self.namespace} annotate ingress synthetic-enterprise-ingress nginx.ingress.kubernetes.io/canary-weight='{weight}' --overwrite"
+        cmd = (
+            f"kubectl -n {self.namespace} annotate ingress compliance-service-green-canary "
+            f"nginx.ingress.kubernetes.io/canary-weight='{weight}' --overwrite"
+        )
         try:
             subprocess.run(cmd, shell=True, check=True, capture_output=True)
             time.sleep(2)
@@ -21,7 +24,7 @@ class TrafficRampTester:
     def get_weight(self):
         try:
             result = subprocess.run(
-                f"kubectl -n {self.namespace} get ingress synthetic-enterprise-ingress -o jsonpath='{{.metadata.annotations.nginx\\.ingress\\.kubernetes\\.io/canary-weight}}'",
+                f"kubectl -n {self.namespace} get ingress compliance-service-green-canary -o jsonpath='{{.metadata.annotations.nginx\\.ingress\\.kubernetes\\.io/canary-weight}}'",
                 shell=True,
                 check=True,
                 capture_output=True,
@@ -58,7 +61,7 @@ class TrafficRampTester:
             time.sleep(2)
 
         result = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
             "total": len(weights),
             "passed": passed,
             "failed": failed,

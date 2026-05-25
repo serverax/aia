@@ -1,5 +1,5 @@
 -r ../../requirements.txt
 
 # Required by qdrant_indexer.py and compliance retrieval flows.
-qdrant-client==2.7.0
+qdrant-client==1.18.0
 sentence-transformers==3.1.1

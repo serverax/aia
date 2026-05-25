@@ -58,4 +58,3 @@ class DocumentService:
             else:
                 lines.append(f"<h3>{key}</h3><pre>{value}</pre>")
         return "".join(lines)
-

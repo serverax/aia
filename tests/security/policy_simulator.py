@@ -23,6 +23,7 @@ NOT covered (out of scope for Sprint 6 validation; add when needed):
 
 See `test_policies_runtime.py` for the test suite that exercises these.
 """
+
 from __future__ import annotations
 
 import ipaddress
@@ -142,12 +143,13 @@ class Cluster:
         any policy that allows the peer+port counts as ALLOWED.
         """
         matching_direction_policies = [
-            p for p in self.policies
+            p
+            for p in self.policies
             if self._policy_selects_pod(p, target_pod)
             and direction in p.get("spec", {}).get("policyTypes", [])
         ]
         if not matching_direction_policies:
-            return Decision.ALLOWED   # K8s default
+            return Decision.ALLOWED  # K8s default
 
         rules_key = "egress" if direction == "Egress" else "ingress"
         for policy in matching_direction_policies:

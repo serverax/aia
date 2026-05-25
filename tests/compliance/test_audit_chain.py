@@ -36,14 +36,44 @@ def test_audit_chain_detects_payload_tampering():
         payload={"agent_id": "analyst"},
     )
     valid_chain = [
-        AuditChainEntry(timestamp, "compliance_officer_v1_20250520", "kill_switch_update", "approved", "human compliance hold", "SPRINTS-7-8-INSTRUCTIONS.md", {"global_enabled": True}, None, first_hash),
-        AuditChainEntry(timestamp, "compliance_officer_v1_20250520", "policy_evaluation", "blocked", "human compliance hold", "SPRINTS-7-8-INSTRUCTIONS.md", {"agent_id": "analyst"}, first_hash, second_hash),
+        AuditChainEntry(
+            timestamp,
+            "compliance_officer_v1_20250520",
+            "kill_switch_update",
+            "approved",
+            "human compliance hold",
+            "SPRINTS-7-8-INSTRUCTIONS.md",
+            {"global_enabled": True},
+            None,
+            first_hash,
+        ),
+        AuditChainEntry(
+            timestamp,
+            "compliance_officer_v1_20250520",
+            "policy_evaluation",
+            "blocked",
+            "human compliance hold",
+            "SPRINTS-7-8-INSTRUCTIONS.md",
+            {"agent_id": "analyst"},
+            first_hash,
+            second_hash,
+        ),
     ]
 
     assert verify_audit_chain(valid_chain) == (True, None)
 
     tampered_chain = [
         valid_chain[0],
-        AuditChainEntry(timestamp, "compliance_officer_v1_20250520", "policy_evaluation", "blocked", "human compliance hold", "SPRINTS-7-8-INSTRUCTIONS.md", {"agent_id": "editor"}, first_hash, second_hash),
+        AuditChainEntry(
+            timestamp,
+            "compliance_officer_v1_20250520",
+            "policy_evaluation",
+            "blocked",
+            "human compliance hold",
+            "SPRINTS-7-8-INSTRUCTIONS.md",
+            {"agent_id": "editor"},
+            first_hash,
+            second_hash,
+        ),
     ]
     assert verify_audit_chain(tampered_chain) == (False, 1)

@@ -9,6 +9,7 @@ RAG pipeline against Milvus (`milvus_manager.py` already exists in this
 folder as their Sprint 3 stub). Sprint 6 ships the agent-loop plumbing
 so when Sprint 3 starts there's a working tool-use foundation to extend.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -140,9 +141,7 @@ class AnalystAgent:
                 user_prompt = assignment.get("description") or json.dumps(assignment)
 
                 tools = self._tool_descriptors_for_agent()
-                tool_exec = (
-                    self.tool_registry.execute if self.tool_registry else _no_tools_executor
-                )
+                tool_exec = self.tool_registry.execute if self.tool_registry else _no_tools_executor
 
                 response = await agent_loop(
                     llm=self.llm,
@@ -164,9 +163,9 @@ class AnalystAgent:
                         "agent_id": self.settings.agent_id,
                         "status": MessageStatus.COMPLETED.value,
                         "output": response.text,
-                        "tool_use_iterations": len(self.llm.tool_calls)
-                        if hasattr(self.llm, "tool_calls")
-                        else None,
+                        "tool_use_iterations": (
+                            len(self.llm.tool_calls) if hasattr(self.llm, "tool_calls") else None
+                        ),
                     },
                     metadata={"in_reply_to": incoming.message_id, **incoming.metadata},
                 )

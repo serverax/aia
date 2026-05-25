@@ -9,7 +9,7 @@ SAMPLE_DOCUMENTS = [
         jurisdiction="EU",
         risk_category="Compliance",
         date="2024-01-15",
-        source="Corporate Compliance Handbook"
+        source="Corporate Compliance Handbook",
     ),
     ComplianceDocument(
         id="POL_002",
@@ -19,7 +19,7 @@ SAMPLE_DOCUMENTS = [
         jurisdiction="UK",
         risk_category="Financial",
         date="2023-11-20",
-        source="Regulatory Authority"
+        source="Regulatory Authority",
     ),
     ComplianceDocument(
         id="GUI_001",
@@ -29,7 +29,7 @@ SAMPLE_DOCUMENTS = [
         jurisdiction="GLOBAL",
         risk_category="Operational",
         date="2024-03-05",
-        source="Industry Standard"
+        source="Industry Standard",
     ),
     ComplianceDocument(
         id="CAS_001",
@@ -39,7 +39,7 @@ SAMPLE_DOCUMENTS = [
         jurisdiction="US",
         risk_category="Legal",
         date="2022-08-10",
-        source="Legal Archives"
+        source="Legal Archives",
     ),
     ComplianceDocument(
         id="POL_003",
@@ -49,19 +49,21 @@ SAMPLE_DOCUMENTS = [
         jurisdiction="GLOBAL",
         risk_category="Compliance",
         date="2024-02-28",
-        source="HR Policy Manual"
+        source="HR Policy Manual",
     ),
 ]
 
 # Generate more samples to reach ~50
 for i in range(45):
-    SAMPLE_DOCUMENTS.append(ComplianceDocument(
-        id=f"GEN_{i:03d}",
-        type="guideline",
-        title=f"General Compliance Guideline {i}",
-        content=f"This is a general guideline for compliance topic {i}. It covers standard operating procedures and risk mitigation strategies.",
-        jurisdiction="UK" if i % 2 == 0 else "US",
-        risk_category="Operational" if i % 3 == 0 else "Legal",
-        date="2024-05-21",
-        source="Automated System"
-    ))
+    SAMPLE_DOCUMENTS.append(
+        ComplianceDocument(
+            id=f"GEN_{i:03d}",
+            type="guideline",
+            title=f"General Compliance Guideline {i}",
+            content=f"This is a general guideline for compliance topic {i}. It covers standard operating procedures and risk mitigation strategies.",
+            jurisdiction="UK" if i % 2 == 0 else "US",
+            risk_category="Operational" if i % 3 == 0 else "Legal",
+            date="2024-05-21",
+            source="Automated System",
+        )
+    )

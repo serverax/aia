@@ -8,6 +8,7 @@ The service intentionally does no application logic beyond echoing — its
 role in Sprint 1 is to prove the full event-driven loop (Redis Streams +
 consumer groups + Postgres audit + Jaeger traces) end to end.
 """
+
 from __future__ import annotations
 
 import asyncio

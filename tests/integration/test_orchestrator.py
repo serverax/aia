@@ -14,6 +14,7 @@ Prereq:
     docker compose -f infrastructure/docker-compose.dev.yml up -d \
         postgres redis jaeger compliance-agent
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -57,9 +58,7 @@ async def pg_pool(require_dev_stack):
     await pool.close()
 
 
-async def test_orchestrator_dispatches_routes_and_escalates_on_veto(
-    redis_client, pg_pool
-):
+async def test_orchestrator_dispatches_routes_and_escalates_on_veto(redis_client, pg_pool):
     project_id = f"proj-{uuid.uuid4()}"
     task_id = f"task-{uuid.uuid4().hex[:8]}"
 

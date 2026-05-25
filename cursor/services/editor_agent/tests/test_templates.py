@@ -18,4 +18,3 @@ def test_validate_content_required_fields():
         "recommendations": "Do work",
     }
     service.validate_content(template, content)
-

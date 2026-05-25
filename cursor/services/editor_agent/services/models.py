@@ -47,4 +47,3 @@ class GenerateDocumentRequest(BaseModel):
 
 class RenderTemplateRequest(BaseModel):
     content: dict[str, Any]
-

@@ -1,13 +1,13 @@
 """FastAPI middleware enforcing the active compliance kill switch."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 
+from compliance_service.kill_switch import KillSwitchState
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
-
-from compliance_service.kill_switch import KillSwitchState
 
 
 class ComplianceMiddleware(BaseHTTPMiddleware):

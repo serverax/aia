@@ -7,7 +7,6 @@ from typing import Any, Dict, Iterable, Optional
 
 from locust import HttpUser, between, events, task
 
-
 JSON_HEADERS = {
     "content-type": "application/json",
     "accept": "application/json",
@@ -149,7 +148,9 @@ class ComplianceLoadUser(HttpUser):
     def choose_seed(self) -> Dict[str, str]:
         return random.choice(self.payloads)
 
-    def record_compliance_latency(self, started_at: float, exception: Optional[Exception] = None) -> None:
+    def record_compliance_latency(
+        self, started_at: float, exception: Optional[Exception] = None
+    ) -> None:
         elapsed_ms = (time.perf_counter() - started_at) * 1000
         events.request.fire(
             request_type="CUSTOM",

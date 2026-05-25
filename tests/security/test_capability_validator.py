@@ -1,4 +1,5 @@
 """Unit tests for scripts/security/capability_validator.py."""
+
 from __future__ import annotations
 
 import json
@@ -38,6 +39,7 @@ def _good_spec() -> dict:
 
 # ---- structural / version ------------------------------------------------
 
+
 def test_clean_spec_returns_no_findings():
     assert cv.validate(_good_spec()) == []
 
@@ -57,6 +59,7 @@ def test_unsupported_version_is_critical():
 
 
 # ---- namespace -----------------------------------------------------------
+
 
 def test_missing_namespace_is_critical():
     spec = _good_spec()
@@ -88,6 +91,7 @@ def test_namespace_over_63_chars_rejected():
 
 # ---- services block ------------------------------------------------------
 
+
 def test_service_with_invalid_port_number_critical():
     spec = _good_spec()
     spec["services"]["redis"]["ports"] = [{"port": 99999, "protocol": "TCP"}]
@@ -117,6 +121,7 @@ def test_service_with_no_ports_warning():
 
 
 # ---- agents block --------------------------------------------------------
+
 
 def test_agent_with_undefined_service_reference_critical():
     spec = _good_spec()
@@ -158,8 +163,8 @@ def test_agent_with_invalid_name_critical():
 def test_findings_sorted_critical_first():
     """Findings list returns criticals before warnings, in stable order."""
     spec = _good_spec()
-    spec["services"]["redis"]["ports"] = []           # warning
-    spec["agents"]["echo"]["network"]["egress_allow"] = ["bogus"]   # critical
+    spec["services"]["redis"]["ports"] = []  # warning
+    spec["agents"]["echo"]["network"]["egress_allow"] = ["bogus"]  # critical
     findings = cv.validate(spec)
     severities = [f.severity for f in findings]
     # All criticals come first
@@ -168,6 +173,7 @@ def test_findings_sorted_critical_first():
 
 
 # ---- CLI -----------------------------------------------------------------
+
 
 def test_cli_returns_0_on_clean_spec(tmp_path, capsys):
     path = tmp_path / "cap.yaml"
@@ -191,7 +197,7 @@ def test_cli_returns_1_on_critical_finding(tmp_path, capsys):
 def test_cli_returns_0_on_warning_only(tmp_path, capsys):
     """Warnings don't block; only criticals do."""
     spec = _good_spec()
-    spec["services"]["redis"]["ports"] = []   # warning
+    spec["services"]["redis"]["ports"] = []  # warning
     path = tmp_path / "cap.yaml"
     path.write_text(yaml.safe_dump(spec))
     rc = cv.main([str(path)])
@@ -226,13 +232,16 @@ def test_cli_json_output_parseable(tmp_path, capsys):
 
 def test_real_repo_capabilities_passes(tmp_path):
     """Smoke test against the actual capabilities.yaml in the repo."""
-    repo_cap = Path(__file__).resolve().parents[2] / "infrastructure" / "security" / "capabilities.yaml"
+    repo_cap = (
+        Path(__file__).resolve().parents[2] / "infrastructure" / "security" / "capabilities.yaml"
+    )
     if not repo_cap.is_file():
         pytest.skip("repo capabilities.yaml missing")
     spec = yaml.safe_load(repo_cap.read_text(encoding="utf-8"))
     findings = cv.validate(spec)
     criticals = [f for f in findings if f.severity == "critical"]
-    assert criticals == [], (
-        f"real capabilities.yaml has critical issues — fix before deploying:\n"
-        + "\n".join(f"  {f.code} @ {f.location}: {f.message}" for f in criticals)
+    assert (
+        criticals == []
+    ), f"real capabilities.yaml has critical issues — fix before deploying:\n" + "\n".join(
+        f"  {f.code} @ {f.location}: {f.message}" for f in criticals
     )

@@ -1,4 +1,5 @@
 """Unit tests for Orchestrator nodes with a StubLLMClient."""
+
 from __future__ import annotations
 
 import pytest
@@ -15,17 +16,19 @@ pytestmark = [pytest.mark.unit]
 
 
 async def test_intent_parser_records_clarification_flag():
-    stub = StubLLMClient([
-        {
-            "objective": "Draft a settlement agreement",
-            "domain": "employment_law",
-            "scope": "UK",
-            "constraints": [],
-            "ambiguities": [],
-            "requires_clarification": False,
-            "clarification_questions": [],
-        }
-    ])
+    stub = StubLLMClient(
+        [
+            {
+                "objective": "Draft a settlement agreement",
+                "domain": "employment_law",
+                "scope": "UK",
+                "constraints": [],
+                "ambiguities": [],
+                "requires_clarification": False,
+                "clarification_questions": [],
+            }
+        ]
+    )
     node = make_intent_parser(stub)
     state = await node({"user_request": "Draft a settlement agreement"})
 
@@ -35,17 +38,19 @@ async def test_intent_parser_records_clarification_flag():
 
 
 async def test_intent_parser_routes_to_clarification_when_ambiguous():
-    stub = StubLLMClient([
-        {
-            "objective": "?",
-            "domain": "general",
-            "scope": "?",
-            "constraints": [],
-            "ambiguities": ["jurisdiction", "claim type"],
-            "requires_clarification": True,
-            "clarification_questions": ["What jurisdiction?"],
-        }
-    ])
+    stub = StubLLMClient(
+        [
+            {
+                "objective": "?",
+                "domain": "general",
+                "scope": "?",
+                "constraints": [],
+                "ambiguities": ["jurisdiction", "claim type"],
+                "requires_clarification": True,
+                "clarification_questions": ["What jurisdiction?"],
+            }
+        ]
+    )
     node = make_intent_parser(stub)
     state = await node({"user_request": "Help with my case"})
     assert state["requires_clarification"] is True
@@ -54,39 +59,47 @@ async def test_intent_parser_routes_to_clarification_when_ambiguous():
 
 
 async def test_task_decomposer_builds_typed_tasks():
-    stub = StubLLMClient([
-        {
-            "tasks": [
-                {
-                    "id": "task_1",
-                    "name": "Research precedent",
-                    "description": "Find 3 similar cases",
-                    "assigned_to": "domain_analyst",
-                    "inputs": {},
-                    "expected_outputs": ["case_list"],
-                    "depends_on": [],
-                    "priority": "high",
-                    "deadline": None,
-                },
-                {
-                    "id": "task_2",
-                    "name": "Compliance check",
-                    "description": "Verify GDPR",
-                    "assigned_to": "compliance_officer",
-                    "inputs": {},
-                    "expected_outputs": ["verdict"],
-                    "depends_on": ["task_1"],
-                    "priority": "critical",
-                    "deadline": None,
-                },
-            ]
-        }
-    ])
+    stub = StubLLMClient(
+        [
+            {
+                "tasks": [
+                    {
+                        "id": "task_1",
+                        "name": "Research precedent",
+                        "description": "Find 3 similar cases",
+                        "assigned_to": "domain_analyst",
+                        "inputs": {},
+                        "expected_outputs": ["case_list"],
+                        "depends_on": [],
+                        "priority": "high",
+                        "deadline": None,
+                    },
+                    {
+                        "id": "task_2",
+                        "name": "Compliance check",
+                        "description": "Verify GDPR",
+                        "assigned_to": "compliance_officer",
+                        "inputs": {},
+                        "expected_outputs": ["verdict"],
+                        "depends_on": ["task_1"],
+                        "priority": "critical",
+                        "deadline": None,
+                    },
+                ]
+            }
+        ]
+    )
     node = make_task_decomposer(stub)
-    state = await node({
-        "intent": {"objective": "Draft agreement", "domain": "employment_law", "constraints": []},
-        "requires_clarification": False,
-    })
+    state = await node(
+        {
+            "intent": {
+                "objective": "Draft agreement",
+                "domain": "employment_law",
+                "constraints": [],
+            },
+            "requires_clarification": False,
+        }
+    )
     assert state["current_phase"] == "dispatching"
     assert len(state["tasks"]) == 2
     assert state["tasks"][0]["assigned_to"] == "domain_analyst"

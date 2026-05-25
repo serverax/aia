@@ -1,4 +1,5 @@
 """Hash-chain helpers for tamper-evident compliance audit records."""
+
 from __future__ import annotations
 
 import hashlib

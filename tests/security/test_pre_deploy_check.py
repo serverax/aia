@@ -10,6 +10,7 @@ via env var, because the gate is meant to validate the actual deployment
 artifacts. Tests that need to inject broken state copy the real files
 into a tmp_path first and point CAPABILITIES at the tampered copy.
 """
+
 from __future__ import annotations
 
 import json
@@ -115,6 +116,7 @@ def _run_gate(
 # 1. Happy path
 # ----------------------------------------------------------------- #
 
+
 def test_clean_repo_returns_go_verdict():
     """Against the real repo state, the gate should report GO."""
     if not GATE_SCRIPT.is_file():
@@ -162,6 +164,7 @@ def test_rbac_audit_skipped_in_offline_mode():
 # 2. Failure injection — capability validator
 # ----------------------------------------------------------------- #
 
+
 @pytest.fixture
 def broken_capabilities(tmp_path) -> Path:
     """Copy real capabilities.yaml then inject an undefined-service ref."""
@@ -200,6 +203,7 @@ def test_missing_capabilities_file_fails_critically(tmp_path):
 # 3. Failure injection — generator drift
 # ----------------------------------------------------------------- #
 
+
 @pytest.fixture
 def drift_setup(tmp_path):
     """Stage a capabilities file that diverges from the committed
@@ -231,6 +235,7 @@ def test_generator_drift_blocks_deploy(drift_setup):
 # 4. CLI behavior
 # ----------------------------------------------------------------- #
 
+
 def test_quiet_flag_suppresses_stdout():
     rc, out, _, _ = _run_gate("--quiet")
     # Quiet mode emits nothing on stdout from say(), only the json report.
@@ -253,6 +258,7 @@ def test_help_flag_prints_usage_and_exits_zero():
 # ----------------------------------------------------------------- #
 # 5. JSON output schema
 # ----------------------------------------------------------------- #
+
 
 def test_json_report_is_valid_and_check_entries_well_formed():
     _, _, _, report = _run_gate("--quiet")

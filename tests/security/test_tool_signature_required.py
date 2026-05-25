@@ -7,6 +7,7 @@ it lives next to the other "Sprint 6 security guarantees" coverage.
 It complements `test_registry.py::test_execute_rejects_invalid_signature`
 by adding the MISSING signature case + production-strict mode.
 """
+
 from __future__ import annotations
 
 import json
@@ -41,18 +42,30 @@ def _make_tool(
     (tool_dir / f"{name}.wasm").write_bytes(wasm_bytes)
     if signature_b64 is not None:
         (tool_dir / f"{name}.wasm.sig").write_text(signature_b64, encoding="utf-8")
-    (tool_dir / "tool.yaml").write_text(yaml.safe_dump({
-        "name": name,
-        "version": "0.1.0",
-        "wasm": f"{name}.wasm",
-        "schema": "schema.json",
-        "allowed_agents": ["analyst"],
-        "capability_class": "small",
-    }))
-    (tool_dir / "schema.json").write_text(json.dumps({
-        "input":  {"type": "object", "required": ["text"], "properties": {"text": {"type": "string"}}},
-        "output": {"type": "object"},
-    }))
+    (tool_dir / "tool.yaml").write_text(
+        yaml.safe_dump(
+            {
+                "name": name,
+                "version": "0.1.0",
+                "wasm": f"{name}.wasm",
+                "schema": "schema.json",
+                "allowed_agents": ["analyst"],
+                "capability_class": "small",
+            }
+        )
+    )
+    (tool_dir / "schema.json").write_text(
+        json.dumps(
+            {
+                "input": {
+                    "type": "object",
+                    "required": ["text"],
+                    "properties": {"text": {"type": "string"}},
+                },
+                "output": {"type": "object"},
+            }
+        )
+    )
 
 
 async def test_signed_tool_with_correct_signature_executes(tmp_path):

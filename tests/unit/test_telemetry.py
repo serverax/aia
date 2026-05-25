@@ -4,10 +4,10 @@
 so we only verify idempotency and that the resource carries the service
 name. Span export plumbing is exercised by the integration tests.
 """
+
 from __future__ import annotations
 
 import pytest
-
 from opentelemetry import trace
 
 from libs.communication import telemetry

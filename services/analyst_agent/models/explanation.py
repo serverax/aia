@@ -1,10 +1,13 @@
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
-from typing import List, Dict, Any, Optional
+
 
 class ClauseRationale(BaseModel):
     clause_id: str
     reasoning: str
-    impact: str # Positive/Negative impact on decision
+    impact: str  # Positive/Negative impact on decision
+
 
 class ExplanationPayload(BaseModel):
     matched_policies: List[str]
@@ -13,6 +16,7 @@ class ExplanationPayload(BaseModel):
     decision_path: str
     triggering_evidence: List[str]
     metadata: Dict[str, Any] = {}
+
 
 class ExplanationRequest(BaseModel):
     query: str

@@ -43,4 +43,7 @@ def test_targeted_kill_switch_blocks_agent_project_and_capability():
     assert state.evaluate(agent_id="agent-a").allowed is False
     assert state.evaluate(project_id="project-a").allowed is False
     assert state.evaluate(capability="external_send").allowed is False
-    assert state.evaluate(agent_id="agent-b", project_id="project-b", capability="draft").allowed is True
+    assert (
+        state.evaluate(agent_id="agent-b", project_id="project-b", capability="draft").allowed
+        is True
+    )

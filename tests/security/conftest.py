@@ -9,6 +9,7 @@ If any precondition is missing, the test skips with a clear reason
 rather than failing — this lets the offline test suite stay green
 while Sprint 6 cluster install is still pending.
 """
+
 from __future__ import annotations
 
 import os
@@ -82,6 +83,7 @@ def kubectl_apply():
 
     Returns the CompletedProcess so tests can inspect returncode + stderr.
     """
+
     def _apply(yaml_doc: str, *, namespace: str = "ordinox-ai"):
         return subprocess.run(
             ["kubectl", "apply", "-n", namespace, "-f", "-"],
@@ -90,13 +92,14 @@ def kubectl_apply():
             text=True,
             timeout=30,
         )
+
     return _apply
 
 
 @pytest.fixture
 def kubectl_delete():
     """Best-effort cleanup helper for tests that create resources."""
-    created: list[tuple[str, str, str]] = []   # (kind, name, namespace)
+    created: list[tuple[str, str, str]] = []  # (kind, name, namespace)
 
     def _track(kind: str, name: str, namespace: str = "ordinox-ai"):
         created.append((kind, name, namespace))
@@ -105,7 +108,16 @@ def kubectl_delete():
 
     for kind, name, namespace in created:
         subprocess.run(
-            ["kubectl", "delete", kind, name, "-n", namespace, "--ignore-not-found", "--wait=false"],
+            [
+                "kubectl",
+                "delete",
+                kind,
+                name,
+                "-n",
+                namespace,
+                "--ignore-not-found",
+                "--wait=false",
+            ],
             capture_output=True,
             timeout=20,
         )

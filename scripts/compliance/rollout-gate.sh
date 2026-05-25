@@ -1,8 +1,8 @@
 #!/bin/bash
 
-NAMESPACE="synthetic-enterprise"
-DEPLOYMENT="compliance-service"
-TIMEOUT=120
+NAMESPACE="${NAMESPACE:-ordinox-ai}"
+DEPLOYMENT="${DEPLOYMENT:-compliance-service}"
+TIMEOUT="${TIMEOUT:-120}"
 START=$(date +%s)
 
 echo "🚦 Rollout Gate Validation"

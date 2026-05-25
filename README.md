@@ -254,6 +254,9 @@ Every inter-agent message follows this immutable structure:
 - **Agent Behavior**: Refer to AGENTS.md (the "Employee Handbook")
 - **Security Concerns**: Check SECURITY_ARCHITECTURE.md and coordinate with Security Engineer
 - **Regulatory/Compliance**: Refer to docs/REGULATORY_FRAMEWORK.md and SPRINT_7_COMPLIANCE_LAYER.md
+- **Deployment Readiness**: See `docs/DEPLOYMENT_READINESS_PASS_2026-05-25.md`, `docs/RELEASE_SIGNOFF_2026-05-25.md`, and `docs/ROLLBACK_CHECKLIST.md`
+- **Handover Package**: See `docs/HANDOVER_2026-05-25.md` and `docs/PROJECT_CLOSURE_REPORT_2026-05-25.md`
+- **Post-Deployment Support**: See `docs/POST_DEPLOYMENT_MONITORING_PLAN_2026-05-25.md`
 
 ---
 

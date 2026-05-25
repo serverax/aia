@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-NAMESPACE="${NAMESPACE:-synthetic-enterprise}"
+NAMESPACE="${NAMESPACE:-ordinox-ai}"
 DEPLOYMENT="${DEPLOYMENT:-compliance-service}"
 KUBECONFIG="${KUBECONFIG:-}"
 DRY_RUN="${DRY_RUN:-false}"

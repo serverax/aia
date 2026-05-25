@@ -15,35 +15,35 @@ python3 tests/compliance/test-traffic-ramp.py  # Should show: 5/5 tests passed
 
 **Phase 1: 0% Canary (Blue Only)**
 ```bash
-kubectl -n synthetic-enterprise get ingress synthetic-enterprise-ingress \
+kubectl -n ordinox-ai get ingress compliance-service-green-canary \
   -o jsonpath='{.metadata.annotations.nginx\.ingress\.kubernetes\.io/canary-weight}'
 # Expected: 0
 ```
 
 **Phase 2: 5% Canary**
 ```bash
-kubectl -n synthetic-enterprise annotate ingress synthetic-enterprise-ingress \
+kubectl -n ordinox-ai annotate ingress compliance-service-green-canary \
   nginx.ingress.kubernetes.io/canary-weight='5' --overwrite
 sleep 300
 ```
 
 **Phase 3: 25% Canary**
 ```bash
-kubectl -n synthetic-enterprise annotate ingress synthetic-enterprise-ingress \
+kubectl -n ordinox-ai annotate ingress compliance-service-green-canary \
   nginx.ingress.kubernetes.io/canary-weight='25' --overwrite
 sleep 300
 ```
 
 **Phase 4: 50% Canary**
 ```bash
-kubectl -n synthetic-enterprise annotate ingress synthetic-enterprise-ingress \
+kubectl -n ordinox-ai annotate ingress compliance-service-green-canary \
   nginx.ingress.kubernetes.io/canary-weight='50' --overwrite
 sleep 300
 ```
 
 **Phase 5: 100% Promotion**
 ```bash
-kubectl -n synthetic-enterprise annotate ingress synthetic-enterprise-ingress \
+kubectl -n ordinox-ai annotate ingress compliance-service-green-canary \
   nginx.ingress.kubernetes.io/canary-weight='100' --overwrite
 echo "✅ New version is 100% production!"
 ```

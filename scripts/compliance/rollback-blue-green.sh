@@ -1,9 +1,9 @@
 #!/bin/bash
 
-NAMESPACE="synthetic-enterprise"
-INGRESS="synthetic-enterprise-ingress"
-DEPLOYMENT="compliance-service"
-DRY_RUN=${1:-false}
+NAMESPACE="${NAMESPACE:-ordinox-ai}"
+INGRESS="${INGRESS:-compliance-service-green-canary}"
+DEPLOYMENT="${DEPLOYMENT:-compliance-service-green}"
+DRY_RUN=${1:-${DRY_RUN:-false}}
 
 echo "🔄 Rolling back to blue (100%)..."
 echo ""

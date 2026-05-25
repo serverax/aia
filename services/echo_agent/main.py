@@ -8,6 +8,7 @@ The service intentionally does no application logic beyond echoing — its
 role in Sprint 1 is to prove the full event-driven loop (Redis Streams +
 consumer groups + Postgres audit + Jaeger traces) end to end.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -21,11 +22,7 @@ from opentelemetry.instrumentation.redis import RedisInstrumentor
 from opentelemetry.trace import SpanKind, Status, StatusCode
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from libs.communication import (
-    AgentMessage,
-    MessageStatus,
-    MessageType,
-)
+from libs.communication import AgentMessage, MessageStatus, MessageType
 from libs.communication.postgres_client import audit, build_pool
 from libs.communication.redis_client import ack, build_client, consume, publish
 from libs.communication.telemetry import init_telemetry

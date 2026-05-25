@@ -42,4 +42,3 @@ def download_document(doc_id: str):
         else "application/pdf"
     )
     return FileResponse(path=file_path, filename=file_path.name, media_type=media_type)
-

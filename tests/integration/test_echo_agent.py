@@ -13,6 +13,7 @@ This test:
   2. Polls the output stream until the matching echo appears.
   3. Queries audit_log to confirm both `in` and `out` rows landed.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -49,9 +50,7 @@ async def _wait_for_echo(
                 msg = AgentMessage.from_stream_fields(fields)
                 if msg.task_id == expected_task_id:
                     return msg
-    raise AssertionError(
-        f"No echo for task_id={expected_task_id} within {timeout_seconds}s"
-    )
+    raise AssertionError(f"No echo for task_id={expected_task_id} within {timeout_seconds}s")
 
 
 @pytest.fixture

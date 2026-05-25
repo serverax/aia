@@ -12,6 +12,7 @@ set in the environment, otherwise raises — call sites should handle the
 fallback explicitly so a missing key never silently degrades to stubs in
 production.
 """
+
 from __future__ import annotations
 
 import json
@@ -150,11 +151,13 @@ class StubLLMClient:
         # Snapshot inputs — agent_loop reuses the same `messages` list across
         # iterations and mutates it in place. Without a deep copy, the stub's
         # tool_calls history all points at the final mutated state.
-        self.tool_calls.append({
-            "messages": copy.deepcopy(messages),
-            "tools": copy.deepcopy(tools),
-            "system": system,
-        })
+        self.tool_calls.append(
+            {
+                "messages": copy.deepcopy(messages),
+                "tools": copy.deepcopy(tools),
+                "system": system,
+            }
+        )
         if not self._tool_responses:
             raise RuntimeError("StubLLMClient.chat_with_tools exhausted")
         return self._tool_responses.pop(0)

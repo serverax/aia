@@ -7,6 +7,7 @@ lookup via `qdrant_indexer.py`), and publishes a `ComplianceResult` back to
 
 Replace `_evaluate()` in Sprint 3 with a real call into `QdrantIndexer.search()`.
 """
+
 from __future__ import annotations
 
 import asyncio

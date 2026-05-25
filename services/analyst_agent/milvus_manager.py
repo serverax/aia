@@ -1,12 +1,14 @@
-from pymilvus import Collection, connections, CollectionSchema, FieldSchema, DataType
-from sentence_transformers import SentenceTransformer
 import time
+
+from pymilvus import Collection, CollectionSchema, DataType, FieldSchema, connections
+from sentence_transformers import SentenceTransformer
+
 
 class MilvusManager:
     def __init__(self, host="localhost", port="19530"):
         self.host = host
         self.port = port
-        self.model = SentenceTransformer('all-MiniLM-L6-v2')
+        self.model = SentenceTransformer("all-MiniLM-L6-v2")
         self.vector_size = 384
 
     def connect(self):
@@ -30,7 +32,7 @@ class MilvusManager:
         ]
         schema = CollectionSchema(fields, f"Client {client_id} data")
         collection = Collection(f"client_{client_id}", schema)
-        
+
         # Create partition for additional isolation if needed
         collection.create_partition(f"{client_id}_partition")
         return collection
@@ -43,18 +45,13 @@ class MilvusManager:
         """Insert client document with embedding."""
         collection = Collection(f"client_{client_id}")
         embedding = self.embed_text(text)
-        
-        entities = [
-            [doc_id],
-            [embedding],
-            [text],
-            [doc_type],
-            [int(time.time() * 1000)]
-        ]
-        
+
+        entities = [[doc_id], [embedding], [text], [doc_type], [int(time.time() * 1000)]]
+
         collection.insert(entities, partition_name=f"{client_id}_partition")
         collection.flush()
         print(f"Inserted document {doc_id} into client_{client_id}")
+
 
 if __name__ == "__main__":
     manager = MilvusManager()

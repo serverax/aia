@@ -1,5 +1,6 @@
 import collections
-from typing import List, Optional, Dict
+from typing import List, Optional
+
 
 class LRUCache:
     def __init__(self, capacity: int = 1000):
@@ -18,6 +19,7 @@ class LRUCache:
         self.cache[key] = value
         if len(self.cache) > self.capacity:
             self.cache.popitem(last=False)
+
 
 class EmbeddingCache:
     def __init__(self, capacity: int = 1000):

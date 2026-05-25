@@ -8,6 +8,7 @@ approving/completed status, or when the risk_level is RED.
 Escalations are written to Postgres via `audit()` and republished on a
 dedicated `orchestrator:escalations` stream so the UI can surface them.
 """
+
 from __future__ import annotations
 
 import logging

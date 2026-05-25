@@ -26,6 +26,7 @@ The script intentionally reuses `generate_policies.build_rbac` so the
 "expected" side of the comparison is identical bytes to what the
 generator would emit. Drift = generator-output != cluster-state.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -40,7 +41,6 @@ from typing import Any
 import yaml
 
 from scripts.security import generate_policies
-
 
 # Generic SAs/Roles/Bindings that exist in namespace.yaml (not per-agent).
 # We don't flag these as "EXTRA" even though capabilities.yaml doesn't list them.
@@ -59,8 +59,8 @@ class Severity(str, Enum):
 
 @dataclass
 class Finding:
-    kind: str           # "MISSING" | "EXTRA" | "MISMATCH"
-    resource: str       # "ServiceAccount" | "Role" | "RoleBinding"
+    kind: str  # "MISSING" | "EXTRA" | "MISMATCH"
+    resource: str  # "ServiceAccount" | "Role" | "RoleBinding"
     name: str
     severity: Severity
     detail: str
@@ -126,18 +126,28 @@ def diff_role(expected: dict, actual: dict) -> list[str]:
     only_expected = exp_rules - act_rules
     only_actual = act_rules - exp_rules
     for rule in sorted(only_expected):
-        diffs.append(f"missing rule: {dict(zip(['apiGroups','resources','resourceNames','verbs'], rule))}")
+        diffs.append(
+            f"missing rule: {dict(zip(['apiGroups','resources','resourceNames','verbs'], rule))}"
+        )
     for rule in sorted(only_actual):
-        diffs.append(f"unexpected rule: {dict(zip(['apiGroups','resources','resourceNames','verbs'], rule))}")
+        diffs.append(
+            f"unexpected rule: {dict(zip(['apiGroups','resources','resourceNames','verbs'], rule))}"
+        )
     return diffs
 
 
 def diff_rolebinding(expected: dict, actual: dict) -> list[str]:
     diffs: list[str] = []
-    exp_subjects = {(s.get("kind"), s.get("name"), s.get("namespace")) for s in expected.get("subjects", [])}
-    act_subjects = {(s.get("kind"), s.get("name"), s.get("namespace")) for s in actual.get("subjects", [])}
+    exp_subjects = {
+        (s.get("kind"), s.get("name"), s.get("namespace")) for s in expected.get("subjects", [])
+    }
+    act_subjects = {
+        (s.get("kind"), s.get("name"), s.get("namespace")) for s in actual.get("subjects", [])
+    }
     if exp_subjects != act_subjects:
-        diffs.append(f"subjects differ: expected={sorted(exp_subjects)} actual={sorted(act_subjects)}")
+        diffs.append(
+            f"subjects differ: expected={sorted(exp_subjects)} actual={sorted(act_subjects)}"
+        )
     exp_ref = expected.get("roleRef", {})
     act_ref = actual.get("roleRef", {})
     if (exp_ref.get("kind"), exp_ref.get("name")) != (act_ref.get("kind"), act_ref.get("name")):
@@ -158,40 +168,44 @@ def audit(
 
         # MISSING: expected but absent.
         for name in sorted(exp_names - act_names):
-            findings.append(Finding(
-                kind="MISSING",
-                resource=kind,
-                name=name,
-                severity=Severity.ERROR,
-                detail=f"capabilities.yaml requires {kind}/{name} but the cluster has no such object",
-                remediation=(
-                    f"re-run scripts/security/generate_policies.py then "
-                    f"kubectl apply -f infrastructure/k3s/rbac-per-agent.yaml"
-                ),
-            ))
+            findings.append(
+                Finding(
+                    kind="MISSING",
+                    resource=kind,
+                    name=name,
+                    severity=Severity.ERROR,
+                    detail=f"capabilities.yaml requires {kind}/{name} but the cluster has no such object",
+                    remediation=(
+                        f"re-run scripts/security/generate_policies.py then "
+                        f"kubectl apply -f infrastructure/k3s/rbac-per-agent.yaml"
+                    ),
+                )
+            )
 
         # EXTRA: present but not declared (warning — could be intentional).
         kind_lower = kind.lower() + "s"
         builtin = NAMESPACE_LEVEL_NAMES.get(kind_lower, set())
         for name in sorted(act_names - exp_names):
             if name in builtin:
-                continue   # namespace.yaml's generic SA/Role/Binding
-            findings.append(Finding(
-                kind="EXTRA",
-                resource=kind,
-                name=name,
-                severity=Severity.WARNING,
-                detail=f"cluster has {kind}/{name}; not declared in capabilities.yaml",
-                remediation=(
-                    f"either delete (`kubectl delete {kind_lower[:-1]} {name} -n ordinox-ai`) "
-                    "or add it to infrastructure/security/capabilities.yaml"
-                ),
-            ))
+                continue  # namespace.yaml's generic SA/Role/Binding
+            findings.append(
+                Finding(
+                    kind="EXTRA",
+                    resource=kind,
+                    name=name,
+                    severity=Severity.WARNING,
+                    detail=f"cluster has {kind}/{name}; not declared in capabilities.yaml",
+                    remediation=(
+                        f"either delete (`kubectl delete {kind_lower[:-1]} {name} -n ordinox-ai`) "
+                        "or add it to infrastructure/security/capabilities.yaml"
+                    ),
+                )
+            )
 
         # MISMATCH: present in both, but contents differ.
         for name in sorted(exp_names & act_names):
             if kind == "ServiceAccount":
-                continue   # SA has no spec; existence is sufficient
+                continue  # SA has no spec; existence is sufficient
             exp = expected[kind][name]
             act = actual[kind][name]
             if kind == "Role":
@@ -201,17 +215,19 @@ def audit(
             else:
                 diffs = []
             if diffs:
-                findings.append(Finding(
-                    kind="MISMATCH",
-                    resource=kind,
-                    name=name,
-                    severity=Severity.ERROR,
-                    detail="; ".join(diffs),
-                    remediation=(
-                        f"re-apply infrastructure/k3s/rbac-per-agent.yaml to overwrite "
-                        f"manual edits; if intentional, update capabilities.yaml + regenerate"
-                    ),
-                ))
+                findings.append(
+                    Finding(
+                        kind="MISMATCH",
+                        resource=kind,
+                        name=name,
+                        severity=Severity.ERROR,
+                        detail="; ".join(diffs),
+                        remediation=(
+                            f"re-apply infrastructure/k3s/rbac-per-agent.yaml to overwrite "
+                            f"manual edits; if intentional, update capabilities.yaml + regenerate"
+                        ),
+                    )
+                )
 
     severity_order = {Severity.ERROR: 0, Severity.WARNING: 1, Severity.INFO: 2}
     findings.sort(key=lambda f: (severity_order[f.severity], f.resource, f.name))
@@ -221,8 +237,16 @@ def audit(
 def fetch_kubectl_json(namespace: str) -> dict[str, Any]:
     """Run kubectl and return the parsed JSON. Raises on non-zero exit."""
     proc = subprocess.run(
-        ["kubectl", "get", "sa,role,rolebinding", "-n", namespace, "-o", "json",
-         "--request-timeout=10s"],
+        [
+            "kubectl",
+            "get",
+            "sa,role,rolebinding",
+            "-n",
+            namespace,
+            "-o",
+            "json",
+            "--request-timeout=10s",
+        ],
         capture_output=True,
         text=True,
         timeout=30,
@@ -234,14 +258,20 @@ def fetch_kubectl_json(namespace: str) -> dict[str, Any]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--capabilities", type=Path,
-                        default=Path("infrastructure/security/capabilities.yaml"))
-    parser.add_argument("--from-json", type=Path,
-                        help="Read cluster state from a kubectl JSON file instead of running kubectl")
-    parser.add_argument("--namespace", default=None,
-                        help="Defaults to capabilities.yaml's namespace")
-    parser.add_argument("--quiet", action="store_true",
-                        help="Only print findings + summary; no INFO chatter")
+    parser.add_argument(
+        "--capabilities", type=Path, default=Path("infrastructure/security/capabilities.yaml")
+    )
+    parser.add_argument(
+        "--from-json",
+        type=Path,
+        help="Read cluster state from a kubectl JSON file instead of running kubectl",
+    )
+    parser.add_argument(
+        "--namespace", default=None, help="Defaults to capabilities.yaml's namespace"
+    )
+    parser.add_argument(
+        "--quiet", action="store_true", help="Only print findings + summary; no INFO chatter"
+    )
     args = parser.parse_args(argv)
 
     if not args.capabilities.is_file():
@@ -265,9 +295,11 @@ def main(argv: list[str] | None = None) -> int:
     findings = audit(expected, actual)
 
     if not args.quiet:
-        print(f"RBAC audit: namespace={namespace} "
-              f"expected_sas={len(expected['ServiceAccount'])} "
-              f"actual_sas={len(actual['ServiceAccount'])}")
+        print(
+            f"RBAC audit: namespace={namespace} "
+            f"expected_sas={len(expected['ServiceAccount'])} "
+            f"actual_sas={len(actual['ServiceAccount'])}"
+        )
 
     if not findings:
         print("OK: deployed RBAC matches capabilities.yaml")

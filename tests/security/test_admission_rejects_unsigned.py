@@ -1,4 +1,5 @@
 """Verify sigstore/policy-controller rejects unsigned images in the namespace."""
+
 from __future__ import annotations
 
 import pytest
@@ -32,10 +33,13 @@ def test_unsigned_image_is_rejected(require_sigstore_policy, kubectl_apply, kube
     combined = (result.stdout + result.stderr).lower()
     # sigstore policy-controller's denial message varies by version; check
     # for any of the recognizable substrings.
-    assert any(needle in combined for needle in (
-        "no signatures found",
-        "signature",
-        "policy-controller",
-        "no matching signatures",
-        "denied",
-    )), f"Unexpected rejection reason: {combined}"
+    assert any(
+        needle in combined
+        for needle in (
+            "no signatures found",
+            "signature",
+            "policy-controller",
+            "no matching signatures",
+            "denied",
+        )
+    ), f"Unexpected rejection reason: {combined}"

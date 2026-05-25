@@ -11,12 +11,12 @@ We use `AllowAllVerifier` for the happy-path tests and `CosignVerifier`
 + `sign_blob_for_testing` for the signature-gating tests, so no cosign
 binary is required.
 """
+
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 import pytest
 import yaml
@@ -40,6 +40,7 @@ pytestmark = [pytest.mark.unit]
 
 
 # --- helpers ------------------------------------------------------------
+
 
 class FakeExecutor(WasmExecutor):
     """Returns a canned output without actually executing WASM."""
@@ -84,13 +85,15 @@ def _make_tool(
     (tool_dir / "tool.yaml").write_text(yaml.safe_dump(spec), encoding="utf-8")
 
     schema = {
-        "input": input_schema or {
+        "input": input_schema
+        or {
             "type": "object",
             "required": ["text"],
             "properties": {"text": {"type": "string"}},
             "additionalProperties": False,
         },
-        "output": output_schema or {
+        "output": output_schema
+        or {
             "type": "object",
             "required": ["echoed"],
             "properties": {"echoed": {"type": "string"}},
@@ -102,6 +105,7 @@ def _make_tool(
 
 
 # --- tests --------------------------------------------------------------
+
 
 def test_registry_discovers_tools(tmp_path):
     _make_tool(tmp_path, "alpha")
@@ -182,10 +186,18 @@ async def test_execute_rejects_bad_output_schema(tmp_path):
     # FakeExecutor returns {"echoed": ...} but we declare the tool returns {"value": int}
     # by overriding the output_schema in the fixture.
     schema_path = tmp_path / "wonky_out" / "schema.json"
-    schema_path.write_text(json.dumps({
-        "input": {"type": "object", "required": ["text"]},
-        "output": {"type": "object", "required": ["value"], "properties": {"value": {"type": "integer"}}},
-    }))
+    schema_path.write_text(
+        json.dumps(
+            {
+                "input": {"type": "object", "required": ["text"]},
+                "output": {
+                    "type": "object",
+                    "required": ["value"],
+                    "properties": {"value": {"type": "integer"}},
+                },
+            }
+        )
+    )
 
     registry = ToolRegistry(
         tools_root=tmp_path,

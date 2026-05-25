@@ -8,6 +8,7 @@ The per-agent NetworkPolicy (Day 7 of Sprint 6) allows egress only to:
 This test execs into a running echo-agent pod (which has no Anthropic
 egress allowed) and tries to reach Cloudflare. It should time out.
 """
+
 from __future__ import annotations
 
 import shutil
@@ -21,10 +22,16 @@ pytestmark = [pytest.mark.security]
 def _find_running_pod(label: str, namespace: str = "synthetic-enterprise") -> str | None:
     result = subprocess.run(
         [
-            "kubectl", "get", "pods", "-n", namespace,
-            "-l", label,
+            "kubectl",
+            "get",
+            "pods",
+            "-n",
+            namespace,
+            "-l",
+            label,
             "--field-selector=status.phase=Running",
-            "-o", "jsonpath={.items[0].metadata.name}",
+            "-o",
+            "jsonpath={.items[0].metadata.name}",
             "--request-timeout=5s",
         ],
         capture_output=True,
@@ -39,13 +46,21 @@ def _find_running_pod(label: str, namespace: str = "synthetic-enterprise") -> st
 def test_echo_agent_pod_cannot_reach_internet(require_cluster):
     pod = _find_running_pod("app=echo-agent")
     if pod is None:
-        pytest.skip("no running echo-agent pod found (deploy infrastructure/k3s/echo-agent.yaml first)")
+        pytest.skip(
+            "no running echo-agent pod found (deploy infrastructure/k3s/echo-agent.yaml first)"
+        )
 
     # Use a 3s connect timeout — a working egress would resolve and connect well under that.
     result = subprocess.run(
         [
-            "kubectl", "exec", "-n", "synthetic-enterprise", pod, "--",
-            "sh", "-c",
+            "kubectl",
+            "exec",
+            "-n",
+            "synthetic-enterprise",
+            pod,
+            "--",
+            "sh",
+            "-c",
             "timeout 4 wget -q --timeout=3 --tries=1 -O- https://1.1.1.1 2>&1; echo EXIT=$?",
         ],
         capture_output=True,

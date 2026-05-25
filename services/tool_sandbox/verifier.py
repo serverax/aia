@@ -14,6 +14,7 @@ Production setup:
     verifier = CosignVerifier(pubkey_pem)
     verifier.verify(wasm_bytes, sig_b64)   # raises on failure
 """
+
 from __future__ import annotations
 
 import base64
@@ -61,9 +62,7 @@ class CosignVerifier:
         try:
             signature_der = base64.b64decode(signature_b64, validate=True)
         except (ValueError, TypeError) as exc:
-            raise SignatureVerificationError(
-                f"signature is not valid base64: {exc}"
-            ) from exc
+            raise SignatureVerificationError(f"signature is not valid base64: {exc}") from exc
 
         try:
             self._key.verify(signature_der, blob, ec.ECDSA(hashes.SHA256()))

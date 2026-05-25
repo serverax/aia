@@ -1,6 +1,6 @@
-import json
-from datetime import datetime
 import uuid
+from datetime import datetime
+
 
 def create_message(from_agent, to_agent, task_id, message_type, status, data=None):
     """Create a structured inter-agent message."""
@@ -13,5 +13,5 @@ def create_message(from_agent, to_agent, task_id, message_type, status, data=Non
         "message_type": message_type,
         "status": status,
         "data": data or {},
-        "metadata": {}
+        "metadata": {},
     }

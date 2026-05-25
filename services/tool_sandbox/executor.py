@@ -14,36 +14,27 @@ Wraps wasmtime-py 24.x with:
 The executor never trusts the tool. It enforces limits at the host level
 regardless of what the WASM module declares.
 """
+
 from __future__ import annotations
 
 import asyncio
 import json
 import logging
-import os
 import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from wasmtime import (
-    Config,
-    Engine,
-    ExitTrap,
-    Linker,
-    Module,
-    Store,
-    Trap,
-    WasiConfig,
-)
+from wasmtime import Config, Engine, ExitTrap, Linker, Module, Store, Trap, WasiConfig
 
 logger = logging.getLogger(__name__)
 
 
 # Defaults sized for "small pure function" tools (parse_dates, validate_*).
 # Override per-tool via tool.yaml -> capability_class.
-DEFAULT_FUEL = 100_000_000          # ~100 ms on a typical CPU
-DEFAULT_MEMORY_BYTES = 64 * 1024 * 1024   # 64 MiB
-DEFAULT_WALL_TIMEOUT_SECONDS = 5.0   # Hard upper bound even if fuel undercounts
+DEFAULT_FUEL = 100_000_000  # ~100 ms on a typical CPU
+DEFAULT_MEMORY_BYTES = 64 * 1024 * 1024  # 64 MiB
+DEFAULT_WALL_TIMEOUT_SECONDS = 5.0  # Hard upper bound even if fuel undercounts
 
 
 @dataclass(frozen=True)

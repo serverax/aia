@@ -5,4 +5,3 @@ import markdown
 
 def render_markdown_to_html(value: str) -> str:
     return markdown.markdown(value)
-

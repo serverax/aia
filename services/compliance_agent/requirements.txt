@@ -1,5 +1,5 @@
 -r ../../requirements.txt
 
-# Sprint 3 will fill these in for qdrant_indexer.py
-# qdrant-client==1.11.0
-# sentence-transformers==3.1.1
+# Required by qdrant_indexer.py and compliance retrieval flows.
+qdrant-client==1.18.0
+sentence-transformers==3.1.1

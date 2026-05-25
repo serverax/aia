@@ -1,0 +1,20 @@
+[flake8]
+max-line-length = 100
+extend-ignore = E203, W503
+exclude =
+    .git,
+    .tmp,
+    __pycache__,
+    node_modules,
+    cursor/frontend/node_modules,
+    cursor/frontend/dist
+per-file-ignores =
+    services/analyst_agent/tests/*.py: F401,F841,E501,E741,F541,E402,E722
+    services/rag_system/tests/*.py: F401,E402
+    services/semantic_search/tests/*.py: F401,F841,E501,E741,F541
+    services/semantic_search/knowledge_base/sample_data.py: E501
+    tests/compliance/*.py: E402,E501,E722,F541
+    tests/integration/test_orchestrator.py: F401
+    tests/security/conftest.py: F401
+    tests/security/test_capability_validator.py: F541
+    tests/security/test_networkpolicy_blocks_external.py: F401

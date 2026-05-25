@@ -27,6 +27,7 @@ NOTE: the existing `audit_log.direction CHECK` constraint allows only
 
 The migration script is at infrastructure/k3s/migrations/0002_audit_tool.sql.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -93,5 +94,6 @@ class PostgresToolAuditSink:
             # Auditing must never sink the actual tool call. Log + swallow.
             logger.exception(
                 "audit write failed for agent=%s tool=%s (call still succeeded)",
-                agent_id, tool_name,
+                agent_id,
+                tool_name,
             )

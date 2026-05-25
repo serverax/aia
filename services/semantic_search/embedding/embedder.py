@@ -1,12 +1,15 @@
 from typing import List, Union
+
 from sentence_transformers import SentenceTransformer
+
 from .cache_manager import EmbeddingCache
+
 
 class Embedder:
     def __init__(self, model_name: str = "all-MiniLM-L6-v2", cache_capacity: int = 1000):
         self.model = SentenceTransformer(model_name)
         self.cache = EmbeddingCache(capacity=cache_capacity)
-        self.dimension = 384 # Default for all-MiniLM-L6-v2
+        self.dimension = 384  # Default for all-MiniLM-L6-v2
 
     def embed(self, texts: Union[str, List[str]]) -> List[List[float]]:
         """Generate embeddings for a single string or a list of strings."""

@@ -4,6 +4,7 @@ FastAPI for HTTP entry (POST /requests) plus a background consumer on
 `orchestrator:requests` so other services can also submit requests via
 Redis. Both paths feed the same LangGraph invocation.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -22,7 +23,7 @@ from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from libs.communication.postgres_client import build_pool
-from libs.communication.redis_client import build_client, consume, ack
+from libs.communication.redis_client import ack, build_client, consume
 from libs.communication.telemetry import init_telemetry
 from libs.llm import LLMClient, build_default_client
 from services.orchestrator_agent.graph import build_graph
@@ -51,6 +52,7 @@ def _build_tool_verifier():
         pubkey_path,
     )
     return AllowAllVerifier()
+
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
@@ -105,11 +107,7 @@ class OrchestratorService:
             # tool_sandbox optional deps installed (e.g. minimal dev images).
             from pathlib import Path
 
-            from services.tool_sandbox import (
-                CosignVerifier,
-                ToolRegistry,
-                WasmExecutor,
-            )
+            from services.tool_sandbox import ToolRegistry, WasmExecutor
             from services.tool_sandbox.audit_adapter import PostgresToolAuditSink
 
             verifier = _build_tool_verifier()
@@ -173,7 +171,11 @@ class OrchestratorService:
                 break
             try:
                 raw = msg.fields.get("request") or json.dumps(msg.fields)
-                payload = RequestPayload.model_validate_json(raw) if raw.startswith("{") else RequestPayload(user_request=raw)
+                payload = (
+                    RequestPayload.model_validate_json(raw)
+                    if raw.startswith("{")
+                    else RequestPayload(user_request=raw)
+                )
                 await self.handle_request(payload)
                 await ack(
                     self.redis,

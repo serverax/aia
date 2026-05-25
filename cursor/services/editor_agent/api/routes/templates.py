@@ -36,4 +36,3 @@ def render_template(template_id: str, request: RenderTemplateRequest):
         value = request.content.get(section.field, section.placeholder or "")
         preview_parts.append(f"<h3>{section.field}</h3><p>{value}</p>")
     return {"preview_html": "".join(preview_parts)}
-

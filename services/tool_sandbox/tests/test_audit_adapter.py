@@ -1,8 +1,6 @@
 """Unit tests for PostgresToolAuditSink with a mocked asyncpg pool."""
-from __future__ import annotations
 
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock
+from __future__ import annotations
 
 import pytest
 
@@ -47,6 +45,7 @@ class _FakePool:
 
             async def __aexit__(self, *_):
                 return False
+
         return _Cm()
 
 
@@ -67,12 +66,13 @@ async def test_record_writes_one_audit_row():
     assert "INSERT INTO audit_log" in sql
     # args: timestamp, agent_id, message_id, task_id, direction, message_type, status, payload
     assert args[1] == "analyst-v1"
-    assert args[3] == "parse_dates_v3:0.1.0"   # task_id
-    assert args[4] == "tool"                    # direction
-    assert args[5] == "tool_call"               # message_type
-    assert args[6] == "ok"                      # status
+    assert args[3] == "parse_dates_v3:0.1.0"  # task_id
+    assert args[4] == "tool"  # direction
+    assert args[5] == "tool_call"  # message_type
+    assert args[6] == "ok"  # status
     # payload is JSON string with both digests + no error
     import json
+
     payload = json.loads(args[7])
     assert payload["tool_name"] == "parse_dates_v3"
     assert payload["error"] is None
@@ -88,8 +88,10 @@ async def test_record_swallows_db_errors_without_raising():
             class _Cm:
                 async def __aenter__(self):
                     raise RuntimeError("db is down")
+
                 async def __aexit__(self, *_):
                     return False
+
             return _Cm()
 
     sink = PostgresToolAuditSink(_BoomPool(), default_agent_id="x")
@@ -109,7 +111,7 @@ async def test_record_falls_back_to_default_agent_id_when_missing():
     pool = _FakePool()
     sink = PostgresToolAuditSink(pool, default_agent_id="fallback")
     await sink.record(
-        agent_id="",          # caller forgot to pass it
+        agent_id="",  # caller forgot to pass it
         tool_name="t",
         tool_version="1",
         status="ok",

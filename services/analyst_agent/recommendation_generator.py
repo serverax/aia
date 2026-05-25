@@ -6,7 +6,6 @@ class RecommendationGenerator:
         """
         Generate 3-5 actionable recommendations based on analysis and risk.
         """
-        overall_level = risk_assessment.get("overall_level", "LOW")
         factors = risk_assessment.get("factors", {})
 
         recommendations = []

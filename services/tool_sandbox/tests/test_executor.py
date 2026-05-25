@@ -16,7 +16,6 @@ a fresh checkout before `scripts/security/build-fixtures.sh` has run).
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest

@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import List
 
 from ..vector_store.schemas import SearchResult
 

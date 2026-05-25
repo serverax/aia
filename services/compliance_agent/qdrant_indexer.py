@@ -1,6 +1,5 @@
 import hashlib
 
-import requests
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, PointStruct, VectorParams
 
@@ -44,7 +43,10 @@ class QdrantIndexer:
                 "id": "era-1996-s1",
                 "regulation": "Employment Rights Act 1996",
                 "section": "Section 1",
-                "text": "An employer shall give to an employee a written statement of particulars of employment.",
+                "text": (
+                    "An employer shall give to an employee a written statement of "
+                    "particulars of employment."
+                ),
                 "jurisdiction": "UK",
                 "source": "https://www.legislation.gov.uk/ukpga/1996/23/section/1",
             },
@@ -52,7 +54,10 @@ class QdrantIndexer:
                 "id": "era-1996-s13",
                 "regulation": "Employment Rights Act 1996",
                 "section": "Section 13",
-                "text": "An employer shall not make a deduction from wages of a worker employed by him.",
+                "text": (
+                    "An employer shall not make a deduction from wages of a worker "
+                    "employed by him."
+                ),
                 "jurisdiction": "UK",
                 "source": "https://www.legislation.gov.uk/ukpga/1996/23/section/13",
             },

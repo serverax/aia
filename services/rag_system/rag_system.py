@@ -69,7 +69,7 @@ class RAGSystem:
 
         # 5. Call LLM (Claude)
         prompt = f"""
-        Use the following context to answer the user's question. 
+        Use the following context to answer the user's question.
         For every claim you make, you MUST cite the source using the format [CITATION: source_id].
         If you don't know the answer based on the context, say so.
 

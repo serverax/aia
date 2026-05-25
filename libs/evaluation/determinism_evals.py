@@ -1,8 +1,5 @@
 import json
 
-from services.analyst_agent.milvus_manager import MilvusManager
-from services.compliance_agent.qdrant_indexer import QdrantIndexer
-
 
 def test_determinism():
     """Run same request 5 times; verify identical output."""

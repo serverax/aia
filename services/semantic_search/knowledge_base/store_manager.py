@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Dict, List
 
 from ..embedding.embedder import Embedder
 from ..vector_store.faiss_store import FAISSStore

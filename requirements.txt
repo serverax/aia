@@ -20,6 +20,7 @@ structlog==24.4.0
 
 # Vector retrieval clients used by RAG and compliance indexers.
 qdrant-client==1.18.0
+sentence-transformers==3.1.1
 
 # Orchestration (Sprint 2)
 langgraph==0.2.34

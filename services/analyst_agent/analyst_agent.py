@@ -1,5 +1,4 @@
-import asyncio
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from libs.communication.config import Config
 from services.rag_system.rag_system import RAGSystem

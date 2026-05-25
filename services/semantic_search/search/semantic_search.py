@@ -1,8 +1,7 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from ..embedding.embedder import Embedder
 from ..vector_store.faiss_store import FAISSStore
-from ..vector_store.schemas import SearchResult
 from .query_processor import QueryProcessor
 from .ranker import Ranker
 

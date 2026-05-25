@@ -2,8 +2,6 @@ from datetime import datetime
 
 import httpx
 
-from services.analyst_agent.milvus_manager import MilvusManager
-
 
 async def web_search(query: str, num_results: int = 10) -> list[dict]:
     """Search web using DuckDuckGo API."""

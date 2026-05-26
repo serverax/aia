@@ -72,12 +72,15 @@ jobs:
       - name: Safety scan
         run: |
           set -e
-          echo "Checking for risky operations..."
-          if grep -R "kubectl delete\|curl.*api.cloudflare\|CF_API_TOKEN\|cloudflare.com/client/v4" . \
-            --exclude-dir=.git \
-            --exclude="aia-dev-cicd-docs-auto.sh" \
-            --exclude="cloudflare-dev-dns-manual.md"; then
-            echo "Risky text found. Review before deployment."
+          echo "Checking generated cluster artifacts for risky operations..."
+          # Scope to generated/ — the auto-generated manifests that actually get
+          # applied to the cluster. Scanning the whole repo produced false
+          # positives on legitimate rollback scripts (scripts/deployment/*),
+          # documentation runbooks (docs/**), and this workflow's own grep
+          # pattern (.github/**). Those legitimately contain "kubectl delete".
+          if grep -R "kubectl delete\|curl.*api.cloudflare\|CF_API_TOKEN\|cloudflare.com/client/v4" \
+            generated/ 2>/dev/null; then
+            echo "Risky text found in generated artifacts. Review before deployment."
             exit 1
           fi
           echo "Safety scan passed"

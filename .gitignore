@@ -26,6 +26,17 @@ coverage.xml
 *.key
 cosign.key
 
+# Kubeconfigs / cluster credentials (never commit)
+*kubeconfig*
+*.kubeconfig
+aia-developer-kubeconfig.yaml
+openclaw-dev-working.yaml
+
+# Generated secrets / dev env files
+secrets*.env
+*.secret.env
+generated/secrets.dev.env
+
 # Editors
 .idea/
 .vscode/

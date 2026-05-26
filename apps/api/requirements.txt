@@ -1,0 +1,5 @@
+# Hiring API service dependencies.
+# Shared runtime pins (fastapi, uvicorn, pydantic, asyncpg, anthropic, …) live
+# in the repo-root requirements.txt; this file inherits them so the service
+# stays in lockstep with the agents/workers.
+-r ../../requirements.txt

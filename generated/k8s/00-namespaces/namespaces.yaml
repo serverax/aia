@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: aia-dev
+  labels:
+    app.kubernetes.io/part-of: aia-hiring-dev
+    environment: dev
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/warn: baseline
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: aia-dev-storage
+  labels:
+    app.kubernetes.io/part-of: aia-hiring-dev
+    environment: dev
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/warn: baseline
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: aia-dev-monitoring
+  labels:
+    app.kubernetes.io/part-of: aia-hiring-dev
+    environment: dev
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/warn: baseline
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: aia-dev-security
+  labels:
+    app.kubernetes.io/part-of: aia-hiring-dev
+    environment: dev
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/warn: baseline

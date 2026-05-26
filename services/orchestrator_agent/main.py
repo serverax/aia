@@ -15,17 +15,20 @@ import uuid
 from contextlib import asynccontextmanager
 from typing import Any
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI, Security, status
+from fastapi.security import OAuth2PasswordRequestForm
 from opentelemetry.instrumentation.asyncpg import AsyncPGInstrumentor
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.redis import RedisInstrumentor
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from libs.auth import Token, User, authenticate_user, create_access_token, get_current_active_user
 from libs.communication.postgres_client import build_pool
 from libs.communication.redis_client import ack, build_client, consume
 from libs.communication.telemetry import init_telemetry
 from libs.llm import LLMClient, build_default_client
+from services.orchestrator_agent.compliance_gate import ComplianceGate
 from services.orchestrator_agent.graph import build_graph
 from services.orchestrator_agent.state import OrchestratorState
 
@@ -77,6 +80,12 @@ class Settings(BaseSettings):
     # tool-use chats. Unset = no tools = current behavior.
     tools_root: str | None = None
 
+    # Sprint 7: kill-switch admission gate. If COMPLIANCE_SERVICE_URL is set,
+    # each request is checked against the Compliance Service before the graph
+    # runs; a denied project/global kill-switch short-circuits with a
+    # "rejected_by_compliance" phase. Unset = gating disabled (dev default).
+    compliance_service_url: str = ""
+
 
 settings = Settings()
 
@@ -89,7 +98,12 @@ class RequestPayload(BaseModel):
 class OrchestratorService:
     """Holds shared clients + graph for the service lifetime."""
 
-    def __init__(self, settings: Settings, llm: LLMClient | None = None) -> None:
+    def __init__(
+        self,
+        settings: Settings,
+        llm: LLMClient | None = None,
+        compliance_gate: ComplianceGate | None = None,
+    ) -> None:
         self.settings = settings
         self.tracer = init_telemetry(service_name=settings.otel_service_name)
         self.redis = build_client()
@@ -97,11 +111,18 @@ class OrchestratorService:
         self.llm = llm or build_default_client()
         self.graph = None  # built after pg pool is ready
         self.tool_registry = None  # populated in start() if tools_root is set
+        # Injectable for tests; otherwise built in start() from settings.
+        self.compliance_gate = compliance_gate
         self._stop = asyncio.Event()
 
     async def start(self) -> None:
         if self.settings.audit_enabled:
             self.pg_pool = await build_pool()
+        if self.compliance_gate is None and self.settings.compliance_service_url:
+            self.compliance_gate = ComplianceGate(base_url=self.settings.compliance_service_url)
+            logger.info(
+                "Compliance admission gate enabled -> %s", self.settings.compliance_service_url
+            )
         if self.settings.tools_root:
             # Imported here so the orchestrator can still run without the
             # tool_sandbox optional deps installed (e.g. minimal dev images).
@@ -142,10 +163,40 @@ class OrchestratorService:
             await self.pg_pool.close()
 
     async def handle_request(self, payload: RequestPayload) -> OrchestratorState:
-        """Synchronously run the graph for one request."""
+        """Synchronously run the graph for one request.
+
+        If a compliance gate is configured, the request is checked against the
+        kill-switch first; a denial short-circuits before the graph runs.
+        """
+        project_id = payload.project_id or f"proj-{uuid.uuid4()}"
+
+        if self.compliance_gate is not None:
+            decision = await self.compliance_gate.check(
+                agent_id=self.settings.agent_id, project_id=project_id
+            )
+            if not decision.allowed:
+                logger.warning(
+                    "request for project %s rejected by compliance gate: %s",
+                    project_id,
+                    decision.reason,
+                )
+                return {
+                    "user_request": payload.user_request,
+                    "project_id": project_id,
+                    "current_phase": "rejected_by_compliance",
+                    "dispatched_task_ids": [],
+                    "results": {},
+                    "compliance": {
+                        "allowed": False,
+                        "reason": decision.reason,
+                        "source": decision.source,
+                        "policy_version": decision.policy_version,
+                    },
+                }
+
         initial: OrchestratorState = {
             "user_request": payload.user_request,
-            "project_id": payload.project_id or f"proj-{uuid.uuid4()}",
+            "project_id": project_id,
             "current_phase": "parsing",
             "dispatched_task_ids": [],
             "results": {},
@@ -225,8 +276,28 @@ async def ready() -> dict[str, Any]:
     return {"status": "ready"}
 
 
+@app.post("/token", response_model=Token)
+async def login_for_access_token(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+) -> dict[str, str]:
+    from fastapi import HTTPException
+
+    user = await authenticate_user(form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token = create_access_token(data={"sub": user.username, "scopes": user.scopes})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
 @app.post("/requests")
-async def submit_request(payload: RequestPayload) -> dict[str, Any]:
+async def submit_request(
+    payload: RequestPayload,
+    current_user: User = Security(get_current_active_user, scopes=["items"]),
+) -> dict[str, Any]:
     """HTTP entry point — handy for curl / dashboard."""
     service: OrchestratorService = app.state.service
     final_state = await service.handle_request(payload)

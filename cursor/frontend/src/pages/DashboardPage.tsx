@@ -69,6 +69,88 @@ export function DashboardPage() {
     }
   }, [events, pendingApprovals.length, snapshot])
 
+  const overview = useMemo(() => {
+    if (!snapshot) {
+      return {
+        activeTasks: 0,
+        stalledTasks: 0,
+        urgentApprovals: 0,
+        workflowState: 'idle',
+      }
+    }
+    const activeTasks = snapshot.tasks.filter((task) => task.status === 'in_progress').length
+    const stalledTasks = snapshot.tasks.filter((task) => (task.progress ?? 0) < 0.2 && task.status === 'pending').length
+    const urgentApprovals = snapshot.tasks.filter((task) => task.approvals_pending.length > 0).length
+    return {
+      activeTasks,
+      stalledTasks,
+      urgentApprovals,
+      workflowState: snapshot.state,
+    }
+  }, [snapshot])
+
+  const workflowPillClass = useMemo(() => {
+    if (overview.workflowState === 'running') return 'approved'
+    if (overview.workflowState === 'error') return 'rejected'
+    if (overview.workflowState === 'paused') return 'pending'
+    return 'in_progress'
+  }, [overview.workflowState])
+
+  const recentActivity = useMemo(() => {
+    return events.slice(0, 8).map((event) => {
+      if (event.type === 'approval_requested') {
+        const data = event.data as { task_id: string; reason: string }
+        return {
+          id: `${event.timestamp}-${event.type}`,
+          label: 'Approval requested',
+          detail: `Task ${data.task_id}: ${data.reason}`,
+          timestamp: event.timestamp,
+        }
+      }
+      if (event.type === 'approval_decided') {
+        const data = event.data as { task_id: string; decision: string; decided_by: string }
+        return {
+          id: `${event.timestamp}-${event.type}`,
+          label: 'Approval decided',
+          detail: `Task ${data.task_id}: ${data.decision} by ${data.decided_by}`,
+          timestamp: event.timestamp,
+        }
+      }
+      if (event.type === 'task_updated') {
+        const data = event.data as { task_id: string; status: string; progress?: number }
+        return {
+          id: `${event.timestamp}-${event.type}`,
+          label: 'Task updated',
+          detail: `Task ${data.task_id}: ${data.status} (${Math.round((data.progress ?? 0) * 100)}%)`,
+          timestamp: event.timestamp,
+        }
+      }
+      if (event.type === 'workflow_completed') {
+        return {
+          id: `${event.timestamp}-${event.type}`,
+          label: 'Workflow completed',
+          detail: 'Current workflow reached completed state.',
+          timestamp: event.timestamp,
+        }
+      }
+      if (event.type === 'error') {
+        const data = event.data as { code: string; message: string }
+        return {
+          id: `${event.timestamp}-${event.type}`,
+          label: 'Error',
+          detail: `${data.code}: ${data.message}`,
+          timestamp: event.timestamp,
+        }
+      }
+      return {
+        id: `${event.timestamp}-${event.type}`,
+        label: event.type.replace('_', ' '),
+        detail: 'Event received from orchestrator.',
+        timestamp: event.timestamp,
+      }
+    })
+  }, [events])
+
   const highlightedTaskIds = useMemo(() => {
     return Array.from(
       new Set(
@@ -98,7 +180,49 @@ export function DashboardPage() {
       ) : null}
 
       {snapshot ? (
-        <div className="dashboard-grid">
+        <div className="dashboard-overview">
+          <section className="card overview-card">
+            <h2>Workflow Overview</h2>
+            <div className="overview-grid">
+              <article>
+                <span>Workflow State</span>
+                <strong className={`pill ${workflowPillClass}`}>{overview.workflowState}</strong>
+              </article>
+              <article>
+                <span>Active Tasks</span>
+                <strong>{overview.activeTasks}</strong>
+              </article>
+              <article>
+                <span>Stalled Tasks</span>
+                <strong>{overview.stalledTasks}</strong>
+              </article>
+              <article>
+                <span>Urgent Approvals</span>
+                <strong>{overview.urgentApprovals}</strong>
+              </article>
+            </div>
+            <small>Last orchestrator update: {new Date(snapshot.last_update).toLocaleString()}</small>
+          </section>
+          <section className="card overview-card">
+            <h2>Recent Activity</h2>
+            <ul className="activity-list">
+              {recentActivity.length === 0 ? <li>No events yet.</li> : null}
+              {recentActivity.map((item) => (
+                <li key={item.id}>
+                  <p>
+                    <strong>{item.label}</strong>
+                  </p>
+                  <p>{item.detail}</p>
+                  <small>{new Date(item.timestamp).toLocaleString()}</small>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
+      ) : null}
+
+      {snapshot ? (
+        <div className="dashboard-grid dashboard-grid-main">
           <RealtimeMetrics
             metrics={snapshot.metrics}
             pendingApprovals={pendingApprovals.length}

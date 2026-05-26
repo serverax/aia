@@ -2,7 +2,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: compliance-service
-  namespace: synthetic-enterprise
+  namespace: ordinox-ai
 spec:
   selector:
     matchLabels:

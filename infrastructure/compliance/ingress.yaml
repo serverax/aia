@@ -1,8 +1,8 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: synthetic-enterprise-ingress
-  namespace: synthetic-enterprise
+  name: compliance-service-green-canary
+  namespace: ordinox-ai
 spec:
   ingressClassName: nginx
   rules:

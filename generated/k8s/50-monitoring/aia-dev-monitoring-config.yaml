@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aia-dev-monitoring-baseline
+  namespace: aia-dev-monitoring
+data:
+  metrics.md: |
+    Required metrics:
+    - HTTP request latency
+    - HTTP error rate
+    - Worker queue depth
+    - Job failure count
+    - Supabase query latency
+    - Vector search latency
+    - LLM request duration
+    - LLM token throughput
+    - MinIO bucket usage
+    - CPU usage
+    - Memory usage
+    - Pod restarts
+
+  alerts.md: |
+    Required alerts:
+    - API 5xx > 5% for 5 minutes
+    - LLM latency > 30 seconds p95
+    - Worker queue older than 10 minutes
+    - Database CPU > 80%
+    - Storage usage > 80%
+    - Backup failure
+    - Pod restart loop
+    - Certificate expiry below 14 days
+
+  stack.md: |
+    Recommended stack:
+    - Prometheus
+    - Grafana
+    - Loki
+    - Promtail or Fluent Bit
+    - Jaeger or OpenTelemetry Collector

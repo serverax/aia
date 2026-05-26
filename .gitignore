@@ -26,6 +26,31 @@ coverage.xml
 *.key
 cosign.key
 
+# Kubeconfigs / cluster credentials (never commit)
+*kubeconfig*
+*.kubeconfig
+aia-developer-kubeconfig.yaml
+openclaw-dev-working.yaml
+
+# Generated secrets / dev env files
+secrets*.env
+*.secret.env
+generated/secrets.dev.env
+
+# Talos PKI / machine configs (CA + bootstrap tokens — NEVER commit).
+# NOTE: existing committed copies still require a history scrub — see
+# docs/integration/SECRET_INVENTORY_AND_SCRUB_RUNBOOK.md
+infrastructure/talos/gen/
+*talosconfig*
+
+# Sync backups & editor backups (transient working-tree clutter)
+_backup_before_*/
+*.save
+*.backup
+*.backup.*
+*.backup-*
+*.before-*
+
 # Editors
 .idea/
 .vscode/

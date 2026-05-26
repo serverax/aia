@@ -1,0 +1,86 @@
+name: AIA Dev CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - dev
+    paths:
+      - "**"
+      - ".github/workflows/aia-dev-ci.yml"
+  pull_request:
+    branches:
+      - main
+      - master
+      - dev
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate project
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show repository
+        run: |
+          echo "Repository: $GITHUB_REPOSITORY"
+          echo "Branch: $GITHUB_REF_NAME"
+
+      - name: Validate shell scripts
+        run: |
+          set -e
+          find scripts -type f -name "*.sh" -print0 2>/dev/null | xargs -0 -r bash -n
+          echo "Shell syntax validation passed"
+
+      - name: Validate Kubernetes YAML exists
+        run: |
+          set -e
+          if [ -d "generated/k8s" ]; then
+            find generated/k8s -type f -name "*.yaml" -print
+          else
+            echo "generated/k8s not found yet. Run the infra generator first."
+          fi
+
+      - name: Node install and test if package.json exists
+        run: |
+          set -e
+          if [ -f package.json ]; then
+            corepack enable || true
+            if [ -f pnpm-lock.yaml ]; then
+              pnpm install --frozen-lockfile
+              pnpm test --if-present
+              pnpm run build --if-present
+            elif [ -f yarn.lock ]; then
+              yarn install --frozen-lockfile
+              yarn test --if-present
+              yarn build --if-present
+            else
+              npm ci
+              npm test --if-present
+              npm run build --if-present
+            fi
+          else
+            echo "No package.json found. Skipping Node tests."
+          fi
+
+      - name: Safety scan
+        run: |
+          set -e
+          echo "Checking generated cluster artifacts for risky operations..."
+          # Scope to generated/ — the auto-generated manifests that actually get
+          # applied to the cluster. Scanning the whole repo produced false
+          # positives on legitimate rollback scripts (scripts/deployment/*),
+          # documentation runbooks (docs/**), and this workflow's own grep
+          # pattern (.github/**). Those legitimately contain "kubectl delete".
+          if grep -R "kubectl delete\|curl.*api.cloudflare\|CF_API_TOKEN\|cloudflare.com/client/v4" \
+            generated/ 2>/dev/null; then
+            echo "Risky text found in generated artifacts. Review before deployment."
+            exit 1
+          fi
+          echo "Safety scan passed"

@@ -56,7 +56,8 @@ export PATH="/usr/bin:/bin:/mingw64/bin:${PATH}"
 # Config
 # ---------------------------------------------------------------- #
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 cd "${REPO_ROOT}"
 
 CAPABILITIES="${CAPABILITIES:-infrastructure/security/capabilities.yaml}"

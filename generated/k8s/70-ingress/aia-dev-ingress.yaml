@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: aia-dev-ingress
+  namespace: aia-dev
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - dev.ordinoxai.com
+      secretName: aia-dev-tls
+  rules:
+    - host: dev.ordinoxai.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: aia-dev-web
+                port:
+                  number: 80

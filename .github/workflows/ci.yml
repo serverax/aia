@@ -45,6 +45,7 @@ jobs:
                  services/orchestrator_agent/tests \
                  services/compliance_agent/tests \
                  services/analyst_agent/tests \
+                 services/editor_agent/tests \
                  services/tool_sandbox/tests \
                  -m unit \
                  --cov=libs --cov=services --cov-report=xml --cov-report=term -v

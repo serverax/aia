@@ -1,13 +1,17 @@
-from typing import Optional, List
+from typing import List, Optional
+
 from pydantic import BaseModel, EmailStr
+
 
 class Token(BaseModel):
     access_token: str
     token_type: str
 
+
 class TokenData(BaseModel):
     username: Optional[str] = None
     scopes: List[str] = []
+
 
 class User(BaseModel):
     username: str
@@ -15,6 +19,7 @@ class User(BaseModel):
     full_name: Optional[str] = None
     disabled: Optional[bool] = None
     scopes: List[str] = []
+
 
 class UserInDB(User):
     hashed_password: str

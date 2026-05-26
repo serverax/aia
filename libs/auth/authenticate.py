@@ -1,6 +1,7 @@
 from typing import Optional
+
 from .models import UserInDB
-from .security import verify_password, get_password_hash
+from .security import get_password_hash, verify_password
 
 # Mock user database
 fake_users_db = {
@@ -10,7 +11,7 @@ fake_users_db = {
         "email": "admin@ordinoxai.com",
         "hashed_password": get_password_hash("synthetic-admin-secret"),
         "disabled": False,
-        "scopes": ["me", "items", "admin"]
+        "scopes": ["me", "items", "admin"],
     },
     "analyst": {
         "username": "analyst",
@@ -18,9 +19,10 @@ fake_users_db = {
         "email": "analyst@ordinoxai.com",
         "hashed_password": get_password_hash("analyst-dev-pass"),
         "disabled": False,
-        "scopes": ["me", "items"]
-    }
+        "scopes": ["me", "items"],
+    },
 }
+
 
 async def authenticate_user(username: str, password: str) -> Optional[UserInDB]:
     user_dict = fake_users_db.get(username)

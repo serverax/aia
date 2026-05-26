@@ -15,7 +15,7 @@ import uuid
 from contextlib import asynccontextmanager
 from typing import Any
 
-from fastapi import FastAPI, Depends, Security, status
+from fastapi import Depends, FastAPI, Security, status
 from fastapi.security import OAuth2PasswordRequestForm
 from opentelemetry.instrumentation.asyncpg import AsyncPGInstrumentor
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
@@ -23,10 +23,6 @@ from opentelemetry.instrumentation.redis import RedisInstrumentor
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from libs.communication.postgres_client import build_pool
-from libs.communication.redis_client import ack, build_client, consume
-from libs.communication.telemetry import init_telemetry
-from libs.llm import LLMClient, agent_loop, build_default_client
 from libs.auth import (
     Token,
     User,
@@ -34,9 +30,12 @@ from libs.auth import (
     create_access_token,
     get_current_active_user,
 )
+from libs.communication.postgres_client import build_pool
+from libs.communication.redis_client import ack, build_client, consume
+from libs.communication.telemetry import init_telemetry
+from libs.llm import LLMClient, build_default_client
 from services.orchestrator_agent.compliance_gate import ComplianceGate
 from services.orchestrator_agent.graph import build_graph
-
 from services.orchestrator_agent.state import OrchestratorState
 
 
@@ -127,7 +126,9 @@ class OrchestratorService:
             self.pg_pool = await build_pool()
         if self.compliance_gate is None and self.settings.compliance_service_url:
             self.compliance_gate = ComplianceGate(base_url=self.settings.compliance_service_url)
-            logger.info("Compliance admission gate enabled -> %s", self.settings.compliance_service_url)
+            logger.info(
+                "Compliance admission gate enabled -> %s", self.settings.compliance_service_url
+            )
         if self.settings.tools_root:
             # Imported here so the orchestrator can still run without the
             # tool_sandbox optional deps installed (e.g. minimal dev images).
@@ -283,9 +284,10 @@ async def ready() -> dict[str, Any]:
 
 @app.post("/token", response_model=Token)
 async def login_for_access_token(
-    form_data: OAuth2PasswordRequestForm = Depends()
+    form_data: OAuth2PasswordRequestForm = Depends(),
 ) -> dict[str, str]:
     from fastapi import HTTPException
+
     user = await authenticate_user(form_data.username, form_data.password)
     if not user:
         raise HTTPException(
@@ -293,16 +295,14 @@ async def login_for_access_token(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    access_token = create_access_token(
-        data={"sub": user.username, "scopes": user.scopes}
-    )
+    access_token = create_access_token(data={"sub": user.username, "scopes": user.scopes})
     return {"access_token": access_token, "token_type": "bearer"}
 
 
 @app.post("/requests")
 async def submit_request(
     payload: RequestPayload,
-    current_user: User = Security(get_current_active_user, scopes=["items"])
+    current_user: User = Security(get_current_active_user, scopes=["items"]),
 ) -> dict[str, Any]:
     """HTTP entry point — handy for curl / dashboard."""
     service: OrchestratorService = app.state.service

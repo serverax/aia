@@ -10,6 +10,8 @@ import pytest
 
 from services.orchestrator_agent.compliance_gate import ComplianceDecision, ComplianceGate
 
+pytestmark = [pytest.mark.unit]
+
 
 @pytest.mark.asyncio
 async def test_allows_when_policy_open():
@@ -64,6 +66,7 @@ async def test_fail_open_allows_on_transport_error():
 # --- Orchestrator admission-gate wiring -------------------------------------
 # Construct the service via __new__ to avoid building real Redis/OTel/LLM
 # clients; we only exercise handle_request's gate branch.
+
 
 def _bare_service(gate, graph=None):
     from services.orchestrator_agent.main import OrchestratorService, Settings

@@ -9,8 +9,12 @@ from __future__ import annotations
 
 import base64
 
+import pytest
+
 from libs.communication import AgentMessage, MessageStatus, MessageType
 from services.editor_agent.main import EditorAgent, Settings, render_markdown
+
+pytestmark = [pytest.mark.unit]
 
 
 def _incoming() -> AgentMessage:
@@ -48,7 +52,9 @@ def test_build_reply_wraps_artifact_and_completes():
     assert reply.status == MessageStatus.COMPLETED
     assert reply.to_agent == "orchestrator"
     assert reply.task_id == "task-123"
-    assert reply.metadata["in_reply_to"] == _incoming().message_id or "in_reply_to" in reply.metadata
+    assert (
+        reply.metadata["in_reply_to"] == _incoming().message_id or "in_reply_to" in reply.metadata
+    )
 
     decoded = base64.b64decode(reply.data["artifact_b64"])
     assert b"# Settlement Summary" in decoded

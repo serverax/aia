@@ -1,0 +1,131 @@
+name: AIA Dev Deploy to Kubernetes
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply_db:
+        description: "Apply Supabase/Postgres dev schema"
+        required: true
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+      apply_k8s:
+        description: "Apply Kubernetes dev manifests"
+        required: true
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+
+permissions:
+  contents: read
+
+env:
+  DEV_NS: aia-dev
+  STORAGE_NS: aia-dev-storage
+  MONITORING_NS: aia-dev-monitoring
+  SECURITY_NS: aia-dev-security
+  DEV_DOMAIN: dev.ordinoxai.com
+  PROD_DOMAIN: ordinoxai.com
+
+jobs:
+  deploy:
+    name: Deploy AIA Dev
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install kubectl
+        if: ${{ github.event.inputs.apply_k8s == 'true' }}
+        uses: azure/setup-kubectl@v4
+        with:
+          version: latest
+
+      - name: Configure kubeconfig
+        if: ${{ github.event.inputs.apply_k8s == 'true' }}
+        run: |
+          set -euo pipefail
+          if [ -z "${{ secrets.KUBE_CONFIG_B64 }}" ]; then
+            echo "Missing GitHub secret KUBE_CONFIG_B64"
+            exit 1
+          fi
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBE_CONFIG_B64 }}" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+          kubectl config current-context
+          kubectl get nodes -o wide
+
+      - name: Safety check manifests
+        run: |
+          set -euo pipefail
+
+          echo "Checking no production namespace is used..."
+          if grep -R "ordinoxai-prod\|aia-prod\|iterlaw-prod" generated/k8s 2>/dev/null; then
+            echo "Production namespace found. Refusing."
+            exit 1
+          fi
+
+          echo "Checking root production domain is not used as ingress host..."
+          if grep -R "host: ordinoxai.com" generated/k8s 2>/dev/null; then
+            echo "Root production domain found as ingress host. Refusing."
+            exit 1
+          fi
+
+          echo "Checking no delete operation exists..."
+          if grep -R "kubectl delete\|cloudflare.com/client/v4\|CF_API_TOKEN" . --exclude-dir=.git; then
+            echo "Risky operation found. Refusing."
+            exit 1
+          fi
+
+          echo "Safety check passed"
+
+      - name: Apply DB schema
+        if: ${{ github.event.inputs.apply_db == 'true' }}
+        run: |
+          set -euo pipefail
+          if [ -z "${{ secrets.SUPABASE_DB_URL_DEV }}" ]; then
+            echo "Missing GitHub secret SUPABASE_DB_URL_DEV"
+            exit 1
+          fi
+
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+          psql "${{ secrets.SUPABASE_DB_URL_DEV }}" -f generated/supabase/aia_dev_schema.sql
+
+      - name: Apply Kubernetes manifests
+        if: ${{ github.event.inputs.apply_k8s == 'true' }}
+        run: |
+          set -euo pipefail
+
+          kubectl apply -f generated/k8s/00-namespaces/namespaces.yaml
+          kubectl apply -f generated/k8s/10-storage/minio-dev.yaml
+          kubectl apply -f generated/k8s/20-llm/ollama-dev-cpu.yaml
+          kubectl apply -f generated/k8s/30-workers/aia-dev-workers.yaml
+          kubectl apply -f generated/k8s/40-backup/supabase-dev-backup-cronjob.yaml
+          kubectl apply -f generated/k8s/50-monitoring/aia-dev-monitoring-config.yaml
+          kubectl apply -f generated/k8s/60-security/network-policies-dev.yaml
+          kubectl apply -f generated/k8s/60-security/aia-dev-security-baseline.yaml
+          kubectl apply -f generated/k8s/70-ingress/aia-dev-placeholder-web.yaml
+          kubectl apply -f generated/k8s/70-ingress/aia-dev-ingress.yaml
+
+      - name: Verify deployment
+        if: ${{ github.event.inputs.apply_k8s == 'true' }}
+        run: |
+          set -euo pipefail
+
+          kubectl -n "aia-dev" rollout status deploy/aia-dev-web --timeout=180s
+          kubectl -n "aia-dev" rollout status deploy/aia-ollama-dev-cpu --timeout=240s || true
+          kubectl -n "aia-dev" rollout status deploy/aia-orchestrator-dev-worker --timeout=180s
+          kubectl -n "aia-dev" rollout status deploy/aia-rag-dev-worker --timeout=180s
+          kubectl -n "aia-dev-storage" rollout status deploy/minio-dev --timeout=240s || true
+
+          kubectl -n "aia-dev" get pods -o wide
+          kubectl -n "aia-dev-storage" get pods -o wide
+          kubectl -n "aia-dev" get svc
+          kubectl -n "aia-dev" get ingress -o wide

@@ -1,0 +1,93 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: minio-dev-root-secret
+  namespace: aia-dev-storage
+type: Opaque
+stringData:
+  MINIO_ROOT_USER: "aia_dev_minio"
+  MINIO_ROOT_PASSWORD: "16lxfqZik3+m9nWRIjjI6cS75YrZgrW+mnUUe7HkhP4="
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: minio-dev-data
+  namespace: aia-dev-storage
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 25Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minio-dev
+  namespace: aia-dev-storage
+  labels:
+    app: minio-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minio-dev
+  template:
+    metadata:
+      labels:
+        app: minio-dev
+        environment: dev
+    spec:
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: minio
+          image: quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z
+          args:
+            - server
+            - /data
+            - --console-address
+            - ":9001"
+          envFrom:
+            - secretRef:
+                name: minio-dev-root-secret
+          ports:
+            - name: s3
+              containerPort: 9000
+            - name: console
+              containerPort: 9001
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "2Gi"
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: minio-dev-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio-dev
+  namespace: aia-dev-storage
+spec:
+  selector:
+    app: minio-dev
+  ports:
+    - name: s3
+      port: 9000
+      targetPort: 9000
+    - name: console
+      port: 9001
+      targetPort: 9001

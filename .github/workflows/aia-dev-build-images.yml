@@ -1,0 +1,68 @@
+name: AIA Dev Build Images
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+      - dev
+    paths:
+      - "apps/**"
+      - "services/**"
+      - "Dockerfile"
+      - ".github/workflows/aia-dev-build-images.yml"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    name: Build available Docker images
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Detect and build images
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          OWNER_REPO="$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')"
+          SHORT_SHA="${GITHUB_SHA::7}"
+
+          build_if_exists() {
+            local name="$1"
+            local dockerfile="$2"
+            local context="$3"
+
+            if [ -f "$dockerfile" ]; then
+              echo "Building $name from $dockerfile"
+              docker build \
+                -f "$dockerfile" \
+                -t "ghcr.io/${OWNER_REPO}/${name}:dev-${SHORT_SHA}" \
+                -t "ghcr.io/${OWNER_REPO}/${name}:dev-latest" \
+                "$context"
+
+              docker push "ghcr.io/${OWNER_REPO}/${name}:dev-${SHORT_SHA}"
+              docker push "ghcr.io/${OWNER_REPO}/${name}:dev-latest"
+            else
+              echo "Skipping $name. Dockerfile not found: $dockerfile"
+            fi
+          }
+
+          build_if_exists "aia-web" "apps/web/Dockerfile" "."
+          build_if_exists "aia-api" "apps/api/Dockerfile" "."
+          build_if_exists "aia-orchestrator-worker" "services/orchestrator/Dockerfile" "."
+          build_if_exists "aia-rag-worker" "services/rag/Dockerfile" "."
+          build_if_exists "aia-search-worker" "services/search/Dockerfile" "."

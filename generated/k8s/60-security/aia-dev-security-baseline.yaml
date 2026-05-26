@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aia-dev-security-baseline
+  namespace: aia-dev-security
+data:
+  policy.md: |
+    Security requirements:
+    - No production DNS mutation from automation
+    - No root ordinoxai.com changes from dev scripts
+    - No secret values committed to Git
+    - No :latest images in production
+    - Containers must drop Linux capabilities
+    - No privileged containers
+    - Use NetworkPolicy between services
+    - Scan containers with Trivy before production
+    - Use sealed-secrets, Vault, or external secret operator for real secrets
+    - Backups must be encrypted
+    - Access logs must not expose CV contents or personal data

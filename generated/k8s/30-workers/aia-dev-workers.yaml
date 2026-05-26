@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aia-orchestrator-dev-worker
+  namespace: aia-dev
+  labels:
+    app: aia-orchestrator-dev-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aia-orchestrator-dev-worker
+  template:
+    metadata:
+      labels:
+        app: aia-orchestrator-dev-worker
+        environment: dev
+    spec:
+      containers:
+        - name: worker
+          image: nginx:1.27.5-alpine
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "AIA orchestrator worker placeholder running";
+              while true; do sleep 3600; done
+          env:
+            - name: ENVIRONMENT
+              value: "dev"
+            - name: OLLAMA_BASE_URL
+              value: "http://aia-ollama-dev-cpu.aia-dev.svc.cluster.local:11434"
+            - name: STORAGE_ENDPOINT
+              value: "http://minio-dev.aia-dev-storage.svc.cluster.local:9000"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aia-rag-dev-worker
+  namespace: aia-dev
+  labels:
+    app: aia-rag-dev-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aia-rag-dev-worker
+  template:
+    metadata:
+      labels:
+        app: aia-rag-dev-worker
+        environment: dev
+    spec:
+      containers:
+        - name: worker
+          image: nginx:1.27.5-alpine
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "AIA RAG worker placeholder running";
+              while true; do sleep 3600; done
+          env:
+            - name: ENVIRONMENT
+              value: "dev"
+            - name: STORAGE_ENDPOINT
+              value: "http://minio-dev.aia-dev-storage.svc.cluster.local:9000"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL

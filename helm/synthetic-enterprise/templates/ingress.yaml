@@ -1,0 +1,40 @@
+{{- if .Values.ingress.enabled }}
+{{- $g := .Values.global -}}
+{{- $d := .Values.defaults -}}
+{{- $release := .Release.Name -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $release }}-ingress
+  namespace: {{ $g.namespace }}
+  labels:
+    app.kubernetes.io/instance: {{ $release }}
+    app.kubernetes.io/part-of: synthetic-enterprise
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          {{- range $name, $svc := .Values.services }}
+          {{- if $svc.httpRoutable }}
+          - path: {{ $svc.ingressPath | default (printf "/%s" $name) }}
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $release }}-{{ $name }}
+                port:
+                  number: {{ $svc.port | default $d.port }}
+          {{- end }}
+          {{- end }}
+  {{- if .Values.ingress.tls }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host }}
+      secretName: {{ $release }}-tls
+  {{- end }}
+{{- end }}

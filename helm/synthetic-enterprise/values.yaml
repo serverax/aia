@@ -1,0 +1,76 @@
+global:
+  namespace: aia-dev
+  imageRegistry: ghcr.io/ordinoxai
+  imageTag: latest
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets: []
+
+# Defaults applied to every service unless overridden in `services` below.
+defaults:
+  replicas: 1
+  port: 8000
+  healthPath: /health
+  readyPath: /ready
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+# One entry per deployable service. Each renders a Deployment + Service +
+# ServiceAccount. `httpRoutable: true` also adds an Ingress path.
+#
+# NOTE: tool_sandbox is intentionally absent — it is an in-process library
+# (WASM executor/registry/verifier) bundled into the orchestrator and analyst
+# images, not a standalone service.
+services:
+  orchestrator:
+    image: orchestrator-agent
+    replicas: 2
+    httpRoutable: true
+    ingressPath: /api/orchestrator
+  echo:
+    image: echo-agent
+  analyst:
+    image: analyst-agent
+    replicas: 2
+    resources:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: "1"
+        memory: 1500Mi
+  compliance-agent:
+    image: compliance-agent
+  compliance-service:
+    image: compliance-service
+    httpRoutable: true
+    ingressPath: /compliance
+  editor:
+    image: editor-agent
+  realtime-collab:
+    image: realtime-collab
+    httpRoutable: true
+    ingressPath: /ws
+  rag-system:
+    image: rag-system
+    # rag_service exposes /rag/status rather than /health (TODO: add /health).
+    healthPath: /rag/status
+    readyPath: /rag/status
+    resources:
+      requests:
+        cpu: 250m
+        memory: 1Gi
+      limits:
+        cpu: "2"
+        memory: 3Gi
+
+ingress:
+  enabled: true
+  className: nginx
+  host: aia-dev.local
+  tls: false
+  annotations: {}

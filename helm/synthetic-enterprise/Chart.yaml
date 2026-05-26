@@ -1,0 +1,10 @@
+apiVersion: v2
+name: synthetic-enterprise
+description: |
+  Synthetic Enterprise / OrdinoxAI multi-agent platform — orchestrator and
+  specialist agents (analyst, editor, compliance, RAG, realtime collaboration).
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+maintainers:
+  - name: OrdinoxAI

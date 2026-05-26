@@ -38,6 +38,9 @@ pyyaml==6.0.2
 passlib[bcrypt]==1.7.4
 python-jose[cryptography]==3.3.0
 email-validator==2.2.0
+# Required by the orchestrator /token form-login (OAuth2PasswordRequestForm).
+# Added during integration: the auth merge introduced the endpoint without it.
+python-multipart==0.0.20
 
 # Security floor pins for transitive deps (Sprint 6 audit, 2026-05-21).
 # These packages are NOT directly imported by our code, but are pulled in

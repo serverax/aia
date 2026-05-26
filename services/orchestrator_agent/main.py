@@ -23,13 +23,7 @@ from opentelemetry.instrumentation.redis import RedisInstrumentor
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from libs.auth import (
-    Token,
-    User,
-    authenticate_user,
-    create_access_token,
-    get_current_active_user,
-)
+from libs.auth import Token, User, authenticate_user, create_access_token, get_current_active_user
 from libs.communication.postgres_client import build_pool
 from libs.communication.redis_client import ack, build_client, consume
 from libs.communication.telemetry import init_telemetry

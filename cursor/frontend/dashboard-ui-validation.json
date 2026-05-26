@@ -1,0 +1,29 @@
+[
+  {
+    "browser": "chromium",
+    "available": true,
+    "load_ms": 1348.46,
+    "overview_visible": true,
+    "activity_visible": true,
+    "metrics_visible": true,
+    "mobile_overflow": false
+  },
+  {
+    "browser": "firefox",
+    "available": true,
+    "load_ms": 12686.17,
+    "overview_visible": true,
+    "activity_visible": true,
+    "metrics_visible": true,
+    "mobile_overflow": false
+  },
+  {
+    "browser": "webkit",
+    "available": true,
+    "load_ms": 3961.78,
+    "overview_visible": true,
+    "activity_visible": true,
+    "metrics_visible": true,
+    "mobile_overflow": false
+  }
+]

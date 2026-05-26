@@ -1,0 +1,11 @@
+# BFG / git-filter-repo replacement rules — literal secret strings to redact.
+# Format: each line is  LITERAL==>REPLACEMENT  (BFG --replace-text syntax).
+# DO NOT COMMIT real additional secrets here. Add lines as the audit finds more.
+#
+# Usage (human-authorized, on a FRESH MIRROR clone — see runbook):
+#   bfg --replace-text bfg-replacements.txt my-repo-mirror.git
+#
+# NOTE: BFG redacts string CONTENT. Whole-file secrets (Talos PKI, kubeconfig)
+# are removed by PATH instead — see the runbook's filter-repo --invert-paths step.
+
+dev-token-12345==>***REDACTED-DEV-TOKEN***

@@ -15,22 +15,50 @@ global:
 #   libs/communication/postgres_client.py -> POSTGRES_HOST/PORT/DB/USER/PASSWORD
 #   libs/communication/config.py          -> QDRANT_HOST/PORT, ANTHROPIC_API_KEY
 #   services/orchestrator_agent/main.py   -> COMPLIANCE_SERVICE_URL
-# NOTE: the endpoints below are PLACEHOLDERS — set them to your cluster's real
-# Redis/Postgres/Qdrant service DNS. This chart does NOT deploy those backends.
 config:
-  redisHost: redis.aia-dev.svc.cluster.local
+  # Redis/Qdrant: when dependencies.{redis,qdrant}.enabled=true (default), the
+  # chart deploys dedicated in-namespace services and REDIS_HOST/QDRANT_HOST are
+  # DERIVED from the release name (these *Host fields are then ignored). Set
+  # them only if you disable the dependency and point at an existing service.
+  # Do NOT point Redis at another app's instance (e.g. Sakina's).
+  redisHost: ""
   redisPort: "6379"
-  postgresHost: postgres.aia-dev.svc.cluster.local
-  postgresPort: "5432"
-  postgresDb: synthetic        # DB that holds audit_log (infrastructure/k3s/postgres-init.sql)
-  postgresUser: synthetic
-  qdrantHost: qdrant.aia-dev.svc.cluster.local
+  qdrantHost: ""
   qdrantPort: "6333"
-  anthropicModel: claude-sonnet-4-20250514   # set to your chosen model
+  postgresHost: supabase-supabase-db.supabase.svc.cluster.local   # confirmed (supabase ns)
+  postgresPort: "5432"
+  postgresDb: synthetic        # TODO confirm: DB holding audit_log (default from postgres_client)
+  postgresUser: synthetic      # TODO confirm: role matching `postgres-password`
   logLevel: INFO
+  # LLM backend. Ollama is primary for dev; Anthropic is optional fallback.
+  # !! CODE GAP: libs/llm currently has NO Ollama client and build_default_client
+  # requires ANTHROPIC_API_KEY. These vars are wired but INERT until an Ollama
+  # client is added to libs/llm. Tracked separately — do not assume Ollama works
+  # from config alone.
+  llmProvider: ollama            # ollama | anthropic
+  ollamaBaseUrl: http://aia-ollama-dev-cpu.aia-dev.svc.cluster.local:11434
+  ollamaModel: llama3.1
+  anthropicModel: claude-sonnet-4-20250514
   # true -> COMPLIANCE_SERVICE_URL points at the in-cluster compliance-service
   # so the orchestrator kill-switch admission gate is ACTIVE.
   complianceGateEnabled: true
+
+# Dev-grade in-namespace dependencies the chart creates so AIA has its OWN
+# Redis/Qdrant (never borrow Sakina's). Single-replica, emptyDir (NO
+# persistence) — acceptable for dev only; production must use operators/PVCs.
+dependencies:
+  redis:
+    enabled: true
+    image: redis:7-alpine
+    port: 6379
+  qdrant:
+    enabled: true
+    image: qdrant/qdrant:v1.12.4
+    port: 6333
+
+# With Ollama primary, ANTHROPIC_API_KEY is optional; the secretKeyRef is
+# marked optional so a missing/empty key never blocks pod start.
+anthropicRequired: false
 
 # Defaults applied to every service unless overridden in `services` below.
 defaults:

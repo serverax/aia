@@ -1,5 +1,14 @@
 {{- $g := .Values.global -}}
 {{- $c := .Values.config -}}
+{{- $dep := .Values.dependencies -}}
+{{- $redisHost := $c.redisHost -}}
+{{- if $dep.redis.enabled -}}
+{{- $redisHost = printf "%s-redis.%s.svc.cluster.local" .Release.Name $g.namespace -}}
+{{- end -}}
+{{- $qdrantHost := $c.qdrantHost -}}
+{{- if $dep.qdrant.enabled -}}
+{{- $qdrantHost = printf "%s-qdrant.%s.svc.cluster.local" .Release.Name $g.namespace -}}
+{{- end -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -10,16 +19,20 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 data:
-  REDIS_HOST: {{ $c.redisHost | quote }}
+  REDIS_HOST: {{ $redisHost | quote }}
   REDIS_PORT: {{ $c.redisPort | quote }}
+  QDRANT_HOST: {{ $qdrantHost | quote }}
+  QDRANT_PORT: {{ $c.qdrantPort | quote }}
   POSTGRES_HOST: {{ $c.postgresHost | quote }}
   POSTGRES_PORT: {{ $c.postgresPort | quote }}
   POSTGRES_DB: {{ $c.postgresDb | quote }}
   POSTGRES_USER: {{ $c.postgresUser | quote }}
-  QDRANT_HOST: {{ $c.qdrantHost | quote }}
-  QDRANT_PORT: {{ $c.qdrantPort | quote }}
-  ANTHROPIC_MODEL: {{ $c.anthropicModel | quote }}
   LOG_LEVEL: {{ $c.logLevel | quote }}
+  # LLM backend (Ollama primary for dev; inert until libs/llm gains an Ollama client)
+  LLM_PROVIDER: {{ $c.llmProvider | quote }}
+  OLLAMA_BASE_URL: {{ $c.ollamaBaseUrl | quote }}
+  OLLAMA_MODEL: {{ $c.ollamaModel | quote }}
+  ANTHROPIC_MODEL: {{ $c.anthropicModel | quote }}
   {{- if $c.complianceGateEnabled }}
   COMPLIANCE_SERVICE_URL: "http://{{ .Release.Name }}-compliance-service:8000"
   {{- else }}

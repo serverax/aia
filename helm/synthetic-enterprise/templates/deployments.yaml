@@ -82,11 +82,13 @@ spec:
                 secretKeyRef:
                   name: {{ $g.externalSecret }}
                   key: anthropic-api-key
+                  optional: {{ not $.Values.anthropicRequired }}
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ $g.externalSecret }}
                   key: redis-password
+                  optional: true
             {{- end }}
           {{- end }}
           securityContext:

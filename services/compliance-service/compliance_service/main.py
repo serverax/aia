@@ -9,8 +9,10 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from compliance_service.kill_switch import KillSwitchPolicy, KillSwitchState
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Security
 from pydantic import BaseModel, Field
+
+from libs.auth import User, get_current_active_user
 
 
 class KillSwitchRequest(BaseModel):
@@ -63,7 +65,12 @@ async def get_kill_switch() -> dict[str, object]:
 
 
 @app.put("/compliance/kill-switch")
-async def put_kill_switch(request: KillSwitchRequest) -> dict[str, object]:
+async def put_kill_switch(
+    request: KillSwitchRequest,
+    _user: User = Security(get_current_active_user, scopes=["admin"]),
+) -> dict[str, object]:
+    # Mutating the kill-switch requires an authenticated admin (scope "admin").
+    # GET and /compliance/evaluate stay open so the orchestrator gate can read.
     if request.global_enabled and not request.reason.strip():
         raise HTTPException(
             status_code=400, detail="reason is required when enabling global kill switch"

@@ -219,7 +219,30 @@ class ApiOrchestratorClient implements IOrchestratorClient {
 
 const mockClient = new MockOrchestratorClient()
 const apiClient = new ApiOrchestratorClient()
-const useMock = import.meta.env.VITE_ORCHESTRATOR_USE_MOCK !== 'false'
+
+// Mocks are OFF by default. Enable ONLY for local dev with VITE_ENABLE_MOCKS=true
+// (legacy VITE_ORCHESTRATOR_USE_MOCK=true is still honoured). A production build
+// must NEVER serve synthetic data as real, so we fail loudly instead.
+const mocksRequested =
+  import.meta.env.VITE_ENABLE_MOCKS === 'true' ||
+  import.meta.env.VITE_ORCHESTRATOR_USE_MOCK === 'true'
+
+if (mocksRequested && import.meta.env.PROD) {
+  throw new Error(
+    '[AIA] Mock mode is enabled in a PRODUCTION build. Refusing to serve fake ' +
+      'dashboard/approval data as real. Unset VITE_ENABLE_MOCKS for production.',
+  )
+}
+
+export const isMockEnabled = mocksRequested && !import.meta.env.PROD
+if (isMockEnabled) {
+  // Surfaced in the UI by <MockModeBanner/>; logged for dev visibility.
+  console.warn(
+    '[AIA] MOCK MODE ENABLED — dashboard/approvals show synthetic data, not the real backend.',
+  )
+}
+
+const useMock = isMockEnabled
 
 export const orchestratorClient: IOrchestratorClient = useMock
   ? {

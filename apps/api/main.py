@@ -14,8 +14,10 @@ from __future__ import annotations
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Security
 from fastapi.middleware.cors import CORSMiddleware
+
+from libs.auth import get_current_active_user
 
 from . import schemas
 from .config import get_settings
@@ -126,10 +128,15 @@ def create_app() -> FastAPI:
             allow_headers=["*"],
         )
 
+    # Hiring data (companies/users/jobs/candidates/applications/waitlist) handles
+    # PII — every CRUD + scoring route requires an authenticated user (scope
+    # "items"). Health probes and the metadata root stay public.
+    require_user = Security(get_current_active_user, scopes=["items"])
+
     app.include_router(health.router)
     for router in _build_crud_routers():
-        app.include_router(router)
-    app.include_router(applications.router)
+        app.include_router(router, dependencies=[require_user])
+    app.include_router(applications.router, dependencies=[require_user])
 
     @app.get("/", tags=["meta"], summary="Service metadata")
     async def root() -> dict[str, str]:

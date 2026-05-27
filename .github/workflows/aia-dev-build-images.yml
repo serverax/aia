@@ -1,14 +1,14 @@
 name: AIA Dev Build Images
 
 # Builds and pushes the AIA service images to:
-#   ghcr.io/ordinoxai/<service>:<tag>
+#   ghcr.io/serverax/<service>:<tag>
 # Versioned tags only (no :latest). Trigger by pushing a v* tag, or run
 # manually via workflow_dispatch with an explicit tag (e.g. v0.1.0).
 #
-# AUTH NOTE: pushing to the `ordinoxai` package namespace (not the repo owner
-# `serverax`) requires a PAT with `write:packages` that can publish to that
-# namespace. Provide it as repo secrets GHCR_USERNAME + GHCR_TOKEN. The
-# built-in GITHUB_TOKEN can only push to ghcr.io/serverax/* and will 403 here.
+# AUTH: the namespace is the repo owner (serverax), so the built-in GITHUB_TOKEN
+# (permissions: packages: write below) can push — no PAT required. The optional
+# GHCR_USERNAME/GHCR_TOKEN secrets are only needed to push to a different
+# namespace.
 
 on:
   workflow_dispatch:
@@ -27,7 +27,7 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAMESPACE: ordinoxai
+  IMAGE_NAMESPACE: serverax
 
 jobs:
   build:

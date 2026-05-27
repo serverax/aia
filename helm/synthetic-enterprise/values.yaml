@@ -1,6 +1,6 @@
 global:
   namespace: aia-dev
-  imageRegistry: ghcr.io/ordinoxai
+  imageRegistry: ghcr.io/serverax
   imageTag: v0.1.0
   imagePullPolicy: IfNotPresent
   imagePullSecrets: []
@@ -31,10 +31,9 @@ config:
   postgresUser: postgres       # confirmed (role matching `postgres-password`)
   logLevel: INFO
   # LLM backend. Ollama is primary for dev; Anthropic is optional fallback.
-  # !! CODE GAP: libs/llm currently has NO Ollama client and build_default_client
-  # requires ANTHROPIC_API_KEY. These vars are wired but INERT until an Ollama
-  # client is added to libs/llm. Tracked separately — do not assume Ollama works
-  # from config alone.
+  # libs/llm.OllamaClient reads these vars; build_default_client() selects it
+  # when LLM_PROVIDER=ollama (no Anthropic key required). Analyst tool-use is
+  # gated by ollamaSupportsTools below.
   llmProvider: ollama            # ollama | anthropic
   ollamaBaseUrl: http://aia-ollama-dev-cpu.aia-dev.svc.cluster.local:11434
   ollamaModel: llama3.1

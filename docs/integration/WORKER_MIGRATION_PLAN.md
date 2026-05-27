@@ -31,7 +31,7 @@ kubectl get deploy -n aia-dev    # confirm 0/0
 ```
 
 ## 2. Deploy the Helm release
-Prereqs: `aia-secrets` exists; images `ghcr.io/ordinoxai/<svc>:v0.1.0` pushed;
+Prereqs: `aia-secrets` exists; images `ghcr.io/serverax/<svc>:v0.1.0` pushed;
 backend values confirmed.
 ```bash
 helm upgrade --install synthetic-enterprise helm/synthetic-enterprise -n aia-dev \

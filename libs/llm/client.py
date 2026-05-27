@@ -163,14 +163,143 @@ class StubLLMClient:
         return self._tool_responses.pop(0)
 
 
-def build_default_client() -> LLMClient:
-    """Return an Anthropic client. Raises if ANTHROPIC_API_KEY is missing."""
-    if "ANTHROPIC_API_KEY" not in os.environ:
-        raise RuntimeError(
-            "ANTHROPIC_API_KEY is not set; cannot build AnthropicClient. "
-            "Set it in .env or inject a StubLLMClient for testing."
+class OllamaToolUseUnsupportedError(RuntimeError):
+    """Raised when tool-use is requested but the Ollama model isn't tool-capable.
+
+    Lets the analyst's `chat_with_tools` path fail *loudly and safely* on a
+    non-tool model instead of silently returning text that ignores the tools.
+    Non-tool flows (`chat_json`, or `chat_with_tools` with an empty tool list)
+    are unaffected.
+    """
+
+
+class OllamaClient:
+    """LLM client backed by an in-cluster Ollama server (native /api/chat).
+
+    Reads `OLLAMA_BASE_URL` and `OLLAMA_MODEL`. Never reads Anthropic creds, so
+    the dev path works with no `ANTHROPIC_API_KEY`. httpx is imported lazily so
+    importing this module stays cheap and offline.
+    """
+
+    def __init__(
+        self,
+        base_url: str | None = None,
+        model: str | None = None,
+        *,
+        supports_tools: bool | None = None,
+        timeout: float = 60.0,
+    ) -> None:
+        self._base_url = (
+            base_url or os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
+        ).rstrip("/")
+        self._model = model or os.environ.get("OLLAMA_MODEL", "llama3.1")
+        if supports_tools is None:
+            supports_tools = os.environ.get("OLLAMA_SUPPORTS_TOOLS", "false").strip().lower() in (
+                "1",
+                "true",
+                "yes",
+            )
+        self._supports_tools = supports_tools
+        self._timeout = timeout
+        # base_url/model are not secrets; no credentials are ever logged.
+        logger.info(
+            "OllamaClient configured (base_url=%s, model=%s, tools=%s)",
+            self._base_url,
+            self._model,
+            self._supports_tools,
         )
-    return AnthropicClient()
+
+    async def _post(self, path: str, payload: dict[str, Any]) -> dict[str, Any]:
+        import httpx
+
+        async with httpx.AsyncClient(timeout=self._timeout) as client:
+            resp = await client.post(f"{self._base_url}{path}", json=payload)
+            resp.raise_for_status()
+            return resp.json()
+
+    async def chat_json(self, prompt: str) -> dict[str, Any]:
+        data = await self._post(
+            "/api/chat",
+            {
+                "model": self._model,
+                "messages": [{"role": "user", "content": prompt}],
+                "format": "json",
+                "stream": False,
+                "options": {"temperature": 0},
+            },
+        )
+        content = data.get("message", {}).get("content", "")
+        return _parse_json(content)
+
+    async def chat_with_tools(
+        self,
+        messages: list[dict[str, Any]],
+        tools: list[dict[str, Any]],
+        *,
+        system: str | None = None,
+        max_tokens: int = 4096,
+    ):
+        from libs.llm.tools import AssistantResponse, TextBlock, ToolUseBlock
+
+        if tools and not self._supports_tools:
+            raise OllamaToolUseUnsupportedError(
+                f"tool-use requested but Ollama model {self._model!r} is not configured "
+                "as tool-capable. Set OLLAMA_SUPPORTS_TOOLS=true with a tool-capable model, "
+                "or route tool-using agents to an Anthropic fallback."
+            )
+
+        msgs = list(messages)
+        if system:
+            msgs = [{"role": "system", "content": system}, *msgs]
+        payload: dict[str, Any] = {
+            "model": self._model,
+            "messages": msgs,
+            "stream": False,
+            "options": {"temperature": 0},
+        }
+        if tools:
+            payload["tools"] = tools
+
+        data = await self._post("/api/chat", payload)
+        msg = data.get("message", {})
+        blocks: list[TextBlock | ToolUseBlock] = []
+        for tc in msg.get("tool_calls") or []:
+            fn = tc.get("function", {})
+            blocks.append(
+                ToolUseBlock(
+                    id=tc.get("id") or fn.get("name", ""),
+                    name=fn.get("name", ""),
+                    input=fn.get("arguments", {}) or {},
+                )
+            )
+        text = msg.get("content") or ""
+        if text:
+            blocks.append(TextBlock(text=text))
+        stop_reason = "tool_use" if any(isinstance(b, ToolUseBlock) for b in blocks) else "end_turn"
+        return AssistantResponse(blocks=blocks, stop_reason=stop_reason)
+
+
+def build_default_client() -> LLMClient:
+    """Build the LLM client selected by `LLM_PROVIDER`.
+
+    - `ollama`   -> `OllamaClient` (reads OLLAMA_BASE_URL/OLLAMA_MODEL; no
+      Anthropic key required — the dev default).
+    - `anthropic` (also the implicit default when LLM_PROVIDER is unset, for
+      backward compatibility) -> `AnthropicClient`; raises if ANTHROPIC_API_KEY
+      is missing.
+    - anything else -> a clear error.
+    """
+    provider = os.environ.get("LLM_PROVIDER", "anthropic").strip().lower()
+    if provider == "ollama":
+        return OllamaClient()
+    if provider == "anthropic":
+        if "ANTHROPIC_API_KEY" not in os.environ:
+            raise RuntimeError(
+                "LLM_PROVIDER=anthropic (or unset default) but ANTHROPIC_API_KEY is not set. "
+                "Set LLM_PROVIDER=ollama for the dev path, or provide ANTHROPIC_API_KEY."
+            )
+        return AnthropicClient()
+    raise RuntimeError(f"Unsupported LLM_PROVIDER={provider!r}; expected 'ollama' or 'anthropic'.")
 
 
 def _parse_json(text: str) -> dict[str, Any]:

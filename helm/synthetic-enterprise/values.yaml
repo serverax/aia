@@ -27,8 +27,8 @@ config:
   qdrantPort: "6333"
   postgresHost: supabase-supabase-db.supabase.svc.cluster.local   # confirmed (supabase ns)
   postgresPort: "5432"
-  postgresDb: synthetic        # TODO confirm: DB holding audit_log (default from postgres_client)
-  postgresUser: synthetic      # TODO confirm: role matching `postgres-password`
+  postgresDb: postgres         # confirmed (supabase default DB)
+  postgresUser: postgres       # confirmed (role matching `postgres-password`)
   logLevel: INFO
   # LLM backend. Ollama is primary for dev; Anthropic is optional fallback.
   # !! CODE GAP: libs/llm currently has NO Ollama client and build_default_client

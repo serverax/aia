@@ -32,6 +32,7 @@ data:
   LLM_PROVIDER: {{ $c.llmProvider | quote }}
   OLLAMA_BASE_URL: {{ $c.ollamaBaseUrl | quote }}
   OLLAMA_MODEL: {{ $c.ollamaModel | quote }}
+  OLLAMA_SUPPORTS_TOOLS: {{ $c.ollamaSupportsTools | quote }}
   ANTHROPIC_MODEL: {{ $c.anthropicModel | quote }}
   {{- if $c.complianceGateEnabled }}
   COMPLIANCE_SERVICE_URL: "http://{{ .Release.Name }}-compliance-service:8000"

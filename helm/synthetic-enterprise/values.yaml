@@ -38,6 +38,10 @@ config:
   llmProvider: ollama            # ollama | anthropic
   ollamaBaseUrl: http://aia-ollama-dev-cpu.aia-dev.svc.cluster.local:11434
   ollamaModel: llama3.1
+  # Analyst tool-use (chat_with_tools). false -> tool-use raises a clear error
+  # (orchestrator chat_json still works). llama3.1 supports tools, so flip this
+  # true once the analyst-on-Ollama tool path is verified against live Ollama.
+  ollamaSupportsTools: false
   anthropicModel: claude-sonnet-4-20250514
   # true -> COMPLIANCE_SERVICE_URL points at the in-cluster compliance-service
   # so the orchestrator kill-switch admission gate is ACTIVE.

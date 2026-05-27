@@ -8,6 +8,8 @@
 {{- $healthPath := $svc.healthPath | default $d.healthPath -}}
 {{- $readyPath := $svc.readyPath | default $d.readyPath -}}
 {{- $resources := $svc.resources | default $d.resources -}}
+{{- $mc := $svc.modelCache | default dict -}}
+{{- $hasModelCache := $mc.enabled | default false -}}
 {{- $ctx := dict "name" $name "release" $release "managedBy" $managedBy }}
 ---
 apiVersion: v1
@@ -59,8 +61,17 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ $release }}-config
-          {{- if $g.externalSecret }}
+          {{- if or $g.externalSecret $hasModelCache }}
           env:
+            {{- if $hasModelCache }}
+            - name: HF_HOME
+              value: "{{ $mc.path }}/hf"
+            - name: TRANSFORMERS_CACHE
+              value: "{{ $mc.path }}/hf"
+            - name: SENTENCE_TRANSFORMERS_HOME
+              value: "{{ $mc.path }}/st"
+            {{- end }}
+            {{- if $g.externalSecret }}
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -76,6 +87,7 @@ spec:
                 secretKeyRef:
                   name: {{ $g.externalSecret }}
                   key: redis-password
+            {{- end }}
           {{- end }}
           securityContext:
             allowPrivilegeEscalation: false
@@ -104,9 +116,20 @@ spec:
           volumeMounts:
             - name: tmp
               mountPath: /tmp
+            {{- if $hasModelCache }}
+            - name: model-cache
+              mountPath: {{ $mc.path }}
+            {{- end }}
       volumes:
         - name: tmp
           emptyDir: {}
+        {{- if $hasModelCache }}
+        - name: model-cache
+          emptyDir:
+            {{- if $mc.sizeLimit }}
+            sizeLimit: {{ $mc.sizeLimit }}
+            {{- end }}
+        {{- end }}
 ---
 apiVersion: v1
 kind: Service

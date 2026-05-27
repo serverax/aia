@@ -87,6 +87,14 @@ services:
     # rag_service exposes /rag/status rather than /health (TODO: add /health).
     healthPath: /rag/status
     readyPath: /rag/status
+    # sentence-transformers downloads models at runtime; with a read-only root
+    # FS it must write to a mounted volume. This adds a writable emptyDir and
+    # points HF_HOME/TRANSFORMERS_CACHE/SENTENCE_TRANSFORMERS_HOME at it.
+    # (Better long-term: bake the model into the image and drop this.)
+    modelCache:
+      enabled: true
+      path: /cache
+      sizeLimit: 5Gi
     resources:
       requests:
         cpu: 250m
@@ -98,6 +106,10 @@ services:
 ingress:
   enabled: true
   className: nginx
-  host: aia-dev.local
+  # AIA backend API surface. Root ordinoxai.com is RESERVED for the landing
+  # page and must never be used here (the chart fails the render if you try).
+  # The web dashboard (aia.ordinoxai.com) is served by the separate aia-dev-web
+  # deployment, not this chart. No public cutover until DNS is pointed here.
+  host: api-aia.ordinoxai.com
   tls: false
   annotations: {}

@@ -2,6 +2,9 @@
 {{- $g := .Values.global -}}
 {{- $d := .Values.defaults -}}
 {{- $release := .Release.Name -}}
+{{- if or (eq .Values.ingress.host "ordinoxai.com") (eq .Values.ingress.host "www.ordinoxai.com") -}}
+{{- fail "ingress.host must NOT be the root ordinoxai.com (reserved for the landing page) — use aia.ordinoxai.com / api-aia.ordinoxai.com" -}}
+{{- end -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:

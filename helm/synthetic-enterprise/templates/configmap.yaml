@@ -1,0 +1,27 @@
+{{- $g := .Values.global -}}
+{{- $c := .Values.config -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-config
+  namespace: {{ $g.namespace }}
+  labels:
+    app.kubernetes.io/part-of: synthetic-enterprise
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+data:
+  REDIS_HOST: {{ $c.redisHost | quote }}
+  REDIS_PORT: {{ $c.redisPort | quote }}
+  POSTGRES_HOST: {{ $c.postgresHost | quote }}
+  POSTGRES_PORT: {{ $c.postgresPort | quote }}
+  POSTGRES_DB: {{ $c.postgresDb | quote }}
+  POSTGRES_USER: {{ $c.postgresUser | quote }}
+  QDRANT_HOST: {{ $c.qdrantHost | quote }}
+  QDRANT_PORT: {{ $c.qdrantPort | quote }}
+  ANTHROPIC_MODEL: {{ $c.anthropicModel | quote }}
+  LOG_LEVEL: {{ $c.logLevel | quote }}
+  {{- if $c.complianceGateEnabled }}
+  COMPLIANCE_SERVICE_URL: "http://{{ .Release.Name }}-compliance-service:8000"
+  {{- else }}
+  COMPLIANCE_SERVICE_URL: ""
+  {{- end }}

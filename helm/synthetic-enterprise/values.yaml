@@ -1,9 +1,36 @@
 global:
   namespace: aia-dev
   imageRegistry: ghcr.io/ordinoxai
-  imageTag: latest
+  imageTag: v0.1.0
   imagePullPolicy: IfNotPresent
   imagePullSecrets: []
+  # External K8s Secret (created during secret rotation) supplying sensitive
+  # env via secretKeyRef. Required keys: postgres-password, anthropic-api-key,
+  # redis-password. Set to "" to disable secret injection (dev/stub only).
+  externalSecret: aia-secrets
+
+# Non-secret runtime config injected into every pod via a ConfigMap (envFrom).
+# Env var NAMES are grounded in the code that reads them:
+#   libs/communication/redis_client.py    -> REDIS_HOST / REDIS_PORT / REDIS_PASSWORD
+#   libs/communication/postgres_client.py -> POSTGRES_HOST/PORT/DB/USER/PASSWORD
+#   libs/communication/config.py          -> QDRANT_HOST/PORT, ANTHROPIC_API_KEY
+#   services/orchestrator_agent/main.py   -> COMPLIANCE_SERVICE_URL
+# NOTE: the endpoints below are PLACEHOLDERS — set them to your cluster's real
+# Redis/Postgres/Qdrant service DNS. This chart does NOT deploy those backends.
+config:
+  redisHost: redis.aia-dev.svc.cluster.local
+  redisPort: "6379"
+  postgresHost: postgres.aia-dev.svc.cluster.local
+  postgresPort: "5432"
+  postgresDb: synthetic        # DB that holds audit_log (infrastructure/k3s/postgres-init.sql)
+  postgresUser: synthetic
+  qdrantHost: qdrant.aia-dev.svc.cluster.local
+  qdrantPort: "6333"
+  anthropicModel: claude-sonnet-4-20250514   # set to your chosen model
+  logLevel: INFO
+  # true -> COMPLIANCE_SERVICE_URL points at the in-cluster compliance-service
+  # so the orchestrator kill-switch admission gate is ACTIVE.
+  complianceGateEnabled: true
 
 # Defaults applied to every service unless overridden in `services` below.
 defaults:

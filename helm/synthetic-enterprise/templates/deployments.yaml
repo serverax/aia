@@ -56,6 +56,27 @@ spec:
           ports:
             - name: http
               containerPort: {{ $port }}
+          envFrom:
+            - configMapRef:
+                name: {{ $release }}-config
+          {{- if $g.externalSecret }}
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $g.externalSecret }}
+                  key: postgres-password
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $g.externalSecret }}
+                  key: anthropic-api-key
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $g.externalSecret }}
+                  key: redis-password
+          {{- end }}
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true

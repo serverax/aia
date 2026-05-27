@@ -5,10 +5,11 @@ name: AIA Dev Build Images
 # Versioned tags only (no :latest). Trigger by pushing a v* tag, or run
 # manually via workflow_dispatch with an explicit tag (e.g. v0.1.0).
 #
-# AUTH: the namespace is the repo owner (serverax), so the built-in GITHUB_TOKEN
-# (permissions: packages: write below) can push — no PAT required. The optional
-# GHCR_USERNAME/GHCR_TOKEN secrets are only needed to push to a different
-# namespace.
+# AUTH: GITHUB_TOKEN was DENIED pushing to ghcr.io/serverax/* ("token does not
+# match expected scopes" — observed in run 26503671827), so a PAT is required:
+#   set repo secrets GHCR_USERNAME=serverax and
+#   GHCR_TOKEN=<classic PAT with write:packages>.
+# The login step falls back to GITHUB_TOKEN when those are unset (which fails).
 
 on:
   workflow_dispatch:

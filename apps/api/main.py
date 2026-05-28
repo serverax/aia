@@ -17,7 +17,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Security
 from fastapi.middleware.cors import CORSMiddleware
 
-from libs.auth import get_current_active_user
+from libs.auth import assert_auth_safe_for_production, get_current_active_user
 
 from . import schemas
 from .config import get_settings
@@ -86,6 +86,10 @@ def _build_crud_routers():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Fail loudly at startup if a production env is still on dev-only auth
+    # (in-memory fake_users_db / dev-default JWT secret). No-op in dev. Mirrors
+    # services/orchestrator_agent/main.py:OrchestratorService.start().
+    assert_auth_safe_for_production()
     settings = get_settings()
     app.state.scorer = build_scorer(
         api_key=settings.anthropic_api_key, model=settings.anthropic_model

@@ -96,8 +96,11 @@ def _run_gate(
 
     if BASH is None:
         pytest.skip("no usable bash found")
+    # Git Bash splits paths on '/', not '\'. Passing the Windows-form path
+    # makes BASH_SOURCE[0]%/* a no-op, which corrupts SCRIPT_DIR and REPO_ROOT
+    # inside the script. Convert to MSYS form so the gate's cwd resolves.
     result = subprocess.run(
-        [BASH, str(GATE_SCRIPT), *args],
+        [BASH, _msys_path(GATE_SCRIPT), *args],
         cwd=str(REPO_ROOT),
         env=env,
         capture_output=True,

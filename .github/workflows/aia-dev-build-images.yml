@@ -1,68 +1,94 @@
 name: AIA Dev Build Images
 
+# Builds and pushes the AIA service images to:
+#   ghcr.io/serverax/<service>:<tag>
+# Versioned tags only (no :latest). Trigger by pushing a v* tag, or run
+# manually via workflow_dispatch with an explicit tag (e.g. v0.1.0).
+#
+# AUTH: GITHUB_TOKEN was DENIED pushing to ghcr.io/serverax/* ("token does not
+# match expected scopes" — observed in run 26503671827), so a PAT is required:
+#   set repo secrets GHCR_USERNAME=serverax and
+#   GHCR_TOKEN=<classic PAT with write:packages>.
+# The login step falls back to GITHUB_TOKEN when those are unset (which fails).
+
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Image tag to build & push (e.g. v0.1.0)"
+        required: true
+        default: v0.1.0
   push:
-    branches:
-      - main
-      - master
-      - dev
-    paths:
-      - "apps/**"
-      - "services/**"
-      - "Dockerfile"
-      - ".github/workflows/aia-dev-build-images.yml"
+    tags:
+      - "v*"
 
 permissions:
   contents: read
   packages: write
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAMESPACE: serverax
+
 jobs:
   build:
-    name: Build available Docker images
+    name: build ${{ matrix.image }}
     runs-on: ubuntu-latest
-
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { dir: orchestrator_agent, image: orchestrator-agent }
+          - { dir: echo_agent,         image: echo-agent }
+          - { dir: analyst_agent,      image: analyst-agent }
+          - { dir: compliance_agent,   image: compliance-agent }
+          - { dir: compliance-service, image: compliance-service }
+          - { dir: editor_agent,       image: editor-agent }
+          - { dir: realtime_collab,    image: realtime-collab }
+          - { dir: rag_system,         image: rag-system }
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Resolve tag
+        id: meta
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Verify GHCR auth secrets present (values never printed)
+        env:
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+        run: |
+          echo "GHCR_USERNAME_PRESENT=$([ -n "$GHCR_USERNAME" ] && echo true || echo false)"
+          echo "GHCR_TOKEN_PRESENT=$([ -n "$GHCR_TOKEN" ] && echo true || echo false)"
+          if [ -z "$GHCR_TOKEN" ]; then
+            echo "::warning::GHCR_TOKEN is not set; falling back to GITHUB_TOKEN, which is DENIED for ghcr.io/serverax/* (user namespace). Push will fail until a PAT secret is added."
+          fi
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.GHCR_USERNAME || github.actor }}
+          password: ${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
 
-      - name: Detect and build images
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          OWNER_REPO="$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')"
-          SHORT_SHA="${GITHUB_SHA::7}"
-
-          build_if_exists() {
-            local name="$1"
-            local dockerfile="$2"
-            local context="$3"
-
-            if [ -f "$dockerfile" ]; then
-              echo "Building $name from $dockerfile"
-              docker build \
-                -f "$dockerfile" \
-                -t "ghcr.io/${OWNER_REPO}/${name}:dev-${SHORT_SHA}" \
-                -t "ghcr.io/${OWNER_REPO}/${name}:dev-latest" \
-                "$context"
-
-              docker push "ghcr.io/${OWNER_REPO}/${name}:dev-${SHORT_SHA}"
-              docker push "ghcr.io/${OWNER_REPO}/${name}:dev-latest"
-            else
-              echo "Skipping $name. Dockerfile not found: $dockerfile"
-            fi
-          }
-
-          build_if_exists "aia-web" "apps/web/Dockerfile" "."
-          build_if_exists "aia-api" "apps/api/Dockerfile" "."
-          build_if_exists "aia-orchestrator-worker" "services/orchestrator/Dockerfile" "."
-          build_if_exists "aia-rag-worker" "services/rag/Dockerfile" "."
-          build_if_exists "aia-search-worker" "services/search/Dockerfile" "."
+      - name: Build & push ${{ matrix.image }}:${{ steps.meta.outputs.tag }}
+        uses: docker/build-push-action@v6
+        with:
+          # Context is the repo ROOT: the Dockerfiles COPY libs/ and the root
+          # requirements.txt, so the build context cannot be the service dir.
+          context: .
+          file: services/${{ matrix.dir }}/Dockerfile
+          push: true
+          provenance: false
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.image }}:${{ steps.meta.outputs.tag }}
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}

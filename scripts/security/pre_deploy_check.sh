@@ -213,7 +213,7 @@ check_generator_drift() {
     heading "2/5 generator drift"
     if [[ ! -f "${NETWORK_POLICIES_FILE}" || ! -f "${RBAC_FILE}" ]]; then
         record "generator_drift" "FAIL" "critical" \
-            "expected generator outputs missing — run generate_policies.py"
+            "expected generator outputs missing — regenerate by running generate_policies.py"
         say "  FAIL: generator outputs missing"
         return 1
     fi

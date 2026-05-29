@@ -1,0 +1,18 @@
+Synthetic Enterprise deployed to namespace: {{ .Values.global.namespace }}
+
+Services rendered:
+{{- range $name, $svc := .Values.services }}
+  - {{ $.Release.Name }}-{{ $name }} ({{ $g := $.Values.global }}{{ $g.imageRegistry }}/{{ $svc.image }}:{{ $g.imageTag }}){{ if $svc.httpRoutable }}  [ingress: {{ $svc.ingressPath | default (printf "/%s" $name) }}]{{ end }}
+{{- end }}
+
+{{- if .Values.ingress.enabled }}
+
+Ingress host: {{ .Values.ingress.host }} (class: {{ .Values.ingress.className }})
+{{- end }}
+
+Verify:
+  kubectl get pods,svc -n {{ .Values.global.namespace }} -l app.kubernetes.io/part-of=synthetic-enterprise
+
+Reminder: images must be built & pushed (services/*/Dockerfile) and the
+COMPLIANCE_SERVICE_URL env wired before the orchestrator's kill-switch gate
+is active. Secrets must be rotated before any real deployment.

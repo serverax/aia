@@ -1,3 +1,4 @@
+import { authedFetch } from '../../auth/tokenStore'
 import type {
   ApprovalAuditEvent,
   ApprovalDecisionInput,
@@ -98,19 +99,19 @@ class ApiOrchestratorClient implements IOrchestratorClient {
   }
 
   async getSnapshot() {
-    const response = await fetch(`${this.baseUrl}/api/v1/orchestrator/snapshot`)
+    const response = await authedFetch(`${this.baseUrl}/api/v1/orchestrator/snapshot`)
     if (!response.ok) throw new Error('Failed to fetch orchestrator snapshot')
     return (await response.json()) as OrchestratorSnapshot
   }
 
   async getApprovals() {
-    const response = await fetch(`${this.baseUrl}/api/v1/approvals`)
+    const response = await authedFetch(`${this.baseUrl}/api/v1/approvals`)
     if (!response.ok) return []
     return (await response.json()) as ApprovalRequest[]
   }
 
   async getApprovalWorkflows() {
-    const response = await fetch(`${this.baseUrl}/api/v1/approval-requests`)
+    const response = await authedFetch(`${this.baseUrl}/api/v1/approval-requests`)
     if (!response.ok) return []
     return (await response.json()) as ApprovalWorkflowRequest[]
   }
@@ -119,13 +120,13 @@ class ApiOrchestratorClient implements IOrchestratorClient {
     const params = new URLSearchParams()
     if (query?.startDate) params.set('start_date', query.startDate)
     if (query?.endDate) params.set('end_date', query.endDate)
-    const response = await fetch(`${this.baseUrl}/api/v1/approval-audit?${params.toString()}`)
+    const response = await authedFetch(`${this.baseUrl}/api/v1/approval-audit?${params.toString()}`)
     if (!response.ok) return []
     return (await response.json()) as ApprovalAuditEvent[]
   }
 
   async createApprovalWorkflow(input: CreateApprovalWorkflowInput, requestor: string) {
-    const response = await fetch(`${this.baseUrl}/api/v1/approval-requests`, {
+    const response = await authedFetch(`${this.baseUrl}/api/v1/approval-requests`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...input, requestor }),
@@ -135,7 +136,7 @@ class ApiOrchestratorClient implements IOrchestratorClient {
   }
 
   async submitApprovalWorkflowDecision(input: ApprovalWorkflowDecisionInput) {
-    const response = await fetch(`${this.baseUrl}/api/v1/approval-requests/${input.requestId}/decision`, {
+    const response = await authedFetch(`${this.baseUrl}/api/v1/approval-requests/${input.requestId}/decision`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
@@ -150,7 +151,7 @@ class ApiOrchestratorClient implements IOrchestratorClient {
     decision: 'approve' | 'reject' | 'request_changes'
     feedback: string
   }) {
-    const response = await fetch(`${this.baseUrl}/api/v1/approval-requests/bulk-decision`, {
+    const response = await authedFetch(`${this.baseUrl}/api/v1/approval-requests/bulk-decision`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
@@ -160,7 +161,7 @@ class ApiOrchestratorClient implements IOrchestratorClient {
   }
 
   async escalateApprovalWorkflow(input: ApprovalEscalationInput) {
-    const response = await fetch(`${this.baseUrl}/api/v1/approval-requests/${input.requestId}/escalate`, {
+    const response = await authedFetch(`${this.baseUrl}/api/v1/approval-requests/${input.requestId}/escalate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
@@ -174,7 +175,7 @@ class ApiOrchestratorClient implements IOrchestratorClient {
     reviewerId: string
     reason: string
   }) {
-    const response = await fetch(`${this.baseUrl}/api/v1/approval-requests/bulk-escalate`, {
+    const response = await authedFetch(`${this.baseUrl}/api/v1/approval-requests/bulk-escalate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
@@ -191,7 +192,7 @@ class ApiOrchestratorClient implements IOrchestratorClient {
       feedback_thread: ApprovalWorkflowRequest['feedback_thread']
     }>,
   ) {
-    await fetch(`${this.baseUrl}/api/v1/approval-requests/bulk-restore`, {
+    await authedFetch(`${this.baseUrl}/api/v1/approval-requests/bulk-restore`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ items: input }),
@@ -199,7 +200,7 @@ class ApiOrchestratorClient implements IOrchestratorClient {
   }
 
   async submitApprovalDecision(input: ApprovalDecisionInput) {
-    const response = await fetch(`${this.baseUrl}/api/v1/approvals/${input.approvalId}/decision`, {
+    const response = await authedFetch(`${this.baseUrl}/api/v1/approvals/${input.approvalId}/decision`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
@@ -219,7 +220,30 @@ class ApiOrchestratorClient implements IOrchestratorClient {
 
 const mockClient = new MockOrchestratorClient()
 const apiClient = new ApiOrchestratorClient()
-const useMock = import.meta.env.VITE_ORCHESTRATOR_USE_MOCK !== 'false'
+
+// Mocks are OFF by default. Enable ONLY for local dev with VITE_ENABLE_MOCKS=true
+// (legacy VITE_ORCHESTRATOR_USE_MOCK=true is still honoured). A production build
+// must NEVER serve synthetic data as real, so we fail loudly instead.
+const mocksRequested =
+  import.meta.env.VITE_ENABLE_MOCKS === 'true' ||
+  import.meta.env.VITE_ORCHESTRATOR_USE_MOCK === 'true'
+
+if (mocksRequested && import.meta.env.PROD) {
+  throw new Error(
+    '[AIA] Mock mode is enabled in a PRODUCTION build. Refusing to serve fake ' +
+      'dashboard/approval data as real. Unset VITE_ENABLE_MOCKS for production.',
+  )
+}
+
+export const isMockEnabled = mocksRequested && !import.meta.env.PROD
+if (isMockEnabled) {
+  // Surfaced in the UI by <MockModeBanner/>; logged for dev visibility.
+  console.warn(
+    '[AIA] MOCK MODE ENABLED — dashboard/approvals show synthetic data, not the real backend.',
+  )
+}
+
+const useMock = isMockEnabled
 
 export const orchestratorClient: IOrchestratorClient = useMock
   ? {

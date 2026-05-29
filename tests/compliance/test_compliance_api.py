@@ -13,6 +13,13 @@ sys.path.insert(0, str(SERVICE_ROOT))
 from compliance_service.kill_switch import KillSwitchPolicy
 from compliance_service.main import app, state
 
+from libs.auth import create_access_token
+
+_ADMIN_HEADERS = {
+    "Authorization": "Bearer "
+    + create_access_token({"sub": "compliance-admin", "scopes": ["admin"]})
+}
+
 
 @pytest.mark.unit
 def test_kill_switch_api_blocks_after_update():
@@ -24,6 +31,7 @@ async def _assert_kill_switch_api_blocks_after_update():
     async with AsyncClient(app=app, base_url="http://test") as client:
         update = await client.put(
             "/compliance/kill-switch",
+            headers=_ADMIN_HEADERS,
             json={
                 "global_enabled": True,
                 "reason": "human compliance hold",

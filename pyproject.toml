@@ -14,7 +14,7 @@ line_length = 100
 known_first_party = ["libs", "services"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests", "services"]
+testpaths = ["tests", "services", "apps/api/tests"]
 python_files = ["test_*.py"]
 asyncio_mode = "auto"
 addopts = "-ra --strict-markers --basetemp=.pytest_tmp"

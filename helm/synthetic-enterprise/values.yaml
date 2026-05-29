@@ -1,0 +1,146 @@
+global:
+  namespace: aia-dev
+  imageRegistry: ghcr.io/serverax
+  imageTag: v0.1.0
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets: []
+  # External K8s Secret (created during secret rotation) supplying sensitive
+  # env via secretKeyRef. Required keys: postgres-password, anthropic-api-key,
+  # redis-password. Set to "" to disable secret injection (dev/stub only).
+  externalSecret: aia-secrets
+
+# Non-secret runtime config injected into every pod via a ConfigMap (envFrom).
+# Env var NAMES are grounded in the code that reads them:
+#   libs/communication/redis_client.py    -> REDIS_HOST / REDIS_PORT / REDIS_PASSWORD
+#   libs/communication/postgres_client.py -> POSTGRES_HOST/PORT/DB/USER/PASSWORD
+#   libs/communication/config.py          -> QDRANT_HOST/PORT, ANTHROPIC_API_KEY
+#   services/orchestrator_agent/main.py   -> COMPLIANCE_SERVICE_URL
+config:
+  # Redis/Qdrant: when dependencies.{redis,qdrant}.enabled=true (default), the
+  # chart deploys dedicated in-namespace services and REDIS_HOST/QDRANT_HOST are
+  # DERIVED from the release name (these *Host fields are then ignored). Set
+  # them only if you disable the dependency and point at an existing service.
+  # Do NOT point Redis at another app's instance (e.g. Sakina's).
+  redisHost: ""
+  redisPort: "6379"
+  qdrantHost: ""
+  qdrantPort: "6333"
+  postgresHost: supabase-supabase-db.supabase.svc.cluster.local   # confirmed (supabase ns)
+  postgresPort: "5432"
+  postgresDb: postgres         # confirmed (supabase default DB)
+  postgresUser: postgres       # confirmed (role matching `postgres-password`)
+  logLevel: INFO
+  # LLM backend. Ollama is primary for dev; Anthropic is optional fallback.
+  # libs/llm.OllamaClient reads these vars; build_default_client() selects it
+  # when LLM_PROVIDER=ollama (no Anthropic key required). Analyst tool-use is
+  # gated by ollamaSupportsTools below.
+  llmProvider: ollama            # ollama | anthropic
+  ollamaBaseUrl: http://aia-ollama-dev-cpu.aia-dev.svc.cluster.local:11434
+  ollamaModel: llama3.1
+  # Analyst tool-use (chat_with_tools). false -> tool-use raises a clear error
+  # (orchestrator chat_json still works). llama3.1 supports tools, so flip this
+  # true once the analyst-on-Ollama tool path is verified against live Ollama.
+  ollamaSupportsTools: false
+  anthropicModel: claude-sonnet-4-20250514
+  # true -> COMPLIANCE_SERVICE_URL points at the in-cluster compliance-service
+  # so the orchestrator kill-switch admission gate is ACTIVE.
+  complianceGateEnabled: true
+
+# Dev-grade in-namespace dependencies the chart creates so AIA has its OWN
+# Redis/Qdrant (never borrow Sakina's). Single-replica, emptyDir (NO
+# persistence) — acceptable for dev only; production must use operators/PVCs.
+dependencies:
+  redis:
+    enabled: true
+    image: redis:7-alpine
+    port: 6379
+  qdrant:
+    enabled: true
+    image: qdrant/qdrant:v1.12.4
+    port: 6333
+
+# With Ollama primary, ANTHROPIC_API_KEY is optional; the secretKeyRef is
+# marked optional so a missing/empty key never blocks pod start.
+anthropicRequired: false
+
+# Defaults applied to every service unless overridden in `services` below.
+defaults:
+  replicas: 1
+  port: 8000
+  healthPath: /health
+  readyPath: /ready
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+# One entry per deployable service. Each renders a Deployment + Service +
+# ServiceAccount. `httpRoutable: true` also adds an Ingress path.
+#
+# NOTE: tool_sandbox is intentionally absent — it is an in-process library
+# (WASM executor/registry/verifier) bundled into the orchestrator and analyst
+# images, not a standalone service.
+services:
+  orchestrator:
+    image: orchestrator-agent
+    replicas: 2
+    httpRoutable: true
+    ingressPath: /api/orchestrator
+  echo:
+    image: echo-agent
+  analyst:
+    image: analyst-agent
+    replicas: 2
+    resources:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: "1"
+        memory: 1500Mi
+  compliance-agent:
+    image: compliance-agent
+  compliance-service:
+    image: compliance-service
+    httpRoutable: true
+    ingressPath: /compliance
+  editor:
+    image: editor-agent
+  realtime-collab:
+    image: realtime-collab
+    httpRoutable: true
+    ingressPath: /ws
+  rag-system:
+    image: rag-system
+    # rag_service exposes /rag/status rather than /health (TODO: add /health).
+    healthPath: /rag/status
+    readyPath: /rag/status
+    # sentence-transformers downloads models at runtime; with a read-only root
+    # FS it must write to a mounted volume. This adds a writable emptyDir and
+    # points HF_HOME/TRANSFORMERS_CACHE/SENTENCE_TRANSFORMERS_HOME at it.
+    # (Better long-term: bake the model into the image and drop this.)
+    modelCache:
+      enabled: true
+      path: /cache
+      sizeLimit: 5Gi
+    resources:
+      requests:
+        cpu: 250m
+        memory: 1Gi
+      limits:
+        cpu: "2"
+        memory: 3Gi
+
+ingress:
+  enabled: true
+  className: nginx
+  # AIA backend API surface. Root ordinoxai.com is RESERVED for the landing
+  # page and must never be used here (the chart fails the render if you try).
+  # The web dashboard (aia.ordinoxai.com) is served by the separate aia-dev-web
+  # deployment, not this chart. No public cutover until DNS is pointed here.
+  host: api-aia.ordinoxai.com
+  tls: false
+  annotations: {}

@@ -1,0 +1,168 @@
+{{- $g := .Values.global -}}
+{{- $dep := .Values.dependencies -}}
+{{- $release := .Release.Name -}}
+{{/*
+  Dev-grade in-namespace dependencies so AIA has its OWN Redis/Qdrant.
+  emptyDir = NO persistence (data lost on pod restart) — dev only. Production
+  must replace these with operators/StatefulSets + PVCs.
+*/}}
+{{- if $dep.redis.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $release }}-redis
+  namespace: {{ $g.namespace }}
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/instance: {{ $release }}
+    app.kubernetes.io/part-of: synthetic-enterprise
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: redis
+      app.kubernetes.io/instance: {{ $release }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: redis
+        app.kubernetes.io/instance: {{ $release }}
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        fsGroup: 999
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: redis
+          image: {{ $dep.redis.image }}
+          args: ["--save", "", "--appendonly", "no"]
+          ports:
+            - name: redis
+              containerPort: {{ $dep.redis.port }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          livenessProbe:
+            tcpSocket:
+              port: redis
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          readinessProbe:
+            tcpSocket:
+              port: redis
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $release }}-redis
+  namespace: {{ $g.namespace }}
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/instance: {{ $release }}
+    app.kubernetes.io/part-of: synthetic-enterprise
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/instance: {{ $release }}
+  ports:
+    - name: redis
+      port: {{ $dep.redis.port }}
+      targetPort: redis
+{{- end }}
+{{- if $dep.qdrant.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $release }}-qdrant
+  namespace: {{ $g.namespace }}
+  labels:
+    app.kubernetes.io/name: qdrant
+    app.kubernetes.io/instance: {{ $release }}
+    app.kubernetes.io/part-of: synthetic-enterprise
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: qdrant
+      app.kubernetes.io/instance: {{ $release }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: qdrant
+        app.kubernetes.io/instance: {{ $release }}
+    spec:
+      containers:
+        - name: qdrant
+          image: {{ $dep.qdrant.image }}
+          ports:
+            - name: http
+              containerPort: {{ $dep.qdrant.port }}
+            - name: grpc
+              containerPort: 6334
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          volumeMounts:
+            - name: storage
+              mountPath: /qdrant/storage
+      volumes:
+        - name: storage
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $release }}-qdrant
+  namespace: {{ $g.namespace }}
+  labels:
+    app.kubernetes.io/name: qdrant
+    app.kubernetes.io/instance: {{ $release }}
+    app.kubernetes.io/part-of: synthetic-enterprise
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: qdrant
+    app.kubernetes.io/instance: {{ $release }}
+  ports:
+    - name: http
+      port: {{ $dep.qdrant.port }}
+      targetPort: http
+    - name: grpc
+      port: 6334
+      targetPort: grpc
+{{- end }}

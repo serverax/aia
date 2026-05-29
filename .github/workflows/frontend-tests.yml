@@ -1,0 +1,50 @@
+name: Frontend tests (vitest)
+
+# Runs the SPA's vitest suite in cursor/frontend/. Includes:
+#   - src/auth/auth.test.tsx
+#       Token store + login API + AuthGate journey (block → login →
+#       unblock → logout) + wrong-password error path.
+#   - src/services/orchestrator/mock-mode.test.tsx
+#       R-5: mock-mode production safety. Asserts the client.ts module-init
+#       throw under VITE_ENABLE_MOCKS=true + PROD, and the MockModeBanner
+#       render contract.
+#
+# Kept separate from the Python gates (ci.yml, security-api-tests.yml) so
+# Node toolchain churn doesn't ripple into the security floor.
+
+on:
+  pull_request:
+    branches: [main, master, develop]
+  push:
+    branches: [main, master, develop]
+
+permissions:
+  contents: read
+
+jobs:
+  vitest:
+    name: vitest run (cursor/frontend)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cursor/frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: cursor/frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Show environment
+        run: |
+          node --version
+          npm --version
+          npx vitest --version
+
+      - name: Run vitest
+        run: npm test

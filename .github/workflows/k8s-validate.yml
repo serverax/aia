@@ -1,0 +1,53 @@
+name: k8s manifest dry-run
+
+# Client-side schema/parse validation for the manifests in k8s/.
+# Catches gross schema errors and YAML breakage before any cluster
+# apply. Does NOT prove deployability — it does not contact a cluster,
+# does not check that CRDs are installed, and does not validate that
+# the placeholder web image is reachable from the cluster's network.
+#
+# k8s/ on this branch is intentionally bootstrap-only (see k8s/README.md).
+# The real production deploy surface lives in helm/ and is gated
+# separately.
+
+on:
+  pull_request:
+    branches: [main, master, develop]
+  push:
+    branches: [main, master, develop]
+
+permissions:
+  contents: read
+
+jobs:
+  dry-run:
+    name: kubectl apply --dry-run=client -f k8s/
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install kubeconform
+        # Offline schema validator. We intentionally do not use `kubectl
+        # --dry-run=client` here: modern kubectl still performs API-group
+        # discovery against a cluster (Get http://localhost:8080/api), which
+        # fails on a hosted runner with no kubeconfig. kubeconform bundles
+        # its own schemas and does true offline validation.
+        run: |
+          set -euo pipefail
+          curl -fsSL -o /tmp/kubeconform.tar.gz \
+            https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz
+          tar -xzf /tmp/kubeconform.tar.gz -C /tmp
+          sudo mv /tmp/kubeconform /usr/local/bin/kubeconform
+          kubeconform -v
+
+      - name: List k8s/ YAML
+        run: |
+          find k8s -type f \( -name '*.yaml' -o -name '*.yml' \) -print
+
+      - name: kubeconform schema validation
+        # -strict: undefined fields are errors (catches typos like
+        # `livenessprobe:` instead of `livenessProbe:`).
+        # -summary: prints PASS/FAIL counts at the end.
+        # -verbose: lists every file checked.
+        run: |
+          kubeconform -strict -summary -verbose k8s/

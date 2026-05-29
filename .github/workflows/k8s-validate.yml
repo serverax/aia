@@ -1,0 +1,43 @@
+name: k8s manifest dry-run
+
+# Client-side schema/parse validation for the manifests in k8s/.
+# Catches gross schema errors and YAML breakage before any cluster
+# apply. Does NOT prove deployability — it does not contact a cluster,
+# does not check that CRDs are installed, and does not validate that
+# the placeholder web image is reachable from the cluster's network.
+#
+# k8s/ on this branch is intentionally bootstrap-only (see k8s/README.md).
+# The real production deploy surface lives in helm/ and is gated
+# separately.
+
+on:
+  pull_request:
+    branches: [main, master, develop]
+  push:
+    branches: [main, master, develop]
+
+permissions:
+  contents: read
+
+jobs:
+  dry-run:
+    name: kubectl apply --dry-run=client -f k8s/
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: latest
+
+      - name: kubectl client version
+        run: kubectl version --client=true
+
+      - name: List k8s/ YAML
+        run: |
+          find k8s -type f \( -name '*.yaml' -o -name '*.yml' \) -print
+
+      - name: Dry-run every YAML under k8s/ (recursive)
+        run: |
+          kubectl apply --dry-run=client --recursive -f k8s/

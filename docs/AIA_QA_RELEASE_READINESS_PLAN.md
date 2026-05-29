@@ -886,3 +886,119 @@ The 2 warnings are pre-existing deprecation notices (`pytest-asyncio` default lo
 Score movement is **+1 for real CI evidence** on a Linux runner pinned to the project's Python. The score change is bounded by the still-open R-5 / R-6 / K-1 / K-2 / K-3 items, which remain unproven on this branch.
 
 A 7/10 means **"the security floor is verified end-to-end in CI. The deploy surface is still not."**
+
+---
+
+### Execution: 2026-05-29 (follow-up 6) — Phase 2 / 3 / 4 + final consolidated status
+
+**Phase 2 — R-5 frontend mock-mode regression (commit `f6f8408`)**
+
+| Surface | Evidence |
+|---|---|
+| `cursor/frontend/src/services/orchestrator/mock-mode.test.tsx` (new) | 6 cases: `isMockEnabled` false default; module-init throws with `VITE_ENABLE_MOCKS=true` under PROD; legacy `VITE_ORCHESTRATOR_USE_MOCK=true` also throws; `isMockEnabled` true in dev; `MockModeBanner` renders nothing when off; banner renders alert when on. |
+| `.github/workflows/frontend-tests.yml` (new) | actions/setup-node@v4 (Node 20), npm ci, npm test inside `cursor/frontend/`. |
+| Local | Windows + vitest 3.2.4: `Test Files 2 passed (2), Tests 11 passed (11)` in 4.97s. |
+| CI | https://github.com/serverax/aia/actions/runs/26619381910 — ubuntu-latest, Node 20.20.2, vitest 3.2.4, `Tests 11 passed (11)` in 16s. |
+| **Status** | **PASS** |
+
+**Phase 3 — R-6 AuthGate malformed-token regression (commit `811c082`)**
+
+| Surface | Evidence |
+|---|---|
+| `cursor/frontend/src/auth/auth.test.tsx` (extended) | 4 new cases: garbage token; three-segment token with non-base64 payload; three-segment token with base64 of non-JSON; explicit no-token baseline. Each pre-seeds sessionStorage before render to exercise the `safeDecode` catch path in `AuthProvider`. |
+| Local | `Tests 15 passed (15)` in 4.09s. |
+| CI | https://github.com/serverax/aia/actions/runs/26619518109 — `Tests 15 passed (15)` in 17s. |
+| **Status** | **PASS** |
+
+**Phase 4 — k8s honesty (commits `08c2feb`, `acb70a6`, `00c9d34`)**
+
+Two findings before the work:
+
+1. `k8s/namespace.yaml` and `k8s/web.yaml` existed in the working tree but had never been committed. The branch named `feature/deploy-manifests` actually contained no k8s/ files — they're now tracked for the first time in `08c2feb`.
+2. Local kubectl v1.36 ran `--dry-run=client` cleanly; runner kubectl v1.31 always fetches API-group discovery from a cluster (`Get http://localhost:8080/api`) even with `--dry-run=client --validate=false`. Two failing CI attempts (`26619613304`, `26619654749`) demonstrated this before settling on kubeconform.
+
+| Surface | Evidence |
+|---|---|
+| `k8s/web.yaml` | Added `readinessProbe` + `livenessProbe` (httpGet `/` :8080); local `kubectl apply --dry-run=client --recursive` → all 4 objects "created (dry run)" on Windows. |
+| `k8s/README.md` (new) | Declares `k8s/` as bootstrap-only. Explicitly lists what it does NOT provide (Hiring API Deployment, orchestrator, compliance, RAG, editor, realtime_collab Deployments; Ingress / Gateway; Secret/ConfigMap wiring for `AIA_AUTH_SECRET_KEY` / `POSTGRES_*` / `ANTHROPIC_API_KEY`). Points at `helm/synthetic-enterprise/` for the real deploy surface. |
+| `.github/workflows/k8s-validate.yml` (new) | kubeconform offline schema validation. -strict treats undefined fields as errors. |
+| CI | https://github.com/serverax/aia/actions/runs/26619689320 — `Summary: 4 resources found in 2 files - Valid: 4, Invalid: 0, Errors: 0, Skipped: 0`. |
+| **Status — K-1 (no probes)** | **PASS** — probes added, schema-validated. |
+| **Status — K-2 (no Ingress)** | **DOCUMENTED.** Placeholder is ClusterIP only by design; not a defect in this scope. |
+| **Status — K-3 (no backend Deployment)** | **DOCUMENTED.** Adding invented backend Deployments without ground truth on image/secrets/env would be misleading; the honest fix is the README and pointer to `helm/`. |
+| **Status — `k8s/` in CI** | **PASS** — kubeconform on every push + PR. |
+| **Status — `k8s/` committed to branch** | **PASS** — files are now actually in PR #9. |
+
+**Consolidated PASS / PARTIAL / FAIL / BLOCKED**
+
+| Surface | Status | Evidence |
+|---|---|---|
+| R-2: Hiring API lifespan calls prod-auth guard | **PASS** | CI run 26618768628; `apps/api/tests/test_prod_guard_wired.py` (3 cases) |
+| Kill-switch PUT is admin-only, GET + `/evaluate` open | **PASS** | CI run 26618768628; `tests/compliance/test_killswitch_auth.py` (4 cases) |
+| Prod-auth-guard decision matrix | **PASS** | CI run 26618768628; `tests/unit/test_auth_prod_guard.py` (5 cases) |
+| Hiring API CRUD + scoring + health + auth | **PASS** | CI run 26618768628; `apps/api/tests/*` (19 cases) |
+| Default `pytest -q` discovers `apps/api/tests` | **PASS** | `pyproject.toml` change verified by the same CI run |
+| Pre-deploy gate end-to-end on Windows + Git Bash | **PASS** (local only) | Local 13/13 in 40.43s; not in CI on this branch |
+| Full `pytest -q` (default discovery, all paths) | **PARTIAL** | Local 333/8/0 against user-managed `.venv-full`; CI gate is the focused subset, not the full set; blocked by the OpenTelemetry vs `pymilvus>=3` protobuf-pin conflict in published `requirements.txt` |
+| R-5: mock-mode-in-PROD throw + banner contract | **PASS** | CI run 26619381910; `cursor/frontend/src/services/orchestrator/mock-mode.test.tsx` (6 cases) |
+| R-6: AuthGate rejects malformed / absent tokens | **PASS** | CI run 26619518109; `cursor/frontend/src/auth/auth.test.tsx` (4 new cases) |
+| K-1: `k8s/web.yaml` probes | **PASS** | CI run 26619689320; readiness + liveness on httpGet `/` :8080 |
+| K-2: Ingress / Gateway for `k8s/` | **DOCUMENTED, OUT OF SCOPE** | `k8s/README.md` declares bootstrap-only scope; real exposure lives in `helm/` |
+| K-3: backend Deployment in `k8s/` | **DOCUMENTED, OUT OF SCOPE** | same; real deploy in `helm/` |
+| `k8s/` manifests tracked in PR | **PASS** | first time committed in `08c2feb` |
+| `k8s/` schema validation in CI | **PASS** | kubeconform run 26619689320 |
+| CI parity for focused security gate (Linux, Py 3.11) | **PASS** | CI run 26618768628 |
+| CI for frontend tests | **PASS** | CI run 26619518109 (latest of 3 green runs) |
+| CI for k8s manifests | **PASS** | CI run 26619689320 |
+| CI Python pin to 3.11 | **PASS** | `security-api-tests.yml` pins explicitly; `ci.yml` already at 3.11 |
+| Local `.venv-full` pin set captured in `requirements.txt` for CI parity | **NOT-YET** | Protobuf pin conflict needs env split or `pymilvus<3` pin (or coordinated OTel bump). The focused CI gate is independent of this. |
+
+**Commands a reviewer can run themselves**
+
+```sh
+# Backend security floor
+git checkout feature/deploy-manifests
+python -m pip install fastapi==0.115.0 pydantic==2.9.2 pydantic-settings==2.5.2 \
+  "passlib[bcrypt]==1.7.4" "python-jose[cryptography]==3.3.0" email-validator==2.2.0 \
+  python-multipart==0.0.20 asyncpg==0.29.0 httpx==0.27.2 pytest==8.3.3 pytest-asyncio==0.24.0
+python -m pytest -q tests/unit/test_auth_prod_guard.py tests/compliance/test_killswitch_auth.py apps/api/tests
+# Expect: 31 passed
+
+# Frontend safety
+cd cursor/frontend && npm ci && npm test
+# Expect: Test Files 2 passed (2), Tests 15 passed (15)
+
+# k8s schema
+kubeconform -strict -summary -verbose k8s/
+# Expect: Summary: 4 resources found in 2 files - Valid: 4, Invalid: 0, Errors: 0, Skipped: 0
+```
+
+**Remaining blockers (consolidated)**
+
+1. ~~R-2 (Hiring API prod-auth guard).~~ **DONE.**
+2. ~~R-5 / R-6 (frontend regression tests).~~ **DONE.**
+3. ~~K-1 (probes).~~ **DONE.**
+4. ~~`k8s/` honesty + CI.~~ **DONE.**
+5. ~~Discovery (`apps/api/tests` in testpaths).~~ **DONE.**
+6. ~~CI parity for the focused security gate.~~ **DONE.**
+7. **Full `pytest -q` parity in CI** (PARTIAL). Requires resolving the published `opentelemetry-proto<5` vs `pymilvus>=3` conflict via env split, `pymilvus<3` pin, or a coordinated OTel bump. The focused security CI does not depend on this.
+8. **`tests/security/test_pre_deploy_check.py` in CI** (NOT-YET). 13 cases green locally on Windows + Git Bash. Linux runners don't have the Git-Bash backslash bug the fix addresses, so behaviour should be the same, but until a CI workflow runs the file there is no CI evidence. Could be folded into `security-api-tests.yml` as a follow-up.
+9. **Helm chart / real production deploy surface** (out of scope for this branch). Lives in `helm/synthetic-enterprise/`. Not addressed by `k8s/`.
+
+**Launch-readiness score: 8 / 10** (was 7).
+
++1 for closing K-1, adding kubeconform CI for `k8s/`, and committing the manifests to the branch.
+
+Held below 9 because:
+- Full-suite CI parity (item 7) is still PARTIAL.
+- The actual production deploy surface (Helm) is not the focus of this branch.
+
+Held below 10 because: a defensible MVP claim needs operator-validated production deploy evidence, which lives in the Helm chart review surface, not in `k8s/`.
+
+**Final recommendation**
+
+**This branch is safe to merge as a QA + security stepping-stone with CI-verified evidence for: R-2 production auth guard, kill-switch auth, Hiring API auth + CRUD + scoring, mock-mode-in-PROD safety, AuthGate malformed-token rejection, and k8s bootstrap schema validity.**
+
+**It is not a production release.** The production deploy surface is the Helm chart in `helm/synthetic-enterprise/`, which is gated separately. The CI gate proves the application and security floors; the deploy plumbing is the next surface to harden.
+
+The honest framing of `k8s/` as bootstrap-only (Phase 4 README) is itself part of the deliverable: a reviewer can now reach the merge button without mistaking the placeholder for the production deploy.

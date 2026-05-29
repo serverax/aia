@@ -298,6 +298,19 @@ check_manifest_dry_run() {
         return 0
     fi
 
+    # kubectl --dry-run=client still performs API-group discovery against a
+    # cluster. On a CI runner with kubectl present but no kubeconfig (the
+    # normal hosted-runner state), every per-file apply fails with a
+    # connection-refused error and the gate would falsely report critical.
+    # Skip cleanly here — schema validation legitimately requires a cluster
+    # or an offline validator (kubeconform is used by k8s-validate.yml).
+    if ! kubectl config current-context >/dev/null 2>&1; then
+        record "manifest_dry_run" "SKIP" "warning" \
+            "kubectl present but no current context — use kubeconform for offline validation"
+        say "  SKIP: no kubeconfig context (CI offline mode)"
+        return 0
+    fi
+
     local ok=0 fail=0 crd_skip=0
     while IFS= read -r -d '' f; do
         local out

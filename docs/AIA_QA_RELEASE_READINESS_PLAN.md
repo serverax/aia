@@ -817,3 +817,72 @@ Score movement justified by **real PASS evidence**, not aspiration:
 A 6/10 means **"the application is testable and tested; the deploy surface is not."**
 
 **Recommendation: do not merge as a release. Safe to merge as a stepping stone with a stronger evidence trail than the prior follow-ups had.** The four still-open items are tractable; none requires a redesign.
+
+---
+
+### Execution: 2026-05-29 (follow-up 5) — Phase 1: CI parity for the focused gate
+
+**Goal.** Move the three regression-target test files from "passes locally" to "passes in CI on the project's pinned Python", so a green check on PR #9 is what proves R-2 / kill-switch-auth / Hiring API auth — not a transcript in this report.
+
+**File added**
+
+`.github/workflows/security-api-tests.yml` — new dedicated workflow. Runs on `pull_request` against `main` / `master` / `develop` and on `push` to those branches.
+
+Key design choices:
+- **Why a new workflow, not an extension of `ci.yml`.** `ci.yml`'s `unit-test` job walks `tests/unit` + selected `services/*/tests` with `-m unit`, so:
+  - `tests/unit/test_auth_prod_guard.py` IS in its scope (correct);
+  - `tests/compliance/test_killswitch_auth.py` is NOT (`tests/compliance` is not in the path list);
+  - `apps/api/tests/*` is NOT (not in the path list either).
+  Two of the three R-2 / kill-switch / Hiring API targets are therefore silently skipped by the existing CI. This new workflow closes that gap as a single focused job.
+- **Why a minimal pinned dep subset, not `pip install -r requirements-dev.txt`.** The full install pulls in `langchain`, `wasmtime`, `qdrant-client`, `sentence-transformers`, `pymilvus`, the OpenTelemetry chain. None of those are needed for the three target files. The gate stays fast, deterministic, and orthogonal to the AI-stack pin churn (the protobuf conflict logged in follow-up 3).
+- **Pins.** `fastapi==0.115.0`, `pydantic==2.9.2`, `pydantic-settings==2.5.2`, `passlib[bcrypt]==1.7.4`, `python-jose[cryptography]==3.3.0`, `email-validator==2.2.0`, `python-multipart==0.0.20`, `asyncpg==0.29.0`, `httpx==0.27.2`, `pytest==8.3.3`, `pytest-asyncio==0.24.0`. Every version matches the project's `requirements.txt` / `requirements-dev.txt`.
+- **Python.** `actions/setup-python@v5` with `python-version: "3.11"` (resolves to 3.11.15 on the current runner image).
+
+**CI evidence — real run on PR #9**
+
+| Field | Value |
+|---|---|
+| Workflow run | https://github.com/serverax/aia/actions/runs/26618768628 |
+| Job | https://github.com/serverax/aia/actions/runs/26618768628/job/78439936702 |
+| Trigger | `pull_request` from `feature/deploy-manifests` → `main` |
+| Runner | `ubuntu-24.04`, Image `20260525.161.1` |
+| Python | 3.11.15 (`/opt/hostedtoolcache/Python/3.11.15/x64`) |
+| Pytest | 8.3.3 |
+| Command | `python -m pytest -q tests/unit/test_auth_prod_guard.py tests/compliance/test_killswitch_auth.py apps/api/tests` |
+| **Result** | **31 passed, 2 warnings in 1.83s** |
+| Total job time | 39s (incl. checkout, setup-python with cache, install, env display) |
+
+The 2 warnings are pre-existing deprecation notices (`pytest-asyncio` default loop scope; `starlette` recommending `import python_multipart` instead of `multipart`); they are not failures and they appeared in the local runs too.
+
+**What CI now proves (PASS — produced by a CI command in this run)**
+
+| Surface | Proved by |
+|---|---|
+| R-2: Hiring API lifespan calls `assert_auth_safe_for_production()` and the guard raises in prod with dev userdb/secret; dev env starts; explicit override permits | `apps/api/tests/test_prod_guard_wired.py` (3 cases) |
+| Kill-switch PUT requires `admin` scope; non-admin → 403; anon → 401; `/evaluate` stays open | `tests/compliance/test_killswitch_auth.py` (4 cases) |
+| `assert_auth_safe_for_production()` matrix — dev allowed, staging allowed, prod with fake refuses, explicit override allows, real secret + fake userdb still refuses | `tests/unit/test_auth_prod_guard.py` (5 cases) |
+| Hiring API auth + CRUD + scoring + health on the standard Python install path | `apps/api/tests/*` (19 cases + 3 R-2 cases) |
+| All 31 cases run on the project's pinned Python (3.11) — not just on a developer machine | the workflow's runtime |
+
+**What CI does NOT prove (PARTIAL / NOT-YET)**
+
+- **Full `pytest -q` (no flags) under the project's pinned environment.** Follow-up 4 captured 333 passed / 8 skipped / 0 failed against a user-managed `.venv-full` on Windows. CI's existing `unit-test` and `integration-test` jobs in `ci.yml` cover overlapping ground on Linux, but the protobuf-pin conflict in published `requirements.txt` means a single CI venv that runs **every** test (including the pymilvus / OpenTelemetry layers together) is not yet wired. **Status: PARTIAL.**
+- **`tests/security/test_pre_deploy_check.py`** — 13 cases passed locally on Windows + Git Bash. **Not in this new workflow**, and `ci.yml` does not run it either. Linux runners don't have the Git-Bash backslash quirk this round's R-2.5 fix addressed, so behavior should be the same, but until CI exercises the file there is no CI evidence. **Status: NOT-YET (local-only).**
+- **Frontend `npm test`.** No CI. **Status: NOT-YET.**
+- **`kubectl apply --dry-run=client -f k8s/`.** No CI. **Status: NOT-YET.**
+
+**Updated remaining blockers**
+
+1. ~~Wire `assert_auth_safe_for_production()` into `apps/api/main.py`.~~ **DONE** (follow-up 1).
+2. Add regression tests R-5, R-6 (frontend) — *Phase 2 / Phase 3 below.*
+3. Replace `k8s/web.yaml` with a real backend deployment + Ingress + probes, or rename the branch — *Phase 4 below.*
+4. ~~Add a `kubectl apply --dry-run=client -f k8s/` step to a CI workflow.~~ **DEFERRED to Phase 4** (it will be added as part of the k8s honesty work; doing it now without a real backend deploy would just lock in the placeholder).
+5. ~~Pin CI Python to 3.11.~~ **DONE** (this workflow). `ci.yml` was already at 3.11; this workflow now also pins 3.11 explicitly.
+6. ~~Add `apps` to `pyproject.toml` `testpaths`.~~ **DONE** (follow-up 2).
+7. Resolve the OpenTelemetry vs. pymilvus protobuf conflict (env split or `pymilvus<3` pin). **OPEN** — affects the "full `pytest -q` is green in CI" claim but not the focused gate.
+
+**Launch-readiness score: 7 / 10** (was 6).
+
+Score movement is **+1 for real CI evidence** on a Linux runner pinned to the project's Python. The score change is bounded by the still-open R-5 / R-6 / K-1 / K-2 / K-3 items, which remain unproven on this branch.
+
+A 7/10 means **"the security floor is verified end-to-end in CI. The deploy surface is still not."**

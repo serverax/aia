@@ -232,9 +232,14 @@ check_generator_drift() {
         return 1
     fi
 
+    # --strip-trailing-cr makes the comparison robust across Windows checkouts
+    # (.gitattributes does not normalize *.yaml to LF, so the committed bytes
+    # can be CRLF on Windows but the generator writes LF on Linux/CI). Real
+    # content drift is still detected; only line-ending-only "drift" is
+    # ignored, which is what we want.
     local np_diff rbac_diff
-    np_diff="$(diff -q "${tmp_np}" "${NETWORK_POLICIES_FILE}" 2>&1 || true)"
-    rbac_diff="$(diff -q "${tmp_rbac}" "${RBAC_FILE}" 2>&1 || true)"
+    np_diff="$(diff -q --strip-trailing-cr "${tmp_np}" "${NETWORK_POLICIES_FILE}" 2>&1 || true)"
+    rbac_diff="$(diff -q --strip-trailing-cr "${tmp_rbac}" "${RBAC_FILE}" 2>&1 || true)"
 
     if [[ -n "${np_diff}" || -n "${rbac_diff}" ]]; then
         record "generator_drift" "FAIL" "critical" \

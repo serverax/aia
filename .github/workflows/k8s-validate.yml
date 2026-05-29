@@ -26,19 +26,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install kubectl
-        uses: azure/setup-kubectl@v4
-        with:
-          version: latest
-
-      - name: kubectl client version
-        run: kubectl version --client=true
-
       - name: Install kubeconform
-        # Offline schema validator. kubectl v1.31+ `--dry-run=client` still
-        # tries to fetch OpenAPI from a cluster, which fails on hosted
-        # runners; kubeconform bundles its own schemas, so we get real
-        # field-level validation without a cluster.
+        # Offline schema validator. We intentionally do not use `kubectl
+        # --dry-run=client` here: modern kubectl still performs API-group
+        # discovery against a cluster (Get http://localhost:8080/api), which
+        # fails on a hosted runner with no kubeconfig. kubeconform bundles
+        # its own schemas and does true offline validation.
         run: |
           set -euo pipefail
           curl -fsSL -o /tmp/kubeconform.tar.gz \
@@ -51,14 +44,10 @@ jobs:
         run: |
           find k8s -type f \( -name '*.yaml' -o -name '*.yml' \) -print
 
-      - name: kubectl client-side dry-run (parse + kind decode)
-        # --validate=false skips the OpenAPI-from-cluster fetch; YAML parse
-        # and apiVersion/kind/metadata decoding still happen here.
-        run: |
-          kubectl apply --dry-run=client --validate=false --recursive -f k8s/
-
-      - name: kubeconform field-level schema validation
-        # Real schema validation against bundled Kubernetes schemas.
-        # -strict treats undefined fields as errors. -summary prints counts.
+      - name: kubeconform schema validation
+        # -strict: undefined fields are errors (catches typos like
+        # `livenessprobe:` instead of `livenessProbe:`).
+        # -summary: prints PASS/FAIL counts at the end.
+        # -verbose: lists every file checked.
         run: |
           kubeconform -strict -summary -verbose k8s/

@@ -232,9 +232,14 @@ check_generator_drift() {
         return 1
     fi
 
+    # --strip-trailing-cr makes the comparison robust across Windows checkouts
+    # (.gitattributes does not normalize *.yaml to LF, so the committed bytes
+    # can be CRLF on Windows but the generator writes LF on Linux/CI). Real
+    # content drift is still detected; only line-ending-only "drift" is
+    # ignored, which is what we want.
     local np_diff rbac_diff
-    np_diff="$(diff -q "${tmp_np}" "${NETWORK_POLICIES_FILE}" 2>&1 || true)"
-    rbac_diff="$(diff -q "${tmp_rbac}" "${RBAC_FILE}" 2>&1 || true)"
+    np_diff="$(diff -q --strip-trailing-cr "${tmp_np}" "${NETWORK_POLICIES_FILE}" 2>&1 || true)"
+    rbac_diff="$(diff -q --strip-trailing-cr "${tmp_rbac}" "${RBAC_FILE}" 2>&1 || true)"
 
     if [[ -n "${np_diff}" || -n "${rbac_diff}" ]]; then
         record "generator_drift" "FAIL" "critical" \
@@ -295,6 +300,19 @@ check_manifest_dry_run() {
     if ! command -v kubectl >/dev/null 2>&1; then
         record "manifest_dry_run" "SKIP" "warning" "kubectl not on PATH"
         say "  SKIP: kubectl not installed"
+        return 0
+    fi
+
+    # kubectl --dry-run=client still performs API-group discovery against a
+    # cluster. On a CI runner with kubectl present but no kubeconfig (the
+    # normal hosted-runner state), every per-file apply fails with a
+    # connection-refused error and the gate would falsely report critical.
+    # Skip cleanly here — schema validation legitimately requires a cluster
+    # or an offline validator (kubeconform is used by k8s-validate.yml).
+    if ! kubectl config current-context >/dev/null 2>&1; then
+        record "manifest_dry_run" "SKIP" "warning" \
+            "kubectl present but no current context — use kubeconform for offline validation"
+        say "  SKIP: no kubeconfig context (CI offline mode)"
         return 0
     fi
 

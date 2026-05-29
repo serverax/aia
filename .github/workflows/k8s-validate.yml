@@ -34,10 +34,31 @@ jobs:
       - name: kubectl client version
         run: kubectl version --client=true
 
+      - name: Install kubeconform
+        # Offline schema validator. kubectl v1.31+ `--dry-run=client` still
+        # tries to fetch OpenAPI from a cluster, which fails on hosted
+        # runners; kubeconform bundles its own schemas, so we get real
+        # field-level validation without a cluster.
+        run: |
+          set -euo pipefail
+          curl -fsSL -o /tmp/kubeconform.tar.gz \
+            https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz
+          tar -xzf /tmp/kubeconform.tar.gz -C /tmp
+          sudo mv /tmp/kubeconform /usr/local/bin/kubeconform
+          kubeconform -v
+
       - name: List k8s/ YAML
         run: |
           find k8s -type f \( -name '*.yaml' -o -name '*.yml' \) -print
 
-      - name: Dry-run every YAML under k8s/ (recursive)
+      - name: kubectl client-side dry-run (parse + kind decode)
+        # --validate=false skips the OpenAPI-from-cluster fetch; YAML parse
+        # and apiVersion/kind/metadata decoding still happen here.
         run: |
-          kubectl apply --dry-run=client --recursive -f k8s/
+          kubectl apply --dry-run=client --validate=false --recursive -f k8s/
+
+      - name: kubeconform field-level schema validation
+        # Real schema validation against bundled Kubernetes schemas.
+        # -strict treats undefined fields as errors. -summary prints counts.
+        run: |
+          kubeconform -strict -summary -verbose k8s/

@@ -1,0 +1,78 @@
+name: Security + API focused tests
+
+# Runs the three test files this branch's QA pass identified as the
+# production-auth / kill-switch / Hiring-API regression target. Uses a
+# minimal pinned dependency subset so this gate stays independent of the
+# full AI stack (langchain / wasmtime / qdrant / pymilvus) in
+# requirements.txt.
+#
+# Targets:
+#   - tests/unit/test_auth_prod_guard.py
+#       libs/auth.assert_auth_safe_for_production() — prod env + dev
+#       userdb/secret raises (R-2 source of truth).
+#   - tests/compliance/test_killswitch_auth.py
+#       PUT /compliance/kill-switch is admin-only; GET + /evaluate stay open.
+#   - apps/api/tests/  (includes test_prod_guard_wired.py)
+#       Hiring API auth, CRUD flow, scoring, health, and the lifespan-level
+#       wiring of the production guard.
+#
+# Why a separate workflow:
+#   - ci.yml's unit-test job filters on -m unit and only walks
+#     tests/unit + selected services/*/tests, so two of the three
+#     targets above (compliance + apps/api) are silently skipped.
+#   - This gate is meant to be the floor — green here = the production
+#     guard, kill-switch auth, and Hiring API auth are all proved on
+#     Python 3.11 / Linux.
+
+on:
+  pull_request:
+    branches: [main, master, develop]
+  push:
+    branches: [main, master, develop]
+
+permissions:
+  contents: read
+
+jobs:
+  security-api:
+    name: pytest auth-guard + kill-switch + Hiring API
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install minimal dependency subset
+        # Pinned to match the relevant slices of requirements.txt /
+        # requirements-dev.txt. Intentionally avoids the full AI dep
+        # stack — those are gated by ci.yml's unit-test/integration-test
+        # jobs instead.
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install \
+            "fastapi==0.115.0" \
+            "pydantic==2.9.2" \
+            "pydantic-settings==2.5.2" \
+            "passlib[bcrypt]==1.7.4" \
+            "python-jose[cryptography]==3.3.0" \
+            "email-validator==2.2.0" \
+            "python-multipart==0.0.20" \
+            "asyncpg==0.29.0" \
+            "httpx==0.27.2" \
+            "pytest==8.3.3" \
+            "pytest-asyncio==0.24.0"
+
+      - name: Show environment
+        run: |
+          python --version
+          python -m pytest --version
+
+      - name: Run focused tests
+        run: |
+          python -m pytest -q \
+            tests/unit/test_auth_prod_guard.py \
+            tests/compliance/test_killswitch_auth.py \
+            apps/api/tests

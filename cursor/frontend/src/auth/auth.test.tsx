@@ -96,3 +96,71 @@ describe('AuthGate journey', () => {
     expect(screen.queryByText('SECRET DASHBOARD')).not.toBeInTheDocument()
   })
 })
+
+describe('AuthGate rejects malformed tokens (R-6)', () => {
+  /*
+   * AuthProvider rehydrates from sessionStorage on mount. `decodeUser` will
+   * throw on any token that isn't a parseable JWT payload; `safeDecode`
+   * wraps that in a try/catch and returns null on failure. The resulting
+   * user is null, so AuthGate must render LoginPage, not the children.
+   * Tests here pre-seed sessionStorage BEFORE render so we exercise the
+   * rehydrate path, not the live signIn path.
+   */
+
+  test('garbage token in sessionStorage -> AuthGate blocks, no protected content', () => {
+    setToken('not-even-a-jwt')
+    render(
+      <AuthProvider>
+        <AuthGate>
+          <div>SECRET DASHBOARD</div>
+        </AuthGate>
+      </AuthProvider>,
+    )
+    expect(screen.getByRole('form', { name: 'login' })).toBeInTheDocument()
+    expect(screen.queryByText('SECRET DASHBOARD')).not.toBeInTheDocument()
+  })
+
+  test('three-segment token with non-base64 payload -> AuthGate blocks', () => {
+    // Looks JWT-shaped but the payload segment is not valid base64; atob throws.
+    setToken('header.@@@not-base64@@@.sig')
+    render(
+      <AuthProvider>
+        <AuthGate>
+          <div>SECRET DASHBOARD</div>
+        </AuthGate>
+      </AuthProvider>,
+    )
+    expect(screen.getByRole('form', { name: 'login' })).toBeInTheDocument()
+    expect(screen.queryByText('SECRET DASHBOARD')).not.toBeInTheDocument()
+  })
+
+  test('three-segment token whose payload is base64 of non-JSON -> AuthGate blocks', () => {
+    // btoa('not-json') = 'bm90LWpzb24='. Decodes cleanly; JSON.parse throws.
+    setToken('header.bm90LWpzb24=.sig')
+    render(
+      <AuthProvider>
+        <AuthGate>
+          <div>SECRET DASHBOARD</div>
+        </AuthGate>
+      </AuthProvider>,
+    )
+    expect(screen.getByRole('form', { name: 'login' })).toBeInTheDocument()
+    expect(screen.queryByText('SECRET DASHBOARD')).not.toBeInTheDocument()
+  })
+
+  test('no token at all -> AuthGate blocks (baseline)', () => {
+    // clearToken in afterEach handles cleanup; this asserts the default case
+    // explicitly so a future refactor to AuthProvider's initial useState can't
+    // silently break the "no token = not authenticated" contract.
+    clearToken()
+    render(
+      <AuthProvider>
+        <AuthGate>
+          <div>SECRET DASHBOARD</div>
+        </AuthGate>
+      </AuthProvider>,
+    )
+    expect(screen.getByRole('form', { name: 'login' })).toBeInTheDocument()
+    expect(screen.queryByText('SECRET DASHBOARD')).not.toBeInTheDocument()
+  })
+})

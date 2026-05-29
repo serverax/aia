@@ -85,39 +85,6 @@ jobs:
             tests/compliance/test_killswitch_auth.py \
             apps/api/tests
 
-      - name: Pre-deploy gate diagnostic (drift + policy-runtime)
-        # Surfaces the actual drift bytes and the policy_runtime invocation
-        # that the gate would use via the test helper. continue-on-error so
-        # the next step always runs.
-        continue-on-error: true
-        env:
-          REPORT_FILE: /tmp/pre_deploy_report.json
-          PYTHON: ${{ env.pythonLocation }}/bin/python
-        run: |
-          echo "=== PYTHON env: $PYTHON ==="
-          "$PYTHON" -c "import sys; print('python:', sys.executable); import pytest; print('pytest:', pytest.__version__); import yaml; print('yaml:', yaml.__version__)"
-
-          echo
-          echo "=== Try the policy-runtime sub-step as the gate runs it ==="
-          "$PYTHON" -m pytest tests/security/test_policies_runtime.py -m unit --no-header -q --tb=short || true
-
-          echo
-          echo "=== Regenerate to /tmp and diff against committed ==="
-          "$PYTHON" -m scripts.security.generate_policies \
-            --in infrastructure/security/capabilities.yaml \
-            --network-out /tmp/np.yaml \
-            --rbac-out /tmp/rbac.yaml
-          echo "--- NetworkPolicy diff ---"
-          diff -u infrastructure/k3s/network-policies-per-agent.yaml /tmp/np.yaml | head -120 || true
-          echo "--- RBAC diff ---"
-          diff -u infrastructure/k3s/rbac-per-agent.yaml /tmp/rbac.yaml | head -120 || true
-
-          echo
-          echo "=== Full gate (verbose) with PYTHON set ==="
-          bash scripts/security/pre_deploy_check.sh || true
-          echo "--- JSON report ---"
-          cat /tmp/pre_deploy_report.json || echo "(no report file)"
-
       - name: Run pre-deploy security checks
         # Sprint 9 pre-deploy gate (tests/security/test_pre_deploy_check.py).
         # Drives scripts/security/pre_deploy_check.sh via subprocess. On the

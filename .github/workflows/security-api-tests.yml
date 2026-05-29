@@ -85,6 +85,17 @@ jobs:
             tests/compliance/test_killswitch_auth.py \
             apps/api/tests
 
+      - name: Pre-deploy gate verbose dry-run (diagnostic)
+        # Run the gate directly so any FAIL/critical messages are visible in
+        # CI logs. Continues even on non-zero exit so the next step always runs.
+        continue-on-error: true
+        env:
+          REPORT_FILE: /tmp/pre_deploy_report.json
+        run: |
+          bash scripts/security/pre_deploy_check.sh || true
+          echo "--- JSON report ---"
+          cat /tmp/pre_deploy_report.json || echo "(no report file)"
+
       - name: Run pre-deploy security checks
         # Sprint 9 pre-deploy gate (tests/security/test_pre_deploy_check.py).
         # Drives scripts/security/pre_deploy_check.sh via subprocess. On the

@@ -29,6 +29,47 @@ jobs:
         # Match pyproject's line-length=100. E203/W503 are black-incompatible.
         run: flake8 libs services tests --max-line-length=100 --extend-ignore=E203,W503
 
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "0"
+
+  image-scan:
+    needs: build-images
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    strategy:
+      fail-fast: false
+      matrix:
+        image: [echo-agent, orchestrator-agent, compliance-agent, analyst-agent]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Trivy image scan
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.image }}:${{ github.sha }}
+          format: table
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "0"
+
   unit-test:
     runs-on: ubuntu-latest
     steps:
@@ -135,7 +176,7 @@ jobs:
   deploy-staging:
     # Gated by the "staging" environment. Configure it in GitHub repo settings
     # with KUBECONFIG_STAGING secret + manual approval if desired.
-    needs: build-images
+    needs: [build-images, image-scan]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: staging
